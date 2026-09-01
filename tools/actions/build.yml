@@ -25,3 +25,12 @@ jobs:
                     mkdir -p ./dist
                     cp ./platform-services/admin-server/build/libs/admin.jar ./dist/admin.jar
                     cp ./platform-services/app-server/build/libs/app.jar ./dist/app.jar
+            -   name: Deploy
+                uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+                with:
+                    server: ${{ secrets.SERVER_HOST }}
+                    username: ${{ secrets.SERVER_USER }}
+                    ssh_private_key: ${{ secrets.SERVER_KEY }}
+                    local_path: "./dist/**"
+                    remote_path: "/data/apps/one/binaries"
+                    sftpArgs: "-o ConnectTimeout=5"
