@@ -17,7 +17,10 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SkillConfig implements Serializable {
+public class SkillsConfig implements Serializable {
+
+    @Builder.Default
+    private boolean enabled = false;
 
     @Builder.Default
     private List<Resource> paths = List.of(new ClassPathResource("META-INF/cc.wdev/skills"));

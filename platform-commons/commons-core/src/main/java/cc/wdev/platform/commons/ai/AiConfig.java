@@ -29,8 +29,10 @@ public class AiConfig implements Serializable {
 
     private VectorizationConfig vectorization;
 
-    private WorkSpaceConfig workspace;
+    @Builder.Default
+    private SkillsConfig skill = SkillsConfig.builder().build();
 
-    private SkillConfig skill;
+    @Builder.Default
+    private MemoryConfig memory = MemoryConfig.builder().build();
 
 }

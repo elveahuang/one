@@ -25,7 +25,7 @@ spring:
         redis:
             host: 127.0.0.1
             port: 6379
-            database: 11
+            database: 0
             password: redis
     rabbitmq:
         host: localhost
@@ -82,6 +82,8 @@ springdoc:
         enabled: true
     swagger-ui:
         enabled: true
+arthas:
+    app-name: webapp
 cosid:
     enabled: true
     namespace: ${spring.application.name}
@@ -135,6 +137,8 @@ platform:
                     name: qwen-image-plus
                 transcription:
                     name: fun-asr
+                rerank:
+                    name: qwen3-rerank
             tencent:
                 enabled: true
                 commons:
@@ -154,8 +158,10 @@ platform:
                 enabled: true
             pgvector:
                 enabled: true
-        vectorization:
-            batch-size: 20
+        skill:
+            enabled: true
+            paths:
+                - file:../../tools/ai/skills
     data:
         core:
             enabled: true

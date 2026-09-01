@@ -111,17 +111,29 @@ public class SimpleChatRequest extends Request {
      */
     @Builder.Default
     @Schema(description = "是否支持工具调用")
-    private Boolean withToolCalling = Boolean.FALSE;
+    private Boolean withToolCalling = Boolean.TRUE;
     /**
      * 是否支持会话
      */
     @Builder.Default
     @Schema(description = "是否支持会话")
-    private Boolean withSession = Boolean.FALSE;
+    private Boolean withSession = Boolean.TRUE;
     /**
      * 是否支持知识检索
      */
     @Builder.Default
     @Schema(description = "是否支持知识检索")
-    private Boolean withRag = Boolean.FALSE;
+    private Boolean withRag = Boolean.TRUE;
+    /**
+     * 是否支持能力
+     */
+    @Builder.Default
+    @Schema(description = "是否支持能力")
+    private Boolean withSkills = Boolean.TRUE;
+    /**
+     * 是否支持长期记忆
+     */
+    @Builder.Default
+    @Schema(description = "是否支持长期记忆")
+    private Boolean withMemory = Boolean.TRUE;
 }

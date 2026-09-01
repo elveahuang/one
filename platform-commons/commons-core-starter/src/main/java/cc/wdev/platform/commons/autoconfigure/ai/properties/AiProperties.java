@@ -53,9 +53,9 @@ public class AiProperties {
     private VectorizationConfig vectorization = VectorizationConfig.builder().build();
 
     @NestedConfigurationProperty
-    private WorkSpaceConfig workspace = WorkSpaceConfig.builder().build();
+    private SkillsConfig skills = SkillsConfig.builder().build();
 
     @NestedConfigurationProperty
-    private SkillConfig skill = SkillConfig.builder().build();
+    private MemoryConfig memory = MemoryConfig.builder().build();
 
 }

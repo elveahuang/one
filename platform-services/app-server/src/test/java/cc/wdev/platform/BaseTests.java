@@ -5,8 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * @author elvea
@@ -17,4 +22,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @Rollback(false)
 public abstract class BaseTests {
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        Path root = Paths.get("").toAbsolutePath();
+        log.info("Root: {}", root);
+        Path project = root.resolve("../..").normalize();
+        log.info("Project: {}", project);
+        Path agent = root.resolve("../../tools/agent").normalize();
+        log.info("Agent: {}", agent);
+        registry.add("project.path", project::toString);
+        registry.add("agent.path", agent::toString);
+    }
+
 }

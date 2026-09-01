@@ -26,6 +26,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Lists;
 import org.jspecify.annotations.NonNull;
+import org.springaicommunity.agent.advisors.AutoMemoryToolsAdvisor;
+import org.springaicommunity.agent.dream.AutoDreamAdvisor;
+import org.springaicommunity.agent.dream.AutoDreamService;
+import org.springaicommunity.agent.tools.SkillsTool;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -34,11 +38,13 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.session.SessionService;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 import static cc.wdev.platform.commons.enums.ResponseCodeEnum.AI_INVALID_CHAT_TYPE;
@@ -196,11 +202,17 @@ public class AiChatApiImpl implements AiChatApi {
         ChatModel model = this.aiManager.getChatModel();
 
         ChatClient.Builder builder = ChatClient.builder(model);
+        if (request.getWithSkills()) {
+            this.applySkillsTool(builder);
+        }
         if (request.getWithSession()) {
             this.applyAdvisors(builder);
         }
         if (request.getWithRag()) {
             this.applyRagAdvisors(builder);
+        }
+        if (request.getWithMemory()) {
+            this.applyMemoryAdvisor(builder);
         }
         return builder.build();
     }
@@ -307,9 +319,35 @@ public class AiChatApiImpl implements AiChatApi {
     }
 
     /**
+     * 对话增加工具支持
+     */
+    private void applySkillsTool(ChatClient.Builder builder) {
+        if (this.aiManager.getConfig().getSkill().isEnabled()
+            && CollectionUtils.isNotEmpty(this.aiManager.getConfig().getSkill().getPaths())) {
+
+            SkillsTool.Builder stb = SkillsTool.builder();
+            for (Resource resource : this.aiManager.getConfig().getSkill().getPaths()) {
+                if (resource.exists()) {
+                    log.info("Add skills directory: {}", resource.getDescription());
+                    stb.addSkillsResource(resource);
+                } else {
+                    log.info("Skills directory {} not exists", resource.getDescription());
+                }
+            }
+
+            builder.defaultTools(stb.build());
+        }
+    }
+
+    /**
      * 智能体对话增加工具支持
      */
     private void applyTools(ChatClient.Builder builder, AiAgentVo agent) {
+        if (this.aiManager.getConfig().getSkill().isEnabled() && CollectionUtils.isNotEmpty(this.aiManager.getConfig().getSkill().getPaths())) {
+            SkillsTool.Builder stb = SkillsTool.builder();
+            this.aiManager.getConfig().getSkill().getPaths().forEach(stb::addSkillsResource);
+            builder.defaultTools(stb.build());
+        }
         this.applyTools(builder, agent.getToolNames());
     }
 
@@ -346,6 +384,35 @@ public class AiChatApiImpl implements AiChatApi {
         RetrievalAugmentationAdvisor advisor = this.aiHelper.resolveRetrievalAugmentationAdvisor(kb);
         if (advisor != null) {
             builder.defaultAdvisors(advisor);
+        }
+    }
+
+    /**
+     * 对话增加长期记忆支持
+     */
+    private void applyMemoryAdvisor(ChatClient.Builder builder) {
+        if (this.aiManager.getConfig().getMemory().isEnabled() && StringUtils.isNotEmpty(this.aiManager.getConfig().getMemory().getPath())) {
+            // 长期记忆需要按租户和用户进行隔离
+            String path = Paths.get(this.aiManager.getConfig().getMemory().getPath())
+                .resolve(String.valueOf(SecurityUtils.getTid()))
+                .resolve(String.valueOf(SecurityUtils.getUid()))
+                .normalize()
+                .toString();
+            log.info("Apply memory directory: {}", path);
+
+            // AutoMemoryToolsAdvisor
+            AutoMemoryToolsAdvisor autoMemoryToolsAdvisor = AutoMemoryToolsAdvisor.builder()
+                .memoriesRootDirectory(path)
+                .build();
+            builder.defaultAdvisors(autoMemoryToolsAdvisor);
+
+            // AutoDreamAdvisor
+            AutoDreamService autoDreamService = AutoDreamService.builder(builder.clone()).build();
+            AutoDreamAdvisor autoDreamAdvisor = AutoDreamAdvisor.builder()
+                .memoriesRootDirectory(path)
+                .dreamService(autoDreamService)
+                .build();
+            builder.defaultAdvisors(autoDreamAdvisor);
         }
     }
 

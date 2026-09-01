@@ -34,6 +34,17 @@ public class AiChatApiTests extends BaseTests {
     }
 
     @Test
+    public void baseStaticAgentTest() {
+        SimpleChatRequest request = SimpleChatRequest.builder()
+            .chatType(AiChatType.STATIC.getValue())
+            .toolNames(Lists.newArrayList(AiToolBizTypeEnum.GET_APPLICATION_VERSION.getToolName()))
+            .prompt("你好")
+            .build();
+        String text = this.aiChatApi.chatText(request);
+        Assertions.assertNotNull(text);
+    }
+
+    @Test
     public void baseStaticChatTest() {
         SimpleChatRequest request = SimpleChatRequest.builder()
             .chatType(AiChatType.STATIC.getValue())

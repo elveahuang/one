@@ -74,9 +74,10 @@ import static cc.wdev.platform.commons.ai.enums.AiServiceProvider.*;
 @AutoConfiguration
 @ConditionalOnProperty(prefix = AiProperties.PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties({
-    AiProperties.class, AiTokenTextSplitterProperties.class,
+    AiProperties.class,
     AiVectorStoreElasticsearchProperties.class, AiVectorStorePgVectorProperties.class, AiVectorStoreMariaDBProperties.class,
-    AiDeepSeekProperties.class, AiAliyunProperties.class, AiTencentProperties.class, AiOpenAiProperties.class, AiOrcaRouterProperties.class
+    AiDeepSeekProperties.class, AiAliyunProperties.class, AiTencentProperties.class, AiOpenAiProperties.class,
+    AiOrcaRouterProperties.class
 })
 @ImportRuntimeHints(AiAutoConfiguration.AiRuntimeHints.class)
 public class AiAutoConfiguration {
@@ -111,8 +112,8 @@ public class AiAutoConfiguration {
             .splitting(AiUtils.resolveSplittingConfig(SplittingConfig.builder().build(), properties.getSplitting()))
             .retrieval(AiUtils.resolveRetrievalConfig(RetrievalConfig.builder().build(), properties.getRetrieval()))
             .vectorization(properties.getVectorization())
-            .workspace(properties.getWorkspace())
-            .skill(properties.getSkill())
+            .skill(properties.getSkills())
+            .memory(properties.getMemory())
             .build();
     }
 
