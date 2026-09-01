@@ -1,0 +1,190 @@
+### --------------------------------------------------------------------------------------------------------------------
+### Spring Config
+### --------------------------------------------------------------------------------------------------------------------
+spring:
+    security:
+        user:
+            name: admin
+            password: admin
+    datasource:
+        name: master
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: org.postgresql.Driver
+        url: jdbc:postgresql://127.0.0.1:5432/webapp
+        username: root
+        password: root
+        hikari:
+            connection-timeout: 30000
+            idle-timeout: 60000
+            max-lifetime: 180000
+            maximum-pool-size: 10
+            minimum-idle: 1
+            auto-commit: true
+            pool-name: MasterDataSource
+    data:
+        redis:
+            host: 127.0.0.1
+            port: 6379
+            database: 11
+            password: redis
+    rabbitmq:
+        host: localhost
+        port: 5672
+        virtual-host: webapp
+        username: admin
+        password: admin
+        publisher-confirm-type: correlated
+        publisher-returns: true
+        listener:
+            simple:
+                acknowledge-mode: auto
+                retry:
+                    enabled: true
+                default-requeue-rejected: true
+    elasticsearch:
+        uris: http://localhost:9200
+        username: elastic
+        password: elastic
+    ai:
+        session:
+            repository:
+                jdbc:
+                    initialize-schema: always
+        mcp:
+            server:
+                enabled: true
+                name: webapp-mcp-server
+                version: 1.0.0
+                type: sync
+                protocol: streamable
+                streamable-http:
+                    mcp-endpoint: /api/mcp
+                    keep-alive-interval: 30s
+### --------------------------------------------------------------------------------------------------------------------
+### Embabel Agent Config
+### --------------------------------------------------------------------------------------------------------------------
+embabel:
+    agent:
+        platform:
+            name: embabel-agent
+            description: Embabel Agent Platform
+            models:
+                deepseek:
+                    api-key: ${DEEPSEEK_API_KEY}
+                openai:
+                    api-key: ${DEEPSEEK_API_KEY}
+                    base-url: https://api.deepseek.com
+### --------------------------------------------------------------------------------------------------------------------
+### Spring Extension Config
+### --------------------------------------------------------------------------------------------------------------------
+springdoc:
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+cosid:
+    enabled: true
+    namespace: ${spring.application.name}
+    machine:
+        enabled: true
+        distributor:
+            type: manual
+            manual:
+                machine-id: 1
+        guarder:
+            enabled: true
+    snowflake:
+        enabled: true
+        epoch: 1672502400000
+### --------------------------------------------------------------------------------------------------------------------
+### Platform Config
+### --------------------------------------------------------------------------------------------------------------------
+platform:
+    cache:
+        enabled: true
+    tenancy:
+        enabled: true
+    ai:
+        enabled: true
+        providers:
+            deepseek:
+                enabled: true
+                commons:
+                    api-key: ${DEEPSEEK_API_KEY}
+                chat:
+                    name: deepseek-v4-flash
+            openai:
+                enabled: true
+                commons:
+                    api-key: ${DASHSCOPE_API_KEY}
+                    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+                chat:
+                    name: deepseek-v4-flash
+                embedding:
+                    name: text-embedding-v4
+            aliyun:
+                enabled: true
+                commons:
+                    api-key: ${DASHSCOPE_API_KEY}
+                    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+                chat:
+                    name: deepseek-v4-flash
+                embedding:
+                    name: text-embedding-v4
+                image:
+                    name: qwen-image-plus
+                transcription:
+                    name: fun-asr
+            tencent:
+                enabled: true
+                commons:
+                    api-key: ${HUNYUAN_API_KEY}
+                chat:
+                    name: deepseek-v4-flash
+            orcarouter:
+                enabled: true
+                commons:
+                    api-key: ${ORCAROUTER_API_KEY}
+                    base-url: https://api.orcarouter.ai/v1
+                chat:
+                    name: deepseek/deepseek-v4-flash-0731
+        vectorstore:
+            type: elasticsearch
+            elasticsearch:
+                enabled: true
+            pgvector:
+                enabled: true
+        vectorization:
+            batch-size: 20
+    data:
+        core:
+            enabled: true
+        jpa:
+            enabled: true
+        mybatis:
+            enabled: true
+    ip:
+        enabled: true
+        geo-lite:
+            path: GeoLite2-City.mmdb
+        ip2region:
+            path: ip2region.xdb
+    storage:
+        enabled: true
+        type: aws
+        aws:
+            enabled: false
+            access-key:
+            secret-key:
+            endpoint:
+            bucket:
+            region:
+            path-style-enabled: false
+            chunked-encoding-enabled: false
+        oss:
+            enabled: false
+            access-key-id:
+            access-key-secret:
+            endpoint:
+            bucket:
+            region:

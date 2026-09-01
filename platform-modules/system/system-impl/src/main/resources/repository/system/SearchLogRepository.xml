@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.log.repository.SearchLogRepository">
+
+    <select id="getSearchLogList" resultType="cc.wdev.platform.system.log.domain.vo.SearchLogVo">
+        select t.search_key
+        from sys_search_log t
+        where t.user_id = #{params.userId}
+        group by t.search_key
+        order by max(t.created_at) desc
+    </select>
+
+    <select id="getSearchLogHotList" resultType="cc.wdev.platform.system.log.domain.vo.SearchLogVo">
+        select search_key
+        from sys_search_log t
+        where t.created_at >= #{params.since}
+        group by t.search_key
+        order by count(t.search_key) desc
+    </select>
+
+</mapper>

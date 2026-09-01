@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.tag.repository.TagRepository">
+
+    <sql id="baseColumns">
+        t.id,
+        t.tenant_id,
+        t.reference_id,
+        t.biz_type,
+        t.biz_id,
+        t.title,
+        t.content,
+        t.extra,
+        t.description,
+        t.idx,
+        t.scope,
+        t.status,
+        t.source,
+        t.version,
+        t.active,
+        t.created_by,
+        t.created_at,
+        t.updated_by,
+        t.updated_at,
+        t.deleted_by,
+        t.deleted_at
+    </sql>
+
+    <select id="list" resultType="cc.wdev.platform.system.tag.domain.entity.TagEntity">
+        select
+        <include refid="baseColumns"/>
+        from sys_tag t
+        left join sys_tag_sequence ts on (ts.tag_id = t.id
+        <if test="request.bizIdList != null and request.bizIdList.size() > 0">
+            and ts.biz_id in
+            <foreach collection="request.bizIdList" item="bizId" open="(" separator="," close=")">
+                #{bizId}
+            </foreach>
+        </if>
+        )
+        where t.active = 1
+        and t.biz_type = #{request.bizType}
+        <if test="request.tenantId != null">
+            and t.tenant_id in (0, #{request.tenantId})
+        </if>
+        <if test="request.bizIdList != null and request.bizIdList.size() > 0">
+            and t.biz_id in
+            <foreach collection="request.bizIdList" item="bizId" open="(" separator="," close=")">
+                #{bizId}
+            </foreach>
+        </if>
+        <if test="request.q != null and request.q != ''">
+            and (t.title like concat('%', #{request.q}, '%') or t.description like concat('%', #{request.q}, '%'))
+        </if>
+        order by coalesce(ts.idx, 0), t.idx, t.updated_at desc
+    </select>
+</mapper>

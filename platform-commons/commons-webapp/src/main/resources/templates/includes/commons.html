@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!-- @thymesVar id="applicationName" type="java.lang.String" -->
+<!-- @thymesVar id="applicationVersion" type="java.lang.String" -->
+<body>
+<th:block th:fragment="meta">
+    <meta charset="utf-8"/>
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css(v=${applicationVersion})}"/>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css(v=${applicationVersion})}"/>
+    <link rel="stylesheet" th:href="@{/assets/css/style.css(v=${applicationVersion})}"/>
+</th:block>
+<th:block th:fragment="js">
+    <script type="module" th:src="@{/webjars/jquery/jquery.min.js(v=${applicationVersion})}"></script>
+    <script type="module" th:src="@{/webjars/popper.js/umd/popper.min.js(v=${applicationVersion})}"></script>
+    <script type="module" th:src="@{/webjars/bootstrap/js/bootstrap.min.js(v=${applicationVersion})}"></script>
+    <script type="module" th:src="@{/assets/js/app.js(v=${applicationVersion})}"></script>
+</th:block>
+</body>
+</html>

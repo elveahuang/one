@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.region.repository.RegionRepository">
+    <sql id="Base_Column_List">
+        id,
+        parent_id,
+        type,
+        code,
+        title,
+        title_first_letter,
+        version,
+        active,
+        created_by,
+        created_at,
+        updated_by
+    </sql>
+
+    <select id="getHasChildrenBatch" resultType="cc.wdev.platform.system.core.domain.bo.EntityIndBo">
+        select sr.id,
+        case when count(c.id) > 0 then 1 else 0 end as ind
+        from sys_region sr
+        left join sys_region c
+        on c.parent_id = sr.id
+        and c.active = 1
+        where sr.active = 1
+        AND sr.id IN
+        <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+            #{parentId}
+        </foreach>
+        group by sr.id
+    </select>
+
+    <update id="updateGeometry">
+        UPDATE sys_region
+        SET wkb_geometry = ST_GeomFromGeoJSON(#{geometryJson}),
+            updated_at   = NOW()
+        WHERE code = #{code}
+    </update>
+
+    <select id="locate" resultType="cc.wdev.platform.system.region.domain.entity.RegionEntity">
+        SELECT id, parent_id, type, code, title, title_first_letter
+        FROM sys_region
+        WHERE wkb_geometry IS NOT NULL
+        AND ST_Contains(
+        wkb_geometry,
+        ST_SetSRID(ST_Point(#{request.longitude}, #{request.latitude}), 4326)
+        )
+        <if test="request.types != null and request.types.size() > 0">
+            AND type IN
+            <foreach collection="request.types" item="t" open="(" separator="," close=")">
+                #{t}
+            </foreach>
+        </if>
+        AND active = 1
+        ORDER BY ST_Area(wkb_geometry) ASC
+        LIMIT 1
+    </select>
+</mapper>

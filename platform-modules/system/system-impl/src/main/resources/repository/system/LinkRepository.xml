@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.site.repository.LinkRepository">
+    <sql id="baseColumns">
+        sl
+        .
+        id
+        ,
+        sl. title,
+        sl.sub_title,
+        sl. link,
+        sl.description,
+        sl.summary,
+        sl.idx,
+        sl.active,
+        sl.created_by,
+        sl.created_at,
+        sl.updated_by,
+        sl.updated_at,
+        sl.deleted_by,
+        sl.deleted_at
+    </sql>
+
+    <select id="friendLinkList" resultType="cc.wdev.platform.system.site.domain.entity.LinkEntity">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM sys_link sl
+        WHERE sl.active = 1
+        <if test="condition.q != null">
+            AND (sl.title LIKE CONCAT('%', #{condition.q}, '%')
+            OR sl.sub_title LIKE CONCAT('%', #{condition.q}, '%')
+            OR sl.description LIKE CONCAT('%', #{condition.q}, '%')
+            OR sl.summary LIKE CONCAT('%', #{condition.q}, '%'))
+        </if>
+        <if test="condition.itemCodes != null and condition.itemCodes.size() > 0">
+            AND EXISTS(SELECT 1
+            FROM sys_dict_relation sdr
+            INNER JOIN sys_dict sd ON (sdr.dict_id = sd. id)
+            WHERE sdr.biz_id = sl. id
+            AND sd. code IN
+            <foreach collection="condition.itemCodes" item="code" open="(" separator="," close=")">
+                #{code}
+            </foreach>
+            )
+        </if>
+    </select>
+</mapper>

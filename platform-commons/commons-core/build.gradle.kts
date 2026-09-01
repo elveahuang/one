@@ -1,0 +1,55 @@
+plugins {
+    id("java-library-conventions")
+}
+
+dependencies {
+    // libs
+    api(libs.bundles.baseCommons)
+    api(libs.bundles.baseJakarta)
+    api(libs.bundles.baseApacheCommons)
+    api(libs.bundles.springCore)
+    api(libs.bundles.springBootCore)
+    api(libs.bundles.http)
+    api(libs.bundles.database)
+    api(libs.bundles.json)
+    api(libs.bundles.hutool)
+    api(libs.bundles.pinyin)
+    api(libs.bundles.thymeleaf)
+    api(libs.bundles.swagger)
+    api(libs.bundles.fory)
+    compileOnly(libs.bundles.springAiCore)
+    compileOnly(libs.bundles.springAiReader)
+    compileOnly(libs.bundles.springAiRagCore)
+    compileOnly(libs.bundles.springAiAgenticCore)
+    compileOnly(libs.bundles.springCloudCore)
+    compileOnly(libs.bundles.springSecurityCore)
+    compileOnly(libs.bundles.mybatis)
+    compileOnly(libs.bundles.hibernate)
+    compileOnly(libs.bundles.selenium)
+    compileOnly(libs.bundles.elastic)
+    compileOnly(libs.bundles.redis)
+    compileOnly(libs.bundles.caffeine)
+    compileOnly(libs.bundles.rabbit)
+    compileOnly(libs.bundles.quartz)
+    compileOnly(libs.bundles.websocket)
+    compileOnly(libs.bundles.html)
+    compileOnly(libs.bundles.excel)
+    compileOnly(libs.bundles.pdf)
+    compileOnly(libs.bundles.image)
+    compileOnly(libs.bundles.im)
+    compileOnly(libs.bundles.ip)
+    compileOnly(libs.bundles.facebody)
+    compileOnly(libs.bundles.translate)
+    compileOnly(libs.bundles.sms)
+    compileOnly(libs.bundles.storage)
+    compileOnly(libs.bundles.telegram)
+    compileOnly(libs.bundles.sharding)
+    compileOnly(libs.bundles.office)
+    compileOnly(libs.bundles.ai)
+    //
+    compileOnly(project(":platform-commons:commons-javacv"))
+}
+
+tasks.named<Jar>("jar") {
+    archiveBaseName.set("platform-commons-core")
+}

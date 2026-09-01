@@ -1,0 +1,16 @@
+{
+    "editor.fontFamily": "'Jetbrains Mono', 'Microsoft YaHei UI', monospace",
+    "editor.fontSize": 16,
+    "editor.fontWeight": "normal",
+    "files.eol": "\n",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.debug.settings.onBuildFailureProceed": true,
+    "java.eclipse.downloadSources": false,
+    "java.gradle.downloadJavadocs": false,
+    "java.gradle.downloadSources": false,
+    "java.import.maven.offline.enabled": false,
+    "java.maven.downloadJavadocs": false,
+    "java.maven.downloadSources": false,
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable"
+}

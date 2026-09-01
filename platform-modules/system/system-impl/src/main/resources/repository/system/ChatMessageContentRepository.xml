@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.im.repository.ChatMessageContentRepository">
+    <sql id="Base_Column_List">
+        scmc
+        .
+        id
+        ,
+        scmc.room_id,
+        scmc.tenant_id,
+        scmc.chat_message_id,
+        scmc.content,
+        scmc.extra,
+        scmc.status,
+        scmc.version,
+        scmc.active,
+        scmc.created_by,
+        scmc.created_at,
+        scmc.updated_by,
+        scmc.updated_at,
+        scmc.deleted_by,
+        scmc.deleted_at
+    </sql>
+</mapper>

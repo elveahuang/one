@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="cc/wdev/logging/logback/base.xml"/>
+
+    <springProfile name="development | dev | local">
+        <include resource="cc/wdev/logging/logback/console-appender.xml"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="production | native">
+        <include resource="cc/wdev/logging/logback/file-appender.xml"/>
+        <include resource="cc/wdev/logging/logback/console-appender.xml"/>
+        <include resource="cc/wdev/logging/logback/loki-appender.xml"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="LOKI"/>
+        </root>
+    </springProfile>
+
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="cc.wdev" level="INFO"/>
+</configuration>

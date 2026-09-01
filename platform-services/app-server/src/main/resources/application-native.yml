@@ -1,0 +1,287 @@
+### --------------------------------------------------------------------------------------------------------------------
+### Spring Config
+### --------------------------------------------------------------------------------------------------------------------
+spring:
+    boot:
+        admin:
+            client:
+                enabled: false
+                url: http://127.0.0.1:8282
+                username: admin
+                password: admin
+                api-path: /devops/sba/instances
+                auto-registration: false
+    datasource:
+        master:
+            name: master
+            type: com.zaxxer.hikari.HikariDataSource
+            driver-class-name: org.postgresql.Driver
+            url: jdbc:postgresql://127.0.0.1:5432/one_platform
+            username: root
+            password: root
+        slave:
+            name: slave
+            type: com.zaxxer.hikari.HikariDataSource
+            driver-class-name: org.postgresql.Driver
+            url: jdbc:postgresql://127.0.0.1:5432/one_platform
+            username: root
+            password: root
+        job:
+            name: job
+            type: com.zaxxer.hikari.HikariDataSource
+            driver-class-name: org.postgresql.Driver
+            url: jdbc:postgresql://127.0.0.1:5432/one_quartz
+            username: root
+            password: root
+    data:
+        redis:
+            host: 127.0.0.1
+            port: 6379
+            database: 11
+            password: redis
+    rabbitmq:
+        host: localhost
+        port: 5672
+        virtual-host: one
+        username: admin
+        password: admin
+        publisher-confirm-type: correlated
+        publisher-returns: true
+        listener:
+            simple:
+                acknowledge-mode: auto
+                retry:
+                    enabled: true
+                default-requeue-rejected: true
+    elasticsearch:
+        uris: http://127.0.0.1:9200
+        username: elastic
+        password: elastic
+    quartz:
+        scheduler-name: QuartzScheduler
+        properties:
+            org.quartz.scheduler.instanceId: ${spring.application.name}_${server.port}
+            org.quartz.jobStore.isClustered: true
+            org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+    ai:
+        mcp:
+            server:
+                enabled: true
+                name: one-mcp-server
+                version: 1.0.0
+                type: sync
+                protocol: streamable
+                streamable-http:
+                    mcp-endpoint: /api/mcp
+                    keep-alive-interval: 30s
+### --------------------------------------------------------------------------------------------------------------------
+### Spring Extension Config
+### --------------------------------------------------------------------------------------------------------------------
+springdoc:
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+cosid:
+    enabled: true
+    namespace: ${spring.application.name}
+    machine:
+        enabled: true
+        distributor:
+            type: manual
+            manual:
+                machine-id: 1
+        guarder:
+            enabled: true
+    snowflake:
+        enabled: true
+        epoch: 1672502400000
+### --------------------------------------------------------------------------------------------------------------------
+### Platform Config
+### --------------------------------------------------------------------------------------------------------------------
+platform:
+    home:
+        mobile: http://127.0.0.1:8082
+        webapp: http://127.0.0.1:8083
+        main: http://127.0.0.1:8084
+    tenancy:
+        enabled: true
+    cache:
+        codec: fory
+        enabled: true
+    ai:
+        enabled: true
+        providers:
+            deepseek:
+                enabled: true
+                commons:
+                    api-key: ${DEEPSEEK_API_KEY}
+                chat:
+                    name: deepseek-v4-flash
+            openai:
+                enabled: true
+                commons:
+                    api-key: ${DASHSCOPE_API_KEY}
+                    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+                chat:
+                    name: deepseek-v4-flash
+                embedding:
+                    name: text-embedding-v4
+            aliyun:
+                enabled: true
+                commons:
+                    api-key: ${DASHSCOPE_API_KEY}
+                chat:
+                    name: deepseek-v4-flash
+                embedding:
+                    name: text-embedding-v4
+                rerank:
+                    name: gte-rerank-v3
+                image:
+                    name: qwen-image-plus
+                transcription:
+                    name: fun-asr
+            tencent:
+                enabled: true
+                commons:
+                    api-key: ${HUNYUAN_API_KEY}
+                chat:
+                    name: deepseek-v4-flash
+        vectorstore:
+            type: elasticsearch
+            elasticsearch:
+                enabled: true
+            redis:
+                enabled: true
+            pgvector:
+                enabled: true
+    data:
+        core:
+            enabled: true
+        jdbc:
+            enabled: true
+        datasource:
+            enabled: true
+            master:
+                enabled: true
+            slave:
+                enabled: false
+            job:
+                enabled: true
+        jpa:
+            enabled: false
+        mybatis:
+            enabled: true
+    jwt:
+        enabled: true
+        strategy: manuel
+        public-key-value: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx7BFbAbKypMnKm8mfGgt5V3I2axIOPv8+78YjMUaekIUdJ1vZ5zoDq7ZtcI2K3DSRQ/W+2f+23cb4ZiURko1qIVgRhQmw7ZC4YBtEoHbK3dR6tSV9I5/o4F0d3bclmN/n+ALS96w5mgb4SF9h/JEoq29RmmFPQ5KX5XzOgDBHlt2XNFHA1eeb77HsHAr//HUU76uyV9ODSAM96BSNOASah//mLqhR02ToOl/srIl1dlkz2oWfpV77awP0Onwq8tJtTw9QW59LwshRIAlQVjj2ESmj76jPIWIWjlBGBFZhdNCUBW23aXFbE3Zk6QiWcKdT2jH3+/y5AO0YuOa/CijQwIDAQAB
+        private-key-value: MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDHsEVsBsrKkycqbyZ8aC3lXcjZrEg4+/z7vxiMxRp6QhR0nW9nnOgOrtm1wjYrcNJFD9b7Z/7bdxvhmJRGSjWohWBGFCbDtkLhgG0Sgdsrd1Hq1JX0jn+jgXR3dtyWY3+f4AtL3rDmaBvhIX2H8kSirb1GaYU9DkpflfM6AMEeW3Zc0UcDV55vvsewcCv/8dRTvq7JX04NIAz3oFI04BJqH/+YuqFHTZOg6X+ysiXV2WTPahZ+lXvtrA/Q6fCry0m1PD1Bbn0vCyFEgCVBWOPYRKaPvqM8hYhaOUEYEVmF00JQFbbdpcVsTdmTpCJZwp1PaMff7/LkA7Ri45r8KKNDAgMBAAECggEAA797cYRDZ7asoyidV/O2oD5mdZtzs9xkE6+Oc8MV4n7Y35V1LDIKhUW+vDOJnyyuSRZEzu1VRJrTo1sg/wosP8vYf/XwuS3PFI0pdciuUDVTVaQ7ZboL1NMqRfQI0OGCxxPqzco/lwk4fU94icXk0S7ZM0EzDaZjqIszCGy9oObYxTzr4wzxq41CxUaiIrE27AGvqBx9aXx8bX6xseXsn44Zzwi7S77T8lWojXgieSe0KoJ4JgHlafkx/fzEw1LLyh8Cc25d4/gnDCpeq53wBO/hRHUotQuqs1kr6+Zd7z8uuOb/D/HFedQ/zlOIBKbVIcEudYfn9CpSkLXwzdqUFQKBgQD1SgUDyNjJySrSS+z+c4a5LzbHaudjg0udT3/kVDGiWkK02XpcodU+1UjJnVGTgqh+6noLKtr2EKORqNdqEIGxEGmx83qT4QyOGWprHBFP97vakkN1ZhrzPbMl0Zmf8xjchHkDNoK345k69/NeLgfiv/+Zj9YH12X3z/2u1qb7lQKBgQDQaICo+WtezBzv6hl8vnUWOIR3MOPKbwiWbhxYpTG9qh9WnIgTExAg0kA2a8+wVnROVwhRCVyajb9JesKG00YYHlSxLfDIN+FgGSyYRQ35lWy7kVl1mH9q2G+46Oc4rgqiMP6RtlWcxckx9HEsjGqakPN9hF3ubHx2zYMImO6tdwKBgB2E5euZrTVDh2q9hmzs3EbG/tGq9OPN9jidS6ff1gVS1XpMPeSN+UrRgiv5Scr1y29SqpNTefxo7jZmWl5CVElJz16CDbtkNw2W027GdvLnvmzEc2fafN3PDBM+ET3llJVdP+76DWsx8cvd8SThZ0OLlagWXkydSIE1P7Nd08StAoGAGUwGCfy0hr456Pk+fMDVj4vusFUT4VeW8EOPV0c+AWqsASRg9AfFVmaO+swdWqcz2OqBjOyY+/2msXGgOSNeB8FuwE72QideSP7lRdpj9t6nYyEifb60ALEi5owGvP+LNOLDk8ZRIAV2BYVJU4H70qUzmRG/IRi0BuutMxb1KcMCgYEA7ROpyvqgZfU3kQO6QAoX+keFk60uBnXu38VI5ZYxmUzLyLd9cYZ8c2129oPzH3zi48Yr+aVH+E/YF9ks/3xrc0tnQ1juI3J5jyycA5+3MSX1jqTTCJ0gK8VYv6APPv9ZTCfQoSjGxtT2UIzNTgREcZSDfF01Uz5TG1dVACg+5Ck=
+    rabbit:
+        enabled: true
+    captcha:
+        enabled: true
+    http:
+        enabled: true
+        type: okhttp
+        proxy:
+            enabled: false
+            host: 127.0.0.1
+            port: 7890
+    oapis:
+        dingtalk:
+            enabled: false
+            agent-id:
+            app-key:
+            app-secret:
+            corp-id:
+        lark:
+            enabled: false
+            app-type: self_built
+            app-id:
+            app-secret:
+        weixin:
+            cp:
+                enabled: false
+                agent-id:
+                corp-id:
+                corp-secret:
+            mp:
+                enabled: true
+                app-id:
+                app-secret:
+                token:
+                aes-key:
+            ma:
+                enabled: false
+                app-id:
+                app-secret:
+    storage:
+        enabled: true
+        type: aws
+        aws:
+            enabled: true
+            access-key:
+            secret-key:
+            endpoint:
+            bucket:
+            region:
+            path-style-enabled: true
+            chunked-encoding-enabled: false
+            domain:
+        oss:
+            enabled: false
+            access-key-id:
+            access-key-secret:
+            endpoint:
+            bucket:
+            region:
+            domain:
+    sms:
+        enabled: false
+        type: aliyun
+        aliyun:
+            enabled: true
+            access-key-id:
+            access-key-secret:
+            sign-name:
+            template:
+    mail:
+        enabled: true
+        config:
+            from:
+            host:
+            port: 25
+            username:
+            password:
+            name:
+    translator:
+        enabled: true
+        type: aliyun
+        aliyun:
+            enabled: true
+            access-key-id:
+            access-key-secret:
+    face-body:
+        enabled: false
+        type: aliyun
+        aliyun:
+            enabled: false
+            access-key-id:
+            access-key-secret:
+    ip:
+        enabled: true
+        geo-lite:
+            location: file_system
+            path: ./ip/GeoLite2-City.mmdb
+    message:
+        broadcast:
+            enabled: true
+            type: rabbit
+    selenium:
+        enabled: false
+        driver-type: edge
+    test:
+        enabled: false
+        email:
+        mobile-number:

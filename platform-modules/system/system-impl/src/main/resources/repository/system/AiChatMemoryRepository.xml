@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.ai.repository.AiChatMemoryRepository">
+
+    <select id="findAllChatsWithWindowFunction" resultType="cc.wdev.platform.system.ai.domain.vo.AiChatVo">
+        SELECT tmp.id, tmp.tenant_id, tmp.user_id, tmp.conversation_id, tmp.content AS title, tmp.type, tmp.created_at
+        FROM (SELECT t.id,
+        t.tenant_id,
+        t.user_id,
+        t.conversation_id,
+        t.content,
+        t.type,
+        t.created_at,
+        ROW_NUMBER() OVER (PARTITION BY t.conversation_id ORDER BY t.created_at ) as rn
+        FROM sys_ai_chat_memory t
+        WHERE t.tenant_id = #{request.tenantId}
+        AND t.active = 1
+        AND t.chat_type = #{request.chatType}
+        AND t.user_id = #{request.userId}
+        <if test="null != request.agentCode and request.agentCode != ''">
+            AND t.agent_code = #{request.agentCode}
+        </if>
+        ) tmp
+        WHERE tmp.rn = 1
+        <if test="request.lastId != null and request.lastId > 0">
+            AND tmp.id &lt; #{request.lastId}
+        </if>
+        ORDER BY tmp.created_at DESC
+    </select>
+
+</mapper>

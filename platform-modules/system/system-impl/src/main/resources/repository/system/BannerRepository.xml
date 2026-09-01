@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.site.repository.BannerRepository">
+    <sql id="baseColumns">
+        sb
+        .
+        id
+        ,
+        sb. title,
+        sb. description,
+        sb.idx,
+        sb. active,
+        sb. status,
+        sb.created_by,
+        sb.created_at,
+        sb.updated_by,
+        sb.updated_at,
+        sb.deleted_by,
+        sb.deleted_at
+    </sql>
+
+    <select id="findForUser" resultType="cc.wdev.platform.system.site.domain.entity.BannerEntity">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM sys_banner sb
+        WHERE sb.active = 1
+        AND sb.status = 1
+        <if test="condition.q != null">
+            AND (sb.title LIKE CONCAT('%', #{condition.q}, '%')
+            OR sb.description LIKE CONCAT('%', #{condition.q}, '%'))
+        </if>
+        <if test="condition.itemCodes != null and condition.itemCodes.size() > 0">
+            AND EXISTS(SELECT 1
+            FROM sys_dict_relation sdr
+            INNER JOIN sys_dict sd ON (sdr.dict_id = sd. id)
+            WHERE sdr.biz_id = sb. id
+            AND sd. code IN
+            <foreach collection="condition.itemCodes" item="code" open="(" separator="," close=")">
+                #{code}
+            </foreach>
+            )
+        </if>
+
+        ORDER BY sb.idx
+    </select>
+</mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.region.repository.AddressRepository">
+
+    <sql id="baseColumns">
+        sa.id,
+        sa.tenant_id,
+        sa.biz_type,
+        sa.biz_id,
+        sa.country_id,
+        sa.province_id,
+        sa.city_id,
+        sa.county_id,
+        sa.title,
+        sa.location,
+        sa.details,
+        sa.extra,
+        sa.lng,
+        sa.lat,
+        sa.status,
+        sa.version,
+        sa.active,
+        sa.created_by,
+        sa.created_at,
+        sa.updated_by,
+        sa.updated_at,
+        sa.deleted_by,
+        sa.deleted_at
+    </sql>
+
+    <select id="findPageByRelation" resultType="cc.wdev.platform.system.region.domain.entity.AddressEntity">
+        select
+        <include refid="baseColumns"/>
+        from sys_address sa
+        where sa.active = 1
+        and sa.biz_type = #{request.bizType}
+        <if test="request.tenantId != null">
+            and sa.tenant_id = #{request.tenantId}
+        </if>
+        and exists(
+        select 1 from sys_address_relation sar
+        where sar.address_id = sa.id
+        and sar.active = 1
+        and sar.biz_type = #{request.relationBizType}
+        <if test="request.relationBizIdList != null and request.relationBizIdList.size() > 0">
+            and sar.biz_id in
+            <foreach collection="request.relationBizIdList" item="bizId" open="(" separator="," close=")">
+                #{bizId}
+            </foreach>
+        </if>
+        )
+        <if test="request.q != null and request.q != ''">
+            and (sa.title like concat('%', #{request.q}, '%') or sa.details like concat('%', #{request.q}, '%'))
+        </if>
+        order by sa.updated_at desc
+    </select>
+
+</mapper>

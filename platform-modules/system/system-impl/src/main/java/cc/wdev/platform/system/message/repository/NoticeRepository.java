@@ -1,0 +1,12 @@
+package cc.wdev.platform.system.message.repository;
+
+import cc.wdev.platform.commons.data.mybatis.repository.BaseEntityRepository;
+import cc.wdev.platform.system.message.domain.entity.NoticeEntity;
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * @author elvea
+ */
+@Mapper
+public interface NoticeRepository extends BaseEntityRepository<NoticeEntity, Long> {
+}

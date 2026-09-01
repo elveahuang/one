@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.im.repository.ChatMessageRepository">
+
+    <select id="getChatMessageCountWithEntitySession" resultType="java.lang.Long">
+        select count(*)
+        from sys_chat_session cs,
+        sys_chat_message cm,
+        sys_chat_entity_session ces
+        where cs.id = ces.chat_session_id
+        and cs.id = cm.chat_session_id
+        <if test="params.chatSessionIds != null and params.chatSessionIds.size() > 0">
+            and cs.id in
+            <foreach collection="params.chatSessionIds" item="chatSessionId" open="(" separator="," close=")">
+                #{chatSessionId}
+            </foreach>
+        </if>
+        and cs.biz_id in
+        <foreach collection="params.bizIds" item="bizId" open="(" separator="," close=")">
+            #{bizId}
+        </foreach>
+        <if test="params.isManager != null and params.isManager == false">
+            and cs.target_user_id = #{params.userId}
+        </if>
+        and cm.id > ces.last_read_message_id
+        and case when ces.clear_at is not null then cm.created_at > ces.clear_at else true end
+        and cs.biz_type = #{params.bizType}
+        and ces.user_id = #{params.userId}
+        and ces.clear_ind = 0
+    </select>
+
+    <select id="getChatMessageCountWithoutEntitySession" resultType="java.lang.Long">
+        select count(*)
+        from sys_chat_session cs,
+        sys_chat_message cm
+        where cs.id = cm.chat_session_id
+        and cm.chat_session_id = cs.id
+        <if test="params.chatSessionIds != null and params.chatSessionIds.size() > 0">
+            and cs.id in
+            <foreach collection="params.chatSessionIds" item="chatSessionId" open="(" separator="," close=")">
+                #{chatSessionId}
+            </foreach>
+        </if>
+        and cs.biz_type = #{params.bizType}
+        and cs.biz_id in
+        <foreach collection="params.bizIds" item="bizId" open="(" separator="," close=")">
+            #{bizId}
+        </foreach>
+        <if test="params.isManager != null and params.isManager == false">
+            and cs.target_user_id = #{params.userId}
+        </if>
+        and not exists(select ces.id
+        from sys_chat_entity_session ces
+        where ces.chat_session_id = cs.id
+        and ces.user_id = #{params.userId})
+    </select>
+
+    <select id="findLastMessageBo" resultType="cc.wdev.platform.system.core.domain.bo.EntityLongBo">
+        select
+        cm.chat_session_id as id,
+        max(cm.id) as number
+        from sys_chat_message cm
+        inner join sys_chat_session cs
+        on (cm.chat_session_id = cs.id
+        and cs.active = 1
+        and cs.biz_type = #{bizType}
+        and cs.biz_id in
+        <foreach collection="bizIds" item="bizId" open="(" separator="," close=")">
+            #{bizId}
+        </foreach>)
+        left join sys_chat_entity_session ces
+        on (cm.chat_session_id = ces.chat_session_id
+        and ces.user_id = #{userId}
+        and ces.active = 1)
+        where cm.active = 1
+        and (ces.clear_ind = 0 or ces.id is null)
+        <if test="params.tab != null and params.tab == 'unread'">
+            and cm.id > coalesce(ces.last_read_message_id, 0)
+        </if>
+        group by cm.chat_session_id
+        order by coalesce(max(ces.top_ind), 0) desc, max(ces.top_at) desc, number desc
+    </select>
+
+    <select id="chatSessionMessageCountBos" resultType="cc.wdev.platform.system.core.domain.bo.EntityLongBo">
+        select
+        cm.chat_session_id as id,
+        count(cm.id) as number
+        from sys_chat_message cm
+        where cm.active = 1
+        and exists (select 1 from (
+        <foreach collection="requests" item="request" separator="union all">
+            select
+            #{request.chatSessionId} as targetChatsessionId,
+            #{request.lastReadMessageId} as targetLastMessageId,
+            #{request.clearAt} as targetClearAt
+        </foreach>) t
+        where cm.chat_session_id = t.targetChatsessionId
+        and cm.id > t.targetLastMessageId
+        and cm.created_at > t.targetClearAt)
+        group by cm.chat_session_id
+    </select>
+
+    <select id="lastMessageBoList" resultType="cc.wdev.platform.system.core.domain.bo.EntityLongBo">
+        select cm.chat_session_id as id, max(cm.id) as number
+        from sys_chat_message cm
+        where cm.active = 1
+        and cm.chat_session_id in
+        <foreach collection="chatSessionIds" item="chatSessionId" open="(" separator="," close=")">
+            #{chatSessionId}
+        </foreach>
+        group by cm.chat_session_id
+    </select>
+
+    <select id="getLastActiveTimeBatch" resultType="cc.wdev.platform.system.core.domain.bo.EntityDateBo">
+        select scm.sender_user_id as id, max(scm.created_at) as dateTime
+        from sys_chat_message scm
+        where scm.active = 1
+        and scm.sender_user_id in
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        group by scm.sender_user_id
+    </select>
+
+</mapper>

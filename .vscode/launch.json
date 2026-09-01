@@ -1,0 +1,37 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug System Service",
+            "type": "java",
+            "request": "launch",
+            "mainClass": "cc.wdev.platform.app.SystemServerApplication",
+            "projectName": "system-server",
+            "vmArgs": "-Dfile.encoding=UTF-8 -Xms512m -Xmx1024m"
+        },
+        {
+            "name": "Debug Auth Service",
+            "type": "java",
+            "request": "launch",
+            "mainClass": "cc.wdev.platform.security.AuthServerApplication",
+            "projectName": "auth-server",
+            "vmArgs": "-Dfile.encoding=UTF-8 -Xms512m -Xmx1024m"
+        },
+        {
+            "name": "Debug Gateway Service",
+            "type": "java",
+            "request": "launch",
+            "mainClass": "cc.wdev.platform.gateway.GatewayServerApplication",
+            "projectName": "gateway-server",
+            "vmArgs": "-Dfile.encoding=UTF-8 -Xms512m -Xmx1024m"
+        },
+        {
+            "name": "Debug Sba Service",
+            "type": "java",
+            "request": "launch",
+            "mainClass": "cc.wdev.platform.sba.SbaServerApplication",
+            "projectName": "sba-server",
+            "vmArgs": "-Dfile.encoding=UTF-8 -Xms512m -Xmx1024m"
+        }
+    ]
+}

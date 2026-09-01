@@ -1,0 +1,19 @@
+{
+    "resources": [
+        {
+            "pattern": "machine_id_distribute.lua"
+        },
+        {
+            "pattern": "machine_id_guard.lua"
+        },
+        {
+            "pattern": "machine_id_revert.lua"
+        },
+        {
+            "pattern": "machine_id_revert_stable.lua"
+        },
+        {
+            "pattern": "redis_id_generate.lua"
+        }
+    ]
+}

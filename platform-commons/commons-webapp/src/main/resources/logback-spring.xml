@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="cc/wdev/logging/logback/console-appender.xml"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.ai" level="DEBUG"/>
+    <logger name="org.springframework.web.client" level="DEBUG"/>
+    <logger name="org.apache.hc" level="DEBUG"/>
+    <logger name="org.bytedeco.javacpp" level="DEBUG"/>
+    <logger name="cc.wdev" level="INFO"/>
+</configuration>

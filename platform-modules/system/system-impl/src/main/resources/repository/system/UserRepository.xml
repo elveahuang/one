@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.core.repository.UserRepository">
+
+    <select id="getCount" resultType="long">
+        SELECT count(su.id)
+        FROM sys_user su
+        where su.active = 1
+        <if test="request.roleTypes != null and request.roleTypes.size() > 0">
+            and exists(select sr.id from sys_user_role sur, sys_role sr
+            where sur.user_id = su.id
+            and sur.role_id = sr.id
+            and sr.active = 1
+            and sr.biz_type in (
+            <foreach collection="request.roleTypes" item="roleType" open="(" separator="," close=")">
+                #{roleType}
+            </foreach>
+            ))
+        </if>
+    </select>
+    <select id="getAllRegisterCount" resultType="java.lang.Long">
+        select count(*) from sys_user where active = 1
+        <if test="startTime != null">
+            and created_at >= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and created_at &lt; #{endTime}
+        </if>
+    </select>
+    <select id="getAllUserCount" resultType="java.lang.Long">
+        select count(*) from sys_user where active = 1
+        <if test="endTime != null">
+            and created_at &lt; #{endTime}
+        </if>
+    </select>
+    <select id="searchWithRoles" resultType="cc.wdev.platform.system.core.domain.entity.UserEntity">
+        select su.*
+        from sys_user su
+        where su.active = 1
+        <if test="request.q != null and request.q != ''">
+            and (su.username like concat('%', #{request.q}, '%') or su.display_name like concat('%', #{request.q}, '%'))
+        </if>
+        and exists
+        (select 1
+        from sys_user_role sur
+        inner join sys_role sr on sr.id = sur.role_id
+        where sur.user_id = su.id
+        and sr.group_type in ('PLATFORM', 'SYSTEM')
+        <if test="request.roleIds != null and request.roleIds.size() > 0">
+            and sr.id in
+            <foreach collection="request.roleIds" item="rid" open="(" separator="," close=")">
+                #{rid}
+            </foreach>
+        </if>
+        )
+    </select>
+
+    <select id="getRegisterCountByTenantId" resultType="java.lang.Long">
+        select count(*) from sys_user where active = 1
+        <if test="startTime != null">
+            and created_at >= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and created_at &lt; #{endTime}
+        </if>
+        <if test="tenantId != null">
+            and tenant_id = #{tenantId}
+        </if>
+    </select>
+    <select id="getInternalUserCount" resultType="java.lang.Long">
+        select count(*)
+        from sys_user su
+        where su.active = 1
+          and su.status = 1
+          and exists(select 1
+                     from sys_user_role sur
+                              inner join sys_role sr on sr.id = sur.role_id
+                     where sur.user_id = su.id
+                       and sr.group_type in ('PLATFORM', 'SYSTEM'))
+    </select>
+
+</mapper>

@@ -1,0 +1,29 @@
+{
+    "properties": [
+        {
+            "name": "spring.ai.vectorstore.type",
+            "type": "java.lang.String",
+            "description": "Spring AI Vector Databases Type."
+        },
+        {
+            "name": "logging.logstash.url",
+            "type": "java.lang.String",
+            "description": "Logstash url."
+        },
+        {
+            "name": "logging.loki.url",
+            "type": "java.lang.String",
+            "description": "Loki url."
+        },
+        {
+            "name": "logging.loki.user",
+            "type": "java.lang.String",
+            "description": "Loki user."
+        },
+        {
+            "name": "logging.loki.pass",
+            "type": "java.lang.String",
+            "description": "Loki pass."
+        }
+    ]
+}
