@@ -52,6 +52,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -340,9 +341,16 @@ public abstract class AiUtils {
         // Tool Calling
         List<ToolCallback> tools = getToolObject(request.getToolNames());
         if (CollectionUtils.isNotEmpty(tools)) {
-            spec.toolContext(Map.of(AiConstants.METADATA_USER_ID, request.getUserId()));
             spec.tools(tools);
         }
+        // 工具上下文（无条件注入，供 KnowledgeTools 等工具通过 ToolContext 读取）
+        Map<String, Object> toolContext = new HashMap<>();
+        toolContext.put(AiConstants.METADATA_USER_ID, request.getUserId());
+        toolContext.put(AiConstants.METADATA_TENANT_ID, request.getTenantId());
+        if (request.getKbId() != null) {
+            toolContext.put(AiConstants.TOOL_CONTEXT_KB_ID, request.getKbId());
+        }
+        spec.toolContext(toolContext);
         // 系统提示词
         if (StringUtils.isNotEmpty(request.getSystemPrompt())) {
             spec = spec.system(request.getSystemPrompt());

@@ -161,7 +161,7 @@ platform:
         skill:
             enabled: true
             paths:
-                - file:../../tools/ai/skills
+                - file:../../tools/agent/skills
     data:
         core:
             enabled: true

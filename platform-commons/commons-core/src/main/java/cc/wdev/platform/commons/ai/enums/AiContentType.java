@@ -14,6 +14,9 @@ public enum AiContentType implements BaseEnum<String> {
     TEXT("text", "文本"),
     CITATION("citation", "引用"),
     INTERACTION("interaction", "交互"),
+    THOUGHT("thought", "智能体思考"),
+    TOOL_CALL("tool_call", "工具调用"),
+    TOOL_RESULT("tool_result", "工具结果"),
     ERROR("error", "Connection timeout."),
     END("[DONE]", "结束标记");
 

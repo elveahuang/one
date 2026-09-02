@@ -1,6 +1,8 @@
 package cc.wdev.platform.system.ai.api;
 
+import cc.wdev.platform.commons.ai.AiConstants;
 import cc.wdev.platform.commons.ai.AiManager;
+import cc.wdev.platform.commons.ai.agent.ReActAgent;
 import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
 import cc.wdev.platform.commons.ai.enums.AiChatType;
 import cc.wdev.platform.commons.ai.enums.AiResponseType;
@@ -10,6 +12,7 @@ import cc.wdev.platform.commons.enums.BaseEnum;
 import cc.wdev.platform.commons.exception.ServiceException;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.NumberUtils;
+import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.SecurityUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.ai.domain.entity.AiSessionEntity;
@@ -21,6 +24,7 @@ import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
 import cc.wdev.platform.system.ai.helpers.AiHelper;
 import cc.wdev.platform.system.ai.service.AiChatMemoryService;
 import cc.wdev.platform.system.ai.service.AiSessionService;
+import cc.wdev.platform.system.ai.tools.KnowledgeTools;
 import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,6 +120,27 @@ public class AiChatApiImpl implements AiChatApi {
             log.info("handleStreamChat [{}] text", request.getConversationId());
             return spec.stream().content();
         }
+    }
+
+    /**
+     * @see AiChatApi#chatAgentStream(SimpleChatRequest)
+     */
+    @Override
+    public Flux<String> chatAgentStream(SimpleChatRequest request) {
+        request.setChatType(AiChatType.AGENT.getValue());
+        preHandleChatRequest(request);
+
+        log.info("chatAgentStream [{}] start", request.getConversationId());
+        ChatClient chatClient = this.getChatClientByAgent(request);
+
+        ReActAgent agent = ReActAgent.builder()
+            .chatClient(chatClient)
+            .maxToolCalls(AiConstants.MAX_AGENT_TOOL_CALLS)
+            // 智能体流程总是配合 SessionMemoryAdvisor（每轮注入历史并持久化事件），关闭 advisor 内部历史拼接
+            .conversationHistoryEnabled(false)
+            .build();
+        log.info("chatAgentStream [{}] process", request.getConversationId());
+        return agent.stream(request);
     }
 
     /**
@@ -261,15 +286,47 @@ public class AiChatApiImpl implements AiChatApi {
         ChatClient.Builder builder = ChatClient.builder(model);
         this.applyTools(builder, agent);
         this.applyAdvisors(builder);
-        this.applyRagAdvisors(builder, agent);
+        // 知识库：预检索 Advisor 兜底 + 检索工具（模型可在 ReAct 循环中自主检索）
+        AiKbVo kbVo = this.resolveAgentKb(agent);
+        if (kbVo != null) {
+            this.applyRagAdvisors(builder, kbVo);
+            builder.defaultTools(new KnowledgeTools(this.aiHelper, kbVo));
+        }
+        // 长期记忆（文件式记忆，按租户/用户隔离）
+        if (!Boolean.FALSE.equals(request.getWithMemory())) {
+            this.applyMemoryAdvisor(builder);
+        }
         // 智能体系统提示词（模板渲染）与温度
         if (StringUtils.isNotEmpty(agent.getSystemPrompt())) {
-            builder.defaultSystem(AiUtils.renderPrompt(agent.getSystemPrompt(), request.getParams()));
+            String systemPrompt = AiUtils.renderPrompt(agent.getSystemPrompt(), request.getParams());
+            if (this.hasAgentTools(agent, kbVo)) {
+                systemPrompt = systemPrompt + AiUtils.END_LINE + AiConstants.AGENT_REACT_PROMPT;
+            }
+            builder.defaultSystem(systemPrompt);
         }
         if (agent.getTemperature() != null && agent.getTemperature().doubleValue() > 0) {
             builder.defaultOptions(ChatOptions.builder().temperature(agent.getTemperature().doubleValue()));
         }
         return builder.build();
+    }
+
+    /**
+     * 获取智能体绑定的知识库
+     */
+    private AiKbVo resolveAgentKb(AiAgentVo agent) {
+        if (!ObjectUtils.isValidId(agent.getKbId())) {
+            return null;
+        }
+        return this.aiKbApi.getKb(GetRequest.builder().id(agent.getKbId()).build());
+    }
+
+    /**
+     * 判断智能体是否配置了工具（用于决定是否追加工具使用约定提示词）
+     */
+    private boolean hasAgentTools(AiAgentVo agent, AiKbVo kbVo) {
+        return CollectionUtils.isNotEmpty(agent.getToolNames())
+            || kbVo != null
+            || this.aiManager.getConfig().getSkill().isEnabled();
     }
 
     /**
@@ -367,14 +424,6 @@ public class AiChatApiImpl implements AiChatApi {
      */
     private void applyRagAdvisors(ChatClient.Builder builder) {
         builder.defaultAdvisors(this.aiManager.getRetrievalAugmentationAdvisor());
-    }
-
-    /**
-     * 智能体对话增加知识检索支持
-     */
-    private void applyRagAdvisors(ChatClient.Builder builder, @NonNull AiAgentVo agent) {
-        AiKbVo kbVo = this.aiKbApi.getKb(GetRequest.builder().id(agent.getKbId()).build());
-        applyRagAdvisors(builder, kbVo);
     }
 
     /**

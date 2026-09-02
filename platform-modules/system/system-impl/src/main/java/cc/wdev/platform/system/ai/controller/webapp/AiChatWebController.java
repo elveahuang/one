@@ -146,6 +146,14 @@ public class AiChatWebController extends AbstractController {
     }
 
     @Authenticated
+    @Operation(summary = "智能体流式对话")
+    @ApiResponse(description = "智能体流式对话（ReAct 循环，输出思考/工具调用/工具结果事件与最终回答）")
+    @PostMapping(value = API_V1_PREFIX + "/ai/chat/agent/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> agentStream(@RequestBody SimpleChatRequest request) {
+        return aiChatApi.chatAgentStream(request);
+    }
+
+    @Authenticated
     @Operation(summary = "模型列表")
     @ApiResponse(description = "模型列表")
     @GetMapping(API_V1_PREFIX + "/ai/chat/models")
