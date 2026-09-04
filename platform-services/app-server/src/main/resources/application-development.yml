@@ -163,10 +163,10 @@ platform:
         skills:
             enabled: true
             paths:
-                - file:../../tools/agent/skills
+                - file:../../tools/ai/skills
         memory:
             enabled: true
-            path: file:../../tools/agent/memory
+            path: file:../../tools/ai/memory
     data:
         core:
             enabled: true

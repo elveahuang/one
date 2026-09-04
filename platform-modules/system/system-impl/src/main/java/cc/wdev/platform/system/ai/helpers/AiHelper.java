@@ -122,14 +122,8 @@ public class AiHelper {
      * 获取知识库对应的文档检索器
      */
     public DocumentRetriever resolveDocumentRetriever(@NonNull AiKbVo kb) {
-        return this.resolveDocumentRetriever(kb, this.resolveRetrievalConfig(kb));
-    }
-
-    /**
-     * 获取知识库对应的文档检索器（允许覆盖检索配置）
-     */
-    public DocumentRetriever resolveDocumentRetriever(@NonNull AiKbVo kb, RetrievalConfig config) {
         Filter.Expression filter = this.buildScopeFilter(kb);
+        RetrievalConfig config = this.resolveRetrievalConfig(kb);
         DocumentRetriever retriever = AiUtils.getDocumentRetriever(this.resolveVectorStore(kb), config, filter);
         DocumentReranker reranker = this.resolveDocumentReranker(kb, config);
         if (reranker != null) {
