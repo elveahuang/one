@@ -123,7 +123,7 @@ public class SimpleChatRequest extends Request {
      */
     @Builder.Default
     @Schema(description = "是否支持知识检索")
-    private Boolean withRag = Boolean.TRUE;
+    private Boolean withRag = Boolean.FALSE;
     /**
      * 是否支持能力
      */
