@@ -45,7 +45,6 @@ public class WxCpCacheConfigStorage extends WxCpDefaultConfigImpl {
         this.keyPrefix = keyPrefix;
     }
 
-    @Override
     public void setAgentId(Integer agentId) {
         super.setAgentId(agentId);
 

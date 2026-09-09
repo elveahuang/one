@@ -1,6 +1,8 @@
 package cc.wdev.platform.commons.ai;
 
 import cc.wdev.platform.commons.ai.advisor.SessionMetadataAdvisor;
+import cc.wdev.platform.commons.ai.config.AgentConfig;
+import cc.wdev.platform.commons.ai.config.MemoryConfig;
 import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
 import cc.wdev.platform.commons.ai.enums.AiVectorStoreType;
 import cc.wdev.platform.commons.ai.factory.audio.SpeechModelFactory;
@@ -20,6 +22,8 @@ import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.ObjectProvider;
+
+import java.util.List;
 
 /**
  * @author elvea
@@ -234,5 +238,44 @@ public interface AiManager {
      * 获取文档切分器
      */
     TextSplitter getDocumentTransformer();
+
+    // ------------------------------------------------------------------------
+    // Agent Utils
+    // ------------------------------------------------------------------------
+
+    /**
+     * 增加子智能体和能力的支持
+     */
+    void applyAgentTool(ChatClient.Builder builder);
+
+    /**
+     * 增加子智能体和能力的支持
+     */
+    void applyAgentTool(ChatClient.Builder builder, AgentConfig config);
+
+    /**
+     * 增加长期记忆存储支持
+     */
+    void applyMemoryAdvisor(ChatClient.Builder builder);
+
+    /**
+     * 增加长期记忆存储支持
+     */
+    void applyMemoryAdvisor(ChatClient.Builder builder, MemoryConfig config);
+
+    /**
+     * 对话增加会话存储和日志的支持
+     */
+    void applyBaseAdvisors(ChatClient.Builder builder);
+
+    /**
+     * 对话增加会话存储和日志的支持
+     */
+    void applyTools(ChatClient.Builder builder, final List<String> toolNames);
+
+    /**
+     * 静态对话增加知识检索支持
+     */
+    void applyRagAdvisors(ChatClient.Builder builder);
 
 }

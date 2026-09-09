@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 
 /**
-* 知识库关联表
-*/
+ * 知识库关联表
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,36 +16,36 @@ import lombok.*;
 public class LmsKbItm extends SimpleTenantEntity {
 
     /**
-    * 租户ID
-    */
+     * 租户ID
+     */
     private Long tenantId;
     /**
-    * 知识库ID
-    */
+     * 知识库ID
+     */
     private Long kbId;
     /**
-    * 类型
-    */
+     * 类型
+     */
     private String type;
     /**
-    * 目标类型
-    */
+     * 目标类型
+     */
     private String targetType;
     /**
-    * 课程ID
-    */
+     * 课程ID
+     */
     private Long targetId;
     /**
-    * 目标资源类型
-    */
+     * 目标资源类型
+     */
     private String targetResType;
     /**
-    * 资源ID
-    */
+     * 资源ID
+     */
     private Long targetResId;
     /**
-    * 内容
-    */
+     * 内容
+     */
     private String content;
 
 }

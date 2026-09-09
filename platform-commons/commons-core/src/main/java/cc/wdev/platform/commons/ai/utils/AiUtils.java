@@ -14,17 +14,14 @@ import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.GsonUtils;
 import cc.wdev.platform.commons.utils.SpringUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
-import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -63,6 +60,7 @@ import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 /**
  * @author elvea
  */
+@Slf4j
 public abstract class AiUtils {
 
     public static final SimpleChatContent STREAM_CONTENT_START = SimpleChatContent.builder().type(AiContentType.START.getValue()).build();
@@ -246,17 +244,6 @@ public abstract class AiUtils {
     // Utils
     // ------------------------------------------------------------------------------
 
-    public static ChatMemory getChatMemory() {
-        return MessageWindowChatMemory.builder()
-            .chatMemoryRepository(new InMemoryChatMemoryRepository())
-            .maxMessages(AiConstants.MAX_MEMORY_MESSAGE_COUNT)
-            .build();
-    }
-
-    public static MessageChatMemoryAdvisor getMessageChatMemoryAdvisor(ChatMemory chatMemory) {
-        return MessageChatMemoryAdvisor.builder(chatMemory).scheduler(MessageChatMemoryAdvisor.DEFAULT_SCHEDULER).build();
-    }
-
     public static CustomContextAdvisor getCustomContextAdvisor() {
         return new CustomContextAdvisor();
     }
@@ -381,8 +368,14 @@ public abstract class AiUtils {
     }
 
     // ------------------------------------------------------------------------------
+    // Agent
+    // ------------------------------------------------------------------------------
+
+
+    // ------------------------------------------------------------------------------
     // Config
     // ------------------------------------------------------------------------------
+
 
     public static ModelConfig buildChatModelConfig(ModelCommonsConfig parentConfig, ModelChatConfig modelConfig) {
         String baseUrl = nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());

@@ -125,11 +125,11 @@ public class SimpleChatRequest extends Request {
     @Schema(description = "是否支持知识检索")
     private Boolean withRag = Boolean.FALSE;
     /**
-     * 是否支持能力
+     * 是否支持智能体行为
      */
     @Builder.Default
-    @Schema(description = "是否支持能力")
-    private Boolean withSkills = Boolean.TRUE;
+    @Schema(description = "是否支持智能体行为")
+    private Boolean withAgentEnabled = Boolean.TRUE;
     /**
      * 是否支持长期记忆
      */

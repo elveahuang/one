@@ -28,6 +28,9 @@ public abstract class JacksonUtils {
     };
 
     @Getter
+    public final static JsonMapper simpleObjectMapper = JsonMapper.builder().build();
+
+    @Getter
     public final static JsonMapper objectMapper = JsonMapper.builder()
         .addModule(new CommonModule())
         .enable(JsonReadFeature.ALLOW_UNQUOTED_PROPERTY_NAMES)

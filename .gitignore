@@ -1,12 +1,14 @@
 .gradle
 .idea
 .kotlin
+.agent
 
 build
 target
 logs
 temp
 dist
+arthas-output
 
 application-local.yml
 application-production.yml

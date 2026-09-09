@@ -30,6 +30,7 @@ import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
@@ -156,6 +157,22 @@ public class AiHelper {
                 .allowEmptyContext(true)
                 .build()
             ).build();
+    }
+
+    /**
+     * 增加知识库检索支持
+     */
+    public void applyRagAdvisors(ChatClient.Builder builder, @NonNull AiKbVo kb) {
+        DocumentRetriever retriever = this.resolveDocumentRetriever(kb);
+
+        RetrievalAugmentationAdvisor advisor = RetrievalAugmentationAdvisor.builder()
+            .documentRetriever(retriever)
+            .queryAugmenter(ContextualQueryAugmenter.builder()
+                .allowEmptyContext(true)
+                .build()
+            ).build();
+
+        builder.defaultAdvisors(advisor);
     }
 
     /**

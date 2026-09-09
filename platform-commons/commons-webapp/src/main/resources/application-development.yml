@@ -158,10 +158,6 @@ platform:
                 enabled: true
             pgvector:
                 enabled: true
-        skill:
-            enabled: true
-            paths:
-                - file:../../tools/ai/skills
     data:
         core:
             enabled: true

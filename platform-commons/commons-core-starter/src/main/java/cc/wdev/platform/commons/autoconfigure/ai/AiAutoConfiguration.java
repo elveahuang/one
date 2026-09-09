@@ -19,6 +19,9 @@ import cc.wdev.platform.commons.ai.factory.vectorstore.MariaDBVectorStoreFactory
 import cc.wdev.platform.commons.ai.factory.vectorstore.PgVectorStoreFactory;
 import cc.wdev.platform.commons.ai.factory.vectorstore.VectorStoreFactory;
 import cc.wdev.platform.commons.ai.tools.CommonTools;
+import cc.wdev.platform.commons.ai.ui.UiComponentDefinition;
+import cc.wdev.platform.commons.ai.ui.UiComponentRegistry;
+import cc.wdev.platform.commons.ai.ui.components.TextComponentDefinition;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.*;
 import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
@@ -112,7 +115,7 @@ public class AiAutoConfiguration {
             .splitting(AiUtils.resolveSplittingConfig(SplittingConfig.builder().build(), properties.getSplitting()))
             .retrieval(AiUtils.resolveRetrievalConfig(RetrievalConfig.builder().build(), properties.getRetrieval()))
             .vectorization(properties.getVectorization())
-            .skill(properties.getSkills())
+            .agent(properties.getAgent())
             .memory(properties.getMemory())
             .build();
     }
@@ -325,6 +328,14 @@ public class AiAutoConfiguration {
     @Bean
     public MethodToolCallbackProvider toolCallbackProvider(CommonTools commonTools) {
         return MethodToolCallbackProvider.builder().toolObjects(commonTools).build();
+    }
+
+    @Bean
+    public UiComponentRegistry uiComponentRegistry(List<UiComponentDefinition> definitions) {
+        UiComponentRegistry registry = new UiComponentRegistry();
+        registry.register(definitions);
+        registry.register(new TextComponentDefinition());
+        return registry;
     }
 
     // ------------------------------------------------------------------------------

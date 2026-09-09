@@ -1,6 +1,8 @@
 package cc.wdev.platform.commons.ai;
 
 import cc.wdev.platform.commons.ai.advisor.SessionMetadataAdvisor;
+import cc.wdev.platform.commons.ai.config.AgentConfig;
+import cc.wdev.platform.commons.ai.config.MemoryConfig;
 import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
 import cc.wdev.platform.commons.ai.enums.AiVectorStoreType;
 import cc.wdev.platform.commons.ai.factory.ModelFactory;
@@ -13,10 +15,20 @@ import cc.wdev.platform.commons.ai.model.ModelConfig;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
 import cc.wdev.platform.commons.enums.BaseEnum;
 import cc.wdev.platform.commons.utils.CollectionUtils;
+import cc.wdev.platform.commons.utils.SecurityUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.utils.Lists;
+import org.springaicommunity.agent.advisors.AutoMemoryToolsAdvisor;
+import org.springaicommunity.agent.common.task.subagent.SubagentType;
+import org.springaicommunity.agent.dream.AutoDreamAdvisor;
+import org.springaicommunity.agent.dream.AutoDreamService;
+import org.springaicommunity.agent.tools.SkillsTool;
+import org.springaicommunity.agent.tools.task.TaskTool;
+import org.springaicommunity.agent.tools.task.claude.ClaudeSubagentReferences;
+import org.springaicommunity.agent.tools.task.claude.ClaudeSubagentType;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -25,11 +37,14 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.session.SessionService;
 import org.springframework.ai.session.advisor.SessionMemoryAdvisor;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.io.Resource;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -483,6 +498,149 @@ public class AiManagerImpl implements AiManager {
     @Override
     public TextSplitter getDocumentTransformer() {
         return AiUtils.getDocumentTransformer(this.config.getSplitting());
+    }
+
+    // ------------------------------------------------------------------------
+    // Agent Utils
+    // ------------------------------------------------------------------------
+
+    /**
+     * @see AiManager#applyAgentTool(ChatClient.Builder)
+     */
+    @Override
+    public void applyAgentTool(ChatClient.Builder builder) {
+        this.applyAgentTool(builder, this.getConfig().getAgent());
+    }
+
+    /**
+     * @see AiManager#applyAgentTool(ChatClient.Builder, AgentConfig)
+     */
+    @Override
+    public void applyAgentTool(ChatClient.Builder builder, AgentConfig config) {
+        List<Resource> skillsResources = Lists.newArrayList();
+        List<Resource> agentsResources = Lists.newArrayList();
+
+        if (config.isEnabled()) {
+            // SkillsTool
+            if (CollectionUtils.isNotEmpty(config.getSkills())) {
+                for (Resource resource : config.getSkills()) {
+                    if (resource.exists()) {
+                        log.info("Add skills directory: {}", resource.getDescription());
+                        skillsResources.add(resource);
+                    } else {
+                        log.info("Skills directory {} not exists", resource.getDescription());
+                    }
+                }
+            }
+
+            if (CollectionUtils.isNotEmpty(skillsResources)) {
+                builder.defaultTools(SkillsTool.builder()
+                    .addSkillsResources(skillsResources)
+                    .build()
+                );
+            }
+
+            // TaskTool
+            if (CollectionUtils.isNotEmpty(config.getAgents())) {
+                for (Resource resource : config.getAgents()) {
+                    if (resource.exists()) {
+                        log.info("Add agents directory: {}", resource.getDescription());
+                        agentsResources.add(resource);
+                    } else {
+                        log.info("Agents directory {} not exists", resource.getDescription());
+                    }
+                }
+            }
+
+            if (CollectionUtils.isNotEmpty(skillsResources) && CollectionUtils.isNotEmpty(agentsResources)) {
+                SubagentType claudeType = ClaudeSubagentType.builder()
+                    .chatClientBuilder("default", builder.clone())
+                    .skillsResources(skillsResources)
+                    .build();
+
+                builder.defaultTools(TaskTool.builder()
+                    .subagentReferences(ClaudeSubagentReferences.fromResources(agentsResources))
+                    .subagentTypes(claudeType)
+                    .build()
+                );
+            }
+        }
+    }
+
+    /**
+     * @see AiManager#applyMemoryAdvisor(ChatClient.Builder)
+     */
+    @Override
+    public void applyMemoryAdvisor(ChatClient.Builder builder) {
+        this.applyMemoryAdvisor(builder, this.getConfig().getMemory());
+    }
+
+    /**
+     * @see AiManager#applyMemoryAdvisor(ChatClient.Builder, MemoryConfig)
+     */
+    @Override
+    public void applyMemoryAdvisor(ChatClient.Builder builder, MemoryConfig config) {
+        if (config.isEnabled() && StringUtils.isNotEmpty(config.getPath())) {
+            // 长期记忆需要按租户和用户进行隔离
+            String path = Paths.get(config.getPath())
+                .resolve(String.valueOf(SecurityUtils.getTid()))
+                .resolve(String.valueOf(SecurityUtils.getUid()))
+                .normalize()
+                .toString();
+            log.info("Apply memory directory: {}", path);
+
+            // AutoMemoryToolsAdvisor
+            AutoMemoryToolsAdvisor autoMemoryToolsAdvisor = AutoMemoryToolsAdvisor.builder()
+                .memoriesRootDirectory(path)
+                .build();
+            builder.defaultAdvisors(autoMemoryToolsAdvisor);
+
+            // AutoDreamAdvisor
+            AutoDreamService autoDreamService = AutoDreamService.builder(builder.clone()).build();
+            AutoDreamAdvisor autoDreamAdvisor = AutoDreamAdvisor.builder()
+                .memoriesRootDirectory(path)
+                .dreamService(autoDreamService)
+                .build();
+            builder.defaultAdvisors(autoDreamAdvisor);
+        }
+    }
+
+    /**
+     * @see AiManager#applyBaseAdvisors(ChatClient.Builder)
+     */
+    @Override
+    public void applyBaseAdvisors(ChatClient.Builder builder) {
+        builder.defaultAdvisors(AiUtils.getCustomLoggingAdvisor());
+        builder.defaultAdvisors(AiUtils.getCustomContextAdvisor());
+        builder.defaultAdvisors(this.getSessionMetadataAdvisor());
+        builder.defaultAdvisors(this.getSessionMemoryAdvisor());
+    }
+
+    /**
+     * @see AiManager#applyBaseAdvisors(ChatClient.Builder)
+     */
+    @Override
+    public void applyTools(ChatClient.Builder builder, final List<String> toolNames) {
+        if (CollectionUtils.isNotEmpty(toolNames)) {
+            List<ToolCallback> objects = Lists.newArrayList();
+            this.getToolCallbackResolver().ifAvailable(resolver -> {
+                for (String toolName : toolNames) {
+                    ToolCallback object = resolver.resolve(toolName);
+                    if (object != null) {
+                        objects.add(object);
+                    }
+                }
+            });
+            builder.defaultTools(objects);
+        }
+    }
+
+    /**
+     * @see AiManager#applyRagAdvisors(ChatClient.Builder)
+     */
+    @Override
+    public void applyRagAdvisors(ChatClient.Builder builder) {
+        builder.defaultAdvisors(this.getRetrievalAugmentationAdvisor());
     }
 
 }

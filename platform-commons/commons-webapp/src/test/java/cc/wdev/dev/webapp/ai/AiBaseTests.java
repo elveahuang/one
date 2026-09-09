@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * @author elvea
  */
-public class AiTests extends BaseTests {
+public class AiBaseTests extends BaseTests {
 
     @Autowired
     private AiManager aiManager;
