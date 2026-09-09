@@ -46,9 +46,9 @@ public class AiServiceImpl implements AiService {
     public Flux<String> chatStream(SimpleChatRequest request) {
         AiUtils.processChatRequest(request);
 
-        ChatClient chatClient = this.getChatClient();
-        ChatClient.ChatClientRequestSpec chatSpec = AiUtils.processChatSpec(chatClient, request);
-        return chatSpec.stream().content();
+        ChatClient client = this.getChatClient();
+        ChatClient.ChatClientRequestSpec spec = AiUtils.processChatSpec(client, request);
+        return spec.stream().content();
     }
 
     /**

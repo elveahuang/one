@@ -8,6 +8,7 @@ import cc.wdev.webapp.ai.service.AiService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.compress.utils.Lists;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -36,7 +37,7 @@ public class ChatController {
         return this.aiService.chatText(request);
     }
 
-    @PostMapping("/chat/stream")
+    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chatCompletionStream(@RequestBody SimpleChatRequest request) {
         return this.aiService.chatStream(request);
     }
