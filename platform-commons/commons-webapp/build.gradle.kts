@@ -7,7 +7,6 @@ plugins {
 dependencies {
     implementation(libs.bundles.springBootCore)
     implementation(libs.bundles.springBootServletStarter)
-    implementation(libs.bundles.springBootArthasStarter)
     implementation(libs.bundles.springAiCore)
     implementation(libs.bundles.springAiReader)
     implementation(libs.bundles.springAiRagCore)

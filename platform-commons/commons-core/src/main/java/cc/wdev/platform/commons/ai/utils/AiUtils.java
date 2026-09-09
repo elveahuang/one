@@ -7,13 +7,12 @@ import cc.wdev.platform.commons.ai.advisor.SessionMetadataAdvisor;
 import cc.wdev.platform.commons.ai.config.*;
 import cc.wdev.platform.commons.ai.domain.chat.SimpleChatContent;
 import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
+import cc.wdev.platform.commons.ai.enums.AiChatType;
 import cc.wdev.platform.commons.ai.enums.AiContentType;
+import cc.wdev.platform.commons.ai.enums.AiResponseType;
 import cc.wdev.platform.commons.ai.model.ModelConfig;
 import cc.wdev.platform.commons.ai.model.SimpleModelConfig;
-import cc.wdev.platform.commons.utils.CollectionUtils;
-import cc.wdev.platform.commons.utils.GsonUtils;
-import cc.wdev.platform.commons.utils.SpringUtils;
-import cc.wdev.platform.commons.utils.StringUtils;
+import cc.wdev.platform.commons.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.compress.utils.Lists;
@@ -309,6 +308,19 @@ public abstract class AiUtils {
             .build();
     }
 
+    /**
+     * 预处理请求
+     * 1. 重要参数，比如租户和用户信息等，不管前端有没有传参数过来都直接覆盖
+     * 2. 其他参数，前端没传参数过来，那么按预设的复制
+     */
+    public static void processChatRequest(SimpleChatRequest request) {
+        request.setTenantId(SecurityUtils.getTid());
+        request.setUserId(null != request.getUserId() && request.getUserId() > 0 ? request.getUserId() : SecurityUtils.getUid());
+        request.setConversationId(StringUtils.nvl(request.getConversationId(), AiUtils.generateConversationId()));
+        request.setResponseType(StringUtils.nvl(request.getResponseType(), AiResponseType.TEXT.getValue()));
+        request.setChatType(StringUtils.nvl(request.getResponseType(), AiChatType.STATIC.getValue()));
+    }
+
     public static ChatClient.ChatClientRequestSpec processChatSpec(ChatClient chatClient, SimpleChatRequest request) {
         ChatClient.ChatClientRequestSpec spec = chatClient.prompt().advisors(a -> {
             a.param(CAHT_CONTEXT_SESSION_ID_KEY, request.getConversationId());
@@ -323,13 +335,8 @@ public abstract class AiUtils {
             u.metadata(METADATA_CHAT_TYPE, request.getChatType());
             u.metadata(METADATA_AGENT_CODE, StringUtils.nvl(request.getAgentCode()));
         });
-
-        // Tool Calling
-        List<ToolCallback> tools = getToolObject(request.getToolNames());
-        if (CollectionUtils.isNotEmpty(tools)) {
-            spec.toolContext(Map.of(AiConstants.METADATA_USER_ID, request.getUserId()));
-            spec.tools(tools);
-        }
+        // 工具上下文
+        spec.toolContext(Map.of(AiConstants.METADATA_USER_ID, request.getUserId()));
         // 系统提示词
         if (StringUtils.isNotEmpty(request.getSystemPrompt())) {
             spec = spec.system(request.getSystemPrompt());

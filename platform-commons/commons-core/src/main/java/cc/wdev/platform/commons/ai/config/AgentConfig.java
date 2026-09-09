@@ -28,4 +28,7 @@ public class AgentConfig implements Serializable {
     @Builder.Default
     private List<Resource> skills = List.of(new ClassPathResource("META-INF/cc.wdev/skills"));
 
+    @Builder.Default
+    private Resource prompts = new ClassPathResource("META-INF/cc.wdev/prompts");
+
 }

@@ -1,15 +1,13 @@
 package cc.wdev.webapp.web;
 
-import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.domain.chat.SimpleChatResponse;
 import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
-import cc.wdev.platform.commons.ai.utils.AiUtils;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.utils.StringUtils;
+import cc.wdev.webapp.ai.service.AiService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.compress.utils.Lists;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -21,7 +19,7 @@ import reactor.core.publisher.Flux;
 @Tag(name = "ChatController", description = "对话控制器")
 public class ChatController {
 
-    private final AiManager aiManager;
+    private final AiService aiService;
 
     @GetMapping("/chat/start")
     public R<SimpleChatResponse> chatStart(@RequestParam(value = "conversationId", defaultValue = "") String conversationId) {
@@ -35,16 +33,12 @@ public class ChatController {
 
     @PostMapping("/chat/text")
     public String chatCompletionText(@RequestBody SimpleChatRequest request) {
-        ChatClient chatClient = aiManager.getChatModelFactory().getChatClient();
-        ChatClient.ChatClientRequestSpec chatSpec = AiUtils.processChatSpec(chatClient, request);
-        return chatSpec.call().content();
+        return this.aiService.chatText(request);
     }
 
     @PostMapping("/chat/stream")
     public Flux<String> chatCompletionStream(@RequestBody SimpleChatRequest request) {
-        ChatClient chatClient = aiManager.getChatModelFactory().getChatClient();
-        ChatClient.ChatClientRequestSpec chatSpec = AiUtils.processChatSpec(chatClient, request);
-        return chatSpec.stream().content();
+        return this.aiService.chatStream(request);
     }
 
 }

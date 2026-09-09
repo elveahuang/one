@@ -39,7 +39,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 import static cc.wdev.platform.commons.enums.ResponseCodeEnum.AI_INVALID_CHAT_TYPE;
-import static cc.wdev.platform.commons.utils.StringUtils.nvl;
 
 /**
  * 智能聊天服务实现
@@ -74,7 +73,7 @@ public class AiChatApiImpl implements AiChatApi {
      */
     @Override
     public String chatText(SimpleChatRequest request) {
-        preHandleChatRequest(request);
+        AiUtils.processChatRequest(request);
 
         log.info("chatText [{}] start", request.getConversationId());
         ChatClient chatClient = this.getChatClient(request);
@@ -88,7 +87,7 @@ public class AiChatApiImpl implements AiChatApi {
      */
     @Override
     public Flux<String> chatStream(SimpleChatRequest request) {
-        preHandleChatRequest(request);
+        AiUtils.processChatRequest(request);
 
         log.info("chatStream [{}] start", request.getConversationId());
         ChatClient chatClient = this.getChatClient(request);
@@ -160,18 +159,6 @@ public class AiChatApiImpl implements AiChatApi {
     // ------------------------------------------------------------------------
     // 私有辅助方法
     // ------------------------------------------------------------------------
-
-    /**
-     * 预处理请求
-     * 1. 重要参数，比如租户和用户信息等，不管前端有没有传参数过来都直接覆盖
-     * 2. 其他参数，前端没传参数过来，那么按预设的复制
-     */
-    private void preHandleChatRequest(SimpleChatRequest request) {
-        request.setTenantId(SecurityUtils.getTid());
-        request.setUserId(null != request.getUserId() && request.getUserId() > 0 ? request.getUserId() : SecurityUtils.getUid());
-        request.setConversationId(nvl(request.getConversationId(), AiUtils.generateConversationId()));
-        request.setResponseType(nvl(request.getResponseType(), AiResponseType.TEXT.getValue()));
-    }
 
     /**
      * 获取ChatClient
