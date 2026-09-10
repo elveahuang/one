@@ -34,4 +34,16 @@ public class GetRequest extends Request {
     @Schema(description = "实体编号")
     private String code;
 
+    public static GetRequest of(Long id) {
+        return GetRequest.builder().id(id).build();
+    }
+
+    public static GetRequest of(String code) {
+        return GetRequest.builder().code(code).build();
+    }
+
+    public static GetRequest of(Long id, String code) {
+        return GetRequest.builder().id(id).code(code).build();
+    }
+
 }

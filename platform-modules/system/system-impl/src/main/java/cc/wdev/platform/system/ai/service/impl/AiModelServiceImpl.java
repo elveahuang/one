@@ -15,13 +15,13 @@ import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.ai.domain.converter.AiModelConverter;
 import cc.wdev.platform.system.ai.domain.entity.AiModelEntity;
-import cc.wdev.platform.system.ai.domain.request.AiModelGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiModelSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiModelSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiModelSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
 import cc.wdev.platform.system.ai.repository.AiModelRepository;
 import cc.wdev.platform.system.ai.service.AiModelService;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,10 +52,10 @@ public class AiModelServiceImpl
     }
 
     /**
-     * @see AiModelService#getAiModel(AiModelGetRequest)
+     * @see AiModelService#getAiModel(GetRequest)
      */
     @Override
-    public AiModelVo getAiModel(AiModelGetRequest request) {
+    public AiModelVo getAiModel(GetRequest request) {
         AiModelEntity entity = null;
         if (StringUtils.isNotEmpty(request.getCode())) {
             entity = this.findCacheByCode(request.getCode().trim());

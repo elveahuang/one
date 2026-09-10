@@ -6,7 +6,9 @@ import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
 import cc.wdev.platform.commons.ai.enums.AiChatType;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
-import cc.wdev.platform.system.ai.domain.request.*;
+import cc.wdev.platform.system.ai.domain.request.AiAgentSaveRequest;
+import cc.wdev.platform.system.ai.domain.request.AiKbSaveRequest;
+import cc.wdev.platform.system.ai.domain.request.AiModelSaveRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentVo;
 import cc.wdev.platform.system.ai.domain.vo.AiKbVo;
 import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
@@ -74,7 +76,7 @@ public class AiBaseTests extends BaseTests {
     @Test
     public void initializeAgent() {
         // 初始化文本模型
-        AiModelVo chatModelVo = aiModelApi.getAiModel(AiModelGetRequest.builder().code(AiModelBizTypeEnum.DEEPSEEK_V4_FLASH.getValue()).build());
+        AiModelVo chatModelVo = aiModelApi.getAiModel(GetRequest.builder().code(AiModelBizTypeEnum.DEEPSEEK_V4_FLASH.getValue()).build());
         Assertions.assertNotNull(chatModelVo);
 
         AiModelSaveRequest chatModelSaveRequest = AiModelSaveRequest.builder()
@@ -86,7 +88,7 @@ public class AiBaseTests extends BaseTests {
         this.aiModelApi.saveAiModel(chatModelSaveRequest);
 
         // 初始化向量模型
-        AiModelVo embeddingModelVo = aiModelApi.getAiModel(AiModelGetRequest.builder().code(AiModelBizTypeEnum.ALIYUN_TEXT_EMBEDDING.getValue()).build());
+        AiModelVo embeddingModelVo = aiModelApi.getAiModel(GetRequest.builder().code(AiModelBizTypeEnum.ALIYUN_TEXT_EMBEDDING.getValue()).build());
         Assertions.assertNotNull(embeddingModelVo);
 
         AiModelSaveRequest embeddingModelSaveRequest = AiModelSaveRequest.builder()
@@ -116,7 +118,7 @@ public class AiBaseTests extends BaseTests {
         List<AiToolSimpleVo> tools = this.aiToolApi.getTools();
 
         // 读取默认智能体
-        AiAgentVo aiAgentVo = this.aiAgentApi.getAiAgent(AiAgentGetRequest.builder().code(AiAgentBizTypeEnum.TEST.getValue()).build());
+        AiAgentVo aiAgentVo = this.aiAgentApi.getAiAgent(GetRequest.builder().code(AiAgentBizTypeEnum.TEST.getValue()).build());
         Assertions.assertNotNull(aiAgentVo);
 
         // 保存默认智能体

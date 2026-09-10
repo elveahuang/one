@@ -45,6 +45,7 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 
 import java.util.Collections;
@@ -346,6 +347,27 @@ public abstract class AiUtils {
             spec = spec.options(ChatOptions.builder().temperature(request.getTemperature().doubleValue()));
         }
         return spec;
+    }
+
+    public static String processChatResponse(ChatClient.ChatClientRequestSpec spec, SimpleChatRequest request) {
+        log.info("processChatResponse [{}] text", request.getConversationId());
+        return spec.call().content();
+    }
+
+    public static Flux<String> processStreamChatResponse(ChatClient.ChatClientRequestSpec spec, SimpleChatRequest request) {
+        if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.JSON.getValue().equalsIgnoreCase(request.getResponseType())) {
+            try {
+                log.info("processChatStreamResponse [{}] json", request.getConversationId());
+                Flux<String> flux = spec.stream().content().map(AiUtils::getTextContent);
+                return Flux.concat(Mono.just(AiUtils.getStartContent()), flux, Mono.just(AiUtils.getEndContent()));
+            } catch (Exception e) {
+                log.error("processChatStreamResponse [{}] error", request.getConversationId(), e);
+                return Flux.just(AiUtils.getErrorContent());
+            }
+        } else {
+            log.info("processChatStreamResponse [{}] text", request.getConversationId());
+            return spec.stream().content();
+        }
     }
 
     public static @Nullable String getChatResponseContent(ChatResponse chatResponse) {

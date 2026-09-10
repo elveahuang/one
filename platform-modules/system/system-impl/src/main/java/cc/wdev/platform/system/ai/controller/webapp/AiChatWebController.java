@@ -14,7 +14,6 @@ import cc.wdev.platform.system.ai.api.AiAgentApi;
 import cc.wdev.platform.system.ai.api.AiChatApi;
 import cc.wdev.platform.system.ai.api.AiModelApi;
 import cc.wdev.platform.system.ai.domain.entity.AiSessionEntity;
-import cc.wdev.platform.system.ai.domain.request.AiAgentGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiChatDeleteRequest;
 import cc.wdev.platform.system.ai.domain.request.AiChatGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiChatSearchRequest;
@@ -23,6 +22,7 @@ import cc.wdev.platform.system.ai.domain.vo.AiAgentVo;
 import cc.wdev.platform.system.ai.domain.vo.AiChatVo;
 import cc.wdev.platform.system.ai.domain.vo.AiModelSimpleVo;
 import cc.wdev.platform.system.ai.service.AiSessionService;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -115,7 +115,7 @@ public class AiChatWebController extends AbstractController {
             log.debug("Start new conversation with id - {}", conversationId);
 
             if (StringUtils.isNotEmpty(code)) {
-                AiAgentVo aiAgentVo = aiAgentApi.getAiAgent(AiAgentGetRequest.builder().code(code).build());
+                AiAgentVo aiAgentVo = aiAgentApi.getAiAgent(GetRequest.builder().code(code).build());
                 if (null != aiAgentVo && StringUtils.isNotBlank(aiAgentVo.getGreeting())) {
                     messages.add(AssistantMessage.builder().content(aiAgentVo.getGreeting()).build());
                 }

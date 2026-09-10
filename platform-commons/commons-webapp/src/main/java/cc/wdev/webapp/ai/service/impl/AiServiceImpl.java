@@ -34,9 +34,10 @@ public class AiServiceImpl implements AiService {
     public String chatText(SimpleChatRequest request) {
         AiUtils.processChatRequest(request);
 
-        ChatClient chatClient = this.getChatClient();
-        ChatClient.ChatClientRequestSpec chatSpec = AiUtils.processChatSpec(chatClient, request);
-        return chatSpec.call().content();
+        ChatClient client = this.getChatClient();
+        ChatClient.ChatClientRequestSpec spec = AiUtils.processChatSpec(client, request);
+
+        return AiUtils.processChatResponse(spec, request);
     }
 
     /**
@@ -48,7 +49,8 @@ public class AiServiceImpl implements AiService {
 
         ChatClient client = this.getChatClient();
         ChatClient.ChatClientRequestSpec spec = AiUtils.processChatSpec(client, request);
-        return spec.stream().content();
+
+        return AiUtils.processStreamChatResponse(spec, request);
     }
 
     /**

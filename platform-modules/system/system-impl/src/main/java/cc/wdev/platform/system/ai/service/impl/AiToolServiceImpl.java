@@ -11,13 +11,13 @@ import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.ai.domain.converter.AiToolConverter;
 import cc.wdev.platform.system.ai.domain.entity.AiToolEntity;
-import cc.wdev.platform.system.ai.domain.request.AiToolGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiToolSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiToolVo;
 import cc.wdev.platform.system.ai.repository.AiToolRepository;
 import cc.wdev.platform.system.ai.service.AiToolService;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -51,10 +51,10 @@ public class AiToolServiceImpl extends BaseCachingEntityService<AiToolEntity, Lo
     }
 
     /**
-     * @see AiToolService#getAiTool(AiToolGetRequest)
+     * @see AiToolService#getAiTool(GetRequest)
      */
     @Override
-    public AiToolVo getAiTool(AiToolGetRequest request) {
+    public AiToolVo getAiTool(GetRequest request) {
         AiToolEntity entity = null;
         if (StringUtils.isNotEmpty(request.getCode())) {
             entity = this.findCacheByCode(request.getCode().trim());

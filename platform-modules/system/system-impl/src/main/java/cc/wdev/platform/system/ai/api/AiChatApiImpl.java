@@ -3,7 +3,6 @@ package cc.wdev.platform.system.ai.api;
 import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
 import cc.wdev.platform.commons.ai.enums.AiChatType;
-import cc.wdev.platform.commons.ai.enums.AiResponseType;
 import cc.wdev.platform.commons.ai.model.SimpleModelConfig;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
 import cc.wdev.platform.commons.enums.BaseEnum;
@@ -13,7 +12,9 @@ import cc.wdev.platform.commons.utils.NumberUtils;
 import cc.wdev.platform.commons.utils.SecurityUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.ai.domain.entity.AiSessionEntity;
-import cc.wdev.platform.system.ai.domain.request.*;
+import cc.wdev.platform.system.ai.domain.request.AiChatDeleteRequest;
+import cc.wdev.platform.system.ai.domain.request.AiChatGetRequest;
+import cc.wdev.platform.system.ai.domain.request.AiChatSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentVo;
 import cc.wdev.platform.system.ai.domain.vo.AiChatVo;
 import cc.wdev.platform.system.ai.domain.vo.AiKbVo;
@@ -29,12 +30,10 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.session.SessionService;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -74,12 +73,12 @@ public class AiChatApiImpl implements AiChatApi {
     @Override
     public String chatText(SimpleChatRequest request) {
         AiUtils.processChatRequest(request);
-
         log.info("chatText [{}] start", request.getConversationId());
         ChatClient chatClient = this.getChatClient(request);
         log.info("chatText [{}] process", request.getConversationId());
         ChatClient.ChatClientRequestSpec spec = AiUtils.processChatSpec(chatClient, request);
-        return spec.call().content();
+        log.info("chatText [{}] response", request.getConversationId());
+        return AiUtils.processChatResponse(spec, request);
     }
 
     /**
@@ -88,24 +87,12 @@ public class AiChatApiImpl implements AiChatApi {
     @Override
     public Flux<String> chatStream(SimpleChatRequest request) {
         AiUtils.processChatRequest(request);
-
         log.info("chatStream [{}] start", request.getConversationId());
         ChatClient chatClient = this.getChatClient(request);
         log.info("chatStream [{}] process", request.getConversationId());
         ChatClient.ChatClientRequestSpec spec = AiUtils.processChatSpec(chatClient, request);
-        if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.JSON.getValue().equalsIgnoreCase(request.getResponseType())) {
-            try {
-                log.info("handleStreamChat [{}] json", request.getConversationId());
-                Flux<String> flux = spec.stream().content().map(AiUtils::getTextContent);
-                return Flux.concat(Mono.just(AiUtils.getStartContent()), flux, Mono.just(AiUtils.getEndContent()));
-            } catch (Exception e) {
-                log.error("handleStreamChat [{}] error", request.getConversationId(), e);
-                return Flux.just(AiUtils.getErrorContent());
-            }
-        } else {
-            log.info("handleStreamChat [{}] text", request.getConversationId());
-            return spec.stream().content();
-        }
+        log.info("chatStream [{}] response", request.getConversationId());
+        return AiUtils.processStreamChatResponse(spec, request);
     }
 
     /**
@@ -177,9 +164,7 @@ public class AiChatApiImpl implements AiChatApi {
      * 获取系统内置对话模型ChatClient
      */
     private ChatClient getDefaultChatClient(SimpleChatRequest request) {
-        ChatModel model = this.aiManager.getChatModel();
-
-        ChatClient.Builder builder = ChatClient.builder(model);
+        ChatClient.Builder builder = ChatClient.builder(this.aiManager.getChatModel());
         if (request.getWithAgentEnabled()) {
             this.aiManager.applyAgentTool(builder);
         }
@@ -199,11 +184,7 @@ public class AiChatApiImpl implements AiChatApi {
      * 获取模型对话的ChatClient
      */
     private ChatClient getChatClientByModel(SimpleChatRequest request) {
-        AiModelVo modelVo = this.aiModelApi.getAiModel(AiModelGetRequest.builder()
-            .id(request.getModelId())
-            .code(request.getModelCode())
-            .build()
-        );
+        AiModelVo modelVo = this.aiModelApi.getAiModel(GetRequest.of(request.getModelId(), request.getModelCode()));
 
         ChatModel model = this.aiManager.getChatModel(SimpleModelConfig.builder()
             .name(modelVo.getModelName())
@@ -221,11 +202,7 @@ public class AiChatApiImpl implements AiChatApi {
      * 获取智能体对话的ChatClient
      */
     private ChatClient getChatClientByAgent(SimpleChatRequest request) {
-        AiAgentVo agent = this.aiAgentApi.getAiAgent(AiAgentGetRequest.builder()
-            .id(request.getAgentId())
-            .code(request.getAgentCode())
-            .build()
-        );
+        AiAgentVo agent = this.aiAgentApi.getAiAgent(GetRequest.of(request.getAgentId(), request.getAgentCode()));
 
         ChatModel model = this.aiManager.getChatModel(SimpleModelConfig.builder()
             .name(agent.getModel().getModelName())
@@ -237,16 +214,11 @@ public class AiChatApiImpl implements AiChatApi {
             .build());
 
         ChatClient.Builder builder = ChatClient.builder(model);
+        this.aiManager.applyAgentTool(builder);
         this.aiManager.applyTools(builder, agent.getToolNames());
         this.aiManager.applyBaseAdvisors(builder);
+        this.aiManager.applyMemoryAdvisor(builder);
         this.aiHelper.applyRagAdvisors(builder, this.aiKbApi.getKb(GetRequest.builder().id(agent.getKbId()).build()));
-        // 智能体系统提示词（模板渲染）与温度
-        if (StringUtils.isNotEmpty(agent.getSystemPrompt())) {
-            builder.defaultSystem(AiUtils.renderPrompt(agent.getSystemPrompt(), request.getParams()));
-        }
-        if (agent.getTemperature() != null && agent.getTemperature().doubleValue() > 0) {
-            builder.defaultOptions(ChatOptions.builder().temperature(agent.getTemperature().doubleValue()));
-        }
         return builder.build();
     }
 
@@ -254,27 +226,20 @@ public class AiChatApiImpl implements AiChatApi {
      * 获取知识库对话的ChatClient
      */
     private ChatClient getChatClientByKb(SimpleChatRequest request) {
-        AiKbVo kbVo = this.aiKbApi.getKb(GetRequest.builder()
-            .id(request.getKbId())
-            .code(request.getKbCode())
-            .build()
-        );
+        AiKbVo kb = this.aiKbApi.getKb(GetRequest.of(request.getKbId(), request.getKbCode()));
 
         ChatModel chatModel = this.aiManager.getChatModel(SimpleModelConfig.builder()
-            .name(kbVo.getChatModel().getModelName())
-            .modelType(kbVo.getChatModel().getModelType())
-            .serviceProvider(kbVo.getChatModel().getServiceProvider())
-            .modelProvider(kbVo.getChatModel().getModelProvider())
-            .baseUrl(kbVo.getChatModel().getBaseUrl())
-            .apiKey(kbVo.getChatModel().getApiKey())
+            .name(kb.getChatModel().getModelName())
+            .modelType(kb.getChatModel().getModelType())
+            .serviceProvider(kb.getChatModel().getServiceProvider())
+            .modelProvider(kb.getChatModel().getModelProvider())
+            .baseUrl(kb.getChatModel().getBaseUrl())
+            .apiKey(kb.getChatModel().getApiKey())
             .build());
 
         ChatClient.Builder builder = ChatClient.builder(chatModel);
         this.aiManager.applyBaseAdvisors(builder);
-        this.aiHelper.applyRagAdvisors(builder, kbVo);
-        if (request.getTemperature() != null && request.getTemperature() > 0) {
-            builder.defaultOptions(ChatOptions.builder().temperature(request.getTemperature().doubleValue()));
-        }
+        this.aiHelper.applyRagAdvisors(builder, kb);
         return builder.build();
     }
 

@@ -2,11 +2,11 @@ package cc.wdev.platform.system.ai.service;
 
 import cc.wdev.platform.commons.service.CachingEntityService;
 import cc.wdev.platform.system.ai.domain.entity.AiToolEntity;
-import cc.wdev.platform.system.ai.domain.request.AiToolGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiToolSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiToolVo;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public interface AiToolService extends CachingEntityService<AiToolEntity, Long> 
     /**
      * 获取工具
      */
-    AiToolVo getAiTool(AiToolGetRequest request);
+    AiToolVo getAiTool(GetRequest request);
 
     /**
      * 保存工具

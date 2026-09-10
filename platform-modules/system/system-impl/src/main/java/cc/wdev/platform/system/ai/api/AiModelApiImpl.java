@@ -9,7 +9,6 @@ import cc.wdev.platform.commons.exception.ServiceException;
 import cc.wdev.platform.commons.utils.ClassUtils;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.system.ai.domain.entity.AiModelEntity;
-import cc.wdev.platform.system.ai.domain.request.AiModelGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiModelSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiModelSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiModelSimpleVo;
@@ -17,6 +16,7 @@ import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
 import cc.wdev.platform.system.ai.enums.BaseAiModelBizTypeEnum;
 import cc.wdev.platform.system.ai.service.AiModelService;
 import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -118,10 +118,10 @@ public class AiModelApiImpl implements AiModelApi {
     }
 
     /**
-     * @see AiModelApi#getAiModel(AiModelGetRequest)
+     * @see AiModelApi#getAiModel(GetRequest)
      */
     @Override
-    public AiModelVo getAiModel(AiModelGetRequest request) {
+    public AiModelVo getAiModel(GetRequest request) {
         return aiModelService.getAiModel(request);
     }
 
@@ -143,11 +143,7 @@ public class AiModelApiImpl implements AiModelApi {
     @Override
     public ChatClient getChatClient(SimpleChatRequest request) {
         // 查询大模型
-        AiModelVo aiModel = this.aiModelService.getAiModel(AiModelGetRequest.builder()
-            .id(request.getModelId())
-            .code(request.getModelCode())
-            .build()
-        );
+        AiModelVo aiModel = this.aiModelService.getAiModel(GetRequest.builder().id(request.getModelId()).code(request.getModelCode()).build());
 
         SimpleModelConfig config = SimpleModelConfig.builder()
             .name(aiModel.getModelName())

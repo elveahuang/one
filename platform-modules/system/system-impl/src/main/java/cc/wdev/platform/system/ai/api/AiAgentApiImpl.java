@@ -1,6 +1,5 @@
 package cc.wdev.platform.system.ai.api;
 
-import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.enums.ActiveTypeEnum;
 import cc.wdev.platform.commons.enums.StatusTypeEnum;
 import cc.wdev.platform.commons.exception.ServiceException;
@@ -10,10 +9,8 @@ import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.system.ai.domain.entity.AiAgentEntity;
 import cc.wdev.platform.system.ai.domain.entity.AiRelationEntity;
 import cc.wdev.platform.system.ai.domain.entity.AiToolEntity;
-import cc.wdev.platform.system.ai.domain.request.AiAgentGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiAgentSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiAgentSearchRequest;
-import cc.wdev.platform.system.ai.domain.request.AiModelGetRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentVo;
 import cc.wdev.platform.system.ai.domain.vo.AiKbVo;
@@ -44,8 +41,6 @@ import static cc.wdev.platform.system.commons.constants.SystemConstants.GLOABL_B
 @Service
 @AllArgsConstructor
 public class AiAgentApiImpl implements AiAgentApi {
-
-    private final AiManager aiManager;
 
     private final AiAgentService aiAgentService;
 
@@ -100,10 +95,10 @@ public class AiAgentApiImpl implements AiAgentApi {
     // ------------------------------------------------------------------------------
 
     /**
-     * @see AiAgentApi#getAiAgent(AiAgentGetRequest)
+     * @see AiAgentApi#getAiAgent(GetRequest)
      */
     @Override
-    public @NonNull AiAgentVo getAiAgent(AiAgentGetRequest request) {
+    public @NonNull AiAgentVo getAiAgent(GetRequest request) {
         AiAgentVo vo = this.aiAgentService.getAiAgent(request);
         getAiAgentExtra(vo);
         return vo;
@@ -186,7 +181,7 @@ public class AiAgentApiImpl implements AiAgentApi {
 
         // 获取模型详情
         if (ObjectUtils.isValidId(aiAgentVo.getModelId())) {
-            AiModelVo aiModelVo = aiModelService.getAiModel(AiModelGetRequest.builder().id(aiAgentVo.getModelId()).build());
+            AiModelVo aiModelVo = aiModelService.getAiModel(GetRequest.of(aiAgentVo.getModelId()));
             if (aiModelVo == null) {
                 throw new ServiceException(AI_INVALID_AGENT_MODEL);
             }
@@ -195,7 +190,7 @@ public class AiAgentApiImpl implements AiAgentApi {
 
         // 获取知识库详情
         if (ObjectUtils.isValidId(aiAgentVo.getKbId())) {
-            AiKbVo aiKbVo = aiKbService.getKb(GetRequest.builder().id(aiAgentVo.getKbId()).build());
+            AiKbVo aiKbVo = aiKbService.getKb(GetRequest.of(aiAgentVo.getKbId()));
             if (aiKbVo != null) {
                 aiAgentVo.setKb(aiKbVo);
             }

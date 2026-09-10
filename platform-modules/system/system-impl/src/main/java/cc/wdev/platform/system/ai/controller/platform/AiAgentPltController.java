@@ -6,13 +6,13 @@ import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
 import cc.wdev.platform.system.ai.api.AiAgentApi;
 import cc.wdev.platform.system.ai.api.AiModelApi;
 import cc.wdev.platform.system.ai.api.AiToolApi;
-import cc.wdev.platform.system.ai.domain.request.AiAgentGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiAgentSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiAgentSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentParamVo;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentVo;
 import cc.wdev.platform.system.ai.service.AiAgentService;
 import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -66,7 +66,7 @@ public class AiAgentPltController extends AbstractController {
     @ApiResponse(description = "查询智能体详情")
     @GetMapping(API_V1_SYS_PREFIX + "/ai/agent/details")
     public R<AiAgentVo> details(@Parameter(description = "智能体ID") @RequestParam("id") Long id) {
-        return R.success(aiAgentApi.getAiAgent(AiAgentGetRequest.builder().id(id).build()));
+        return R.success(aiAgentApi.getAiAgent(GetRequest.builder().id(id).build()));
     }
 
     @PreAuthorize("hasAnyAuthority('dev:ai:config:agent')")

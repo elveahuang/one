@@ -6,7 +6,6 @@ import cc.wdev.platform.commons.ai.enums.AiVectorizationStatus;
 import cc.wdev.platform.commons.constants.DateTimeConstants;
 import cc.wdev.platform.commons.utils.DateTimeUtils;
 import cc.wdev.platform.system.ai.domain.request.AiKbItemSaveRequest;
-import cc.wdev.platform.system.ai.domain.request.AiModelGetRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiKbItemVo;
 import cc.wdev.platform.system.ai.domain.vo.AiKbVo;
 import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
@@ -76,7 +75,7 @@ public class AiKbApiTests extends BaseTests {
     @Test
     public void baseVectorStoreTest() {
         // 获取知识库向量模型
-        AiModelVo modelVo = aiModelApi.getAiModel(AiModelGetRequest.builder().code(AiModelBizTypeEnum.ALIYUN_TEXT_EMBEDDING.getValue()).build());
+        AiModelVo modelVo = aiModelApi.getAiModel(GetRequest.builder().code(AiModelBizTypeEnum.ALIYUN_TEXT_EMBEDDING.getValue()).build());
         Assertions.assertNotNull(modelVo);
 
         // 初始知识库向量存储

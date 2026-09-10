@@ -4,10 +4,10 @@ import cc.wdev.platform.commons.annotations.OperationLog;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
 import cc.wdev.platform.system.ai.api.AiToolApi;
-import cc.wdev.platform.system.ai.domain.request.AiToolGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiToolVo;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -55,7 +55,7 @@ public class AiToolPltController extends AbstractController {
     @ApiResponse(description = "查询Tool详情")
     @GetMapping(API_V1_SYS_PREFIX + "/ai/tool/details")
     public R<AiToolVo> details(@Parameter(description = "ToolID") @RequestParam("id") Long id) {
-        return R.success(aiToolApi.getAiTool(AiToolGetRequest.builder().id(id).build()));
+        return R.success(aiToolApi.getAiTool(GetRequest.builder().id(id).build()));
     }
 
     @PreAuthorize("hasAnyAuthority('dev:ai:config:tool')")

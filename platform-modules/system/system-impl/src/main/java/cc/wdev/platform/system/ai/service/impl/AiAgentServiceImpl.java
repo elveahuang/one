@@ -14,13 +14,13 @@ import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.ai.domain.converter.AiAgentConverter;
 import cc.wdev.platform.system.ai.domain.entity.AiAgentEntity;
-import cc.wdev.platform.system.ai.domain.request.AiAgentGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiAgentSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiAgentSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentVo;
 import cc.wdev.platform.system.ai.repository.AiAgentRepository;
 import cc.wdev.platform.system.ai.service.AiAgentService;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -51,10 +51,10 @@ public class AiAgentServiceImpl
     }
 
     /**
-     * @see AiAgentService#getAiAgent(AiAgentGetRequest)
+     * @see AiAgentService#getAiAgent(GetRequest)
      */
     @Override
-    public AiAgentVo getAiAgent(AiAgentGetRequest request) {
+    public AiAgentVo getAiAgent(GetRequest request) {
         AiAgentEntity entity = null;
         if (StringUtils.isNotEmpty(request.getCode())) {
             entity = this.findCacheByCode(request.getCode().trim());

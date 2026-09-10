@@ -7,13 +7,13 @@ import cc.wdev.platform.commons.annotations.OperationLog;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
 import cc.wdev.platform.system.ai.api.AiModelApi;
-import cc.wdev.platform.system.ai.domain.request.AiModelGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiModelSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiModelSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiModelOptionsVo;
 import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
 import cc.wdev.platform.system.ai.service.AiModelService;
 import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import cc.wdev.platform.system.commons.domain.vo.SimpleOptionVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -67,7 +67,7 @@ public class AiModelPltController extends AbstractController {
     @ApiResponse(description = "查询模型详情")
     @GetMapping(API_V1_SYS_PREFIX + "/ai/model/details")
     public R<AiModelVo> details(@Parameter(description = "模型ID") @RequestParam("id") Long id) {
-        return R.success(aiModelApi.getAiModel(AiModelGetRequest.builder().id(id).build()));
+        return R.success(aiModelApi.getAiModel(GetRequest.builder().id(id).build()));
     }
 
     @PreAuthorize("hasAnyAuthority('dev:ai:config:model')")

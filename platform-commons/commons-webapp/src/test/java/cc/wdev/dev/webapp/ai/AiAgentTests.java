@@ -1,6 +1,8 @@
 package cc.wdev.dev.webapp.ai;
 
 import cc.wdev.dev.webapp.BaseTests;
+import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
+import cc.wdev.platform.commons.ai.enums.AiChatType;
 import cc.wdev.platform.commons.ai.ui.UiComponentRegistry;
 import cc.wdev.platform.commons.ai.ui.UiOutputConverter;
 import cc.wdev.platform.commons.ai.ui.UiResponse;
@@ -40,6 +42,16 @@ public class AiAgentTests extends BaseTests {
 
         String json = JacksonUtils.toJson(response);
         Assertions.assertNotNull(json);
+    }
+
+    @Test
+    public void chatTest() {
+        SimpleChatRequest request = SimpleChatRequest.builder()
+            .chatType(AiChatType.STATIC.getValue())
+            .prompt("你好")
+            .build();
+        String resp = this.aiService.chatText(request);
+        Assertions.assertNotNull(resp);
     }
 
 }

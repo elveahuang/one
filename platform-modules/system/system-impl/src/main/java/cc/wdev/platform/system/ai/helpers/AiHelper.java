@@ -20,12 +20,12 @@ import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.ai.domain.entity.AiRelationEntity;
 import cc.wdev.platform.system.ai.domain.request.AiKbMetadataRequest;
-import cc.wdev.platform.system.ai.domain.request.AiModelGetRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiKbVo;
 import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
 import cc.wdev.platform.system.ai.enums.AiRelationBizTypeEnum;
 import cc.wdev.platform.system.ai.service.AiModelService;
 import cc.wdev.platform.system.ai.service.AiRelationService;
+import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -258,8 +258,7 @@ public class AiHelper {
      */
     public RetrievalConfig resolveRetrievalConfig(@NonNull AiKbVo kb) {
         RetrievalConfig globalConfig = this.aiManager.getConfig().getRetrieval();
-        return AiUtils.resolveRetrievalConfig(globalConfig, RetrievalConfig.builder()
-            .build());
+        return AiUtils.resolveRetrievalConfig(globalConfig, RetrievalConfig.builder().build());
     }
 
     /**
@@ -294,7 +293,7 @@ public class AiHelper {
 
         for (AiRelationEntity relation : relationList) {
             if (AiRelationBizTypeEnum.KB_CURRENT_EMBEDDING_MODEL.getValue().equals(relation.getBizType())) {
-                AiModelVo aiModelVo = this.aiModelService.getAiModel(AiModelGetRequest.builder().id(relation.getBizId()).build());
+                AiModelVo aiModelVo = this.aiModelService.getAiModel(GetRequest.of(relation.getBizId()));
                 if (aiModelVo == null) {
                     throw new ServiceException(AI_INVALID_KB_MODEL);
                 }
@@ -303,7 +302,7 @@ public class AiHelper {
             }
 
             if (AiRelationBizTypeEnum.KB_CURRENT_CHAT_MODEL.getValue().equals(relation.getBizType())) {
-                AiModelVo aiModelVo = this.aiModelService.getAiModel(AiModelGetRequest.builder().id(relation.getBizId()).build());
+                AiModelVo aiModelVo = this.aiModelService.getAiModel(GetRequest.of(relation.getBizId()));
                 if (aiModelVo == null) {
                     throw new ServiceException(AI_INVALID_KB_MODEL);
                 }
@@ -312,7 +311,7 @@ public class AiHelper {
             }
 
             if (AiRelationBizTypeEnum.KB_CURRENT_RERANK_MODEL.getValue().equals(relation.getBizType())) {
-                AiModelVo aiModelVo = this.aiModelService.getAiModel(AiModelGetRequest.builder().id(relation.getBizId()).build());
+                AiModelVo aiModelVo = this.aiModelService.getAiModel(GetRequest.of(relation.getBizId()));
                 if (aiModelVo == null) {
                     throw new ServiceException(AI_INVALID_KB_MODEL);
                 }
