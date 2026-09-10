@@ -5,14 +5,17 @@ package cc.wdev.platform.commons.ai.ui;
  */
 public class UiComponentManager {
 
-    private static volatile UiComponentRegistry gloablUiComponentRegistry = new UiComponentRegistry();
+    private UiComponentManager() {
+    }
+
+    private static volatile UiComponentRegistry globalUiComponentRegistry = new UiComponentRegistry();
 
     public static UiComponentRegistry getRegistry() {
-        return gloablUiComponentRegistry;
+        return globalUiComponentRegistry;
     }
 
     public static void setRegistry(UiComponentRegistry registry) {
-        gloablUiComponentRegistry = registry;
+        globalUiComponentRegistry = registry;
     }
 
 }

@@ -93,6 +93,12 @@ public abstract class AiUtils {
         request.setChatType(StringUtils.nvl(request.getResponseType(), AiChatType.STATIC.getValue()));
     }
 
+    /**
+     * 处理请求
+     * 1. 请求上下文基础数据
+     * 2. 大模型参数
+     * 3. 提示词
+     */
     public static ChatClient.ChatClientRequestSpec processChatSpec(ChatClient chatClient, SimpleChatRequest request) {
         ChatClient.ChatClientRequestSpec spec = chatClient.prompt().advisors(a -> {
             a.param(CAHT_CONTEXT_SESSION_ID_KEY, request.getConversationId());
@@ -127,28 +133,28 @@ public abstract class AiUtils {
 
     public static Flux<String> processStreamChatResponse(ChatClient.ChatClientRequestSpec spec, SimpleChatRequest request) {
         if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.BLOCK.getValue().equalsIgnoreCase(request.getResponseType())) {
+            log.info("processStreamChatResponse [{}] block", request.getConversationId());
             try {
-                log.info("processChatStreamResponse [{}] block", request.getConversationId());
                 UiOutputConverter converter = UiComponentManager.getRegistry().getConverter();
                 UiResponse response = spec.call().entity(converter, ChatClient.EntityParamSpec::validateSchema);
                 List<UiBlock> blocks = response != null ? response.blocks() : Collections.emptyList();
                 Flux<String> flux = Flux.fromIterable(CollectionUtils.nvl(blocks)).map(AiUtils::getBlockContent);
                 return Flux.concat(Mono.just(AiUtils.getStartContent()), flux, Mono.just(AiUtils.getEndContent()));
             } catch (Exception e) {
-                log.error("processChatStreamResponse [{}] error", request.getConversationId(), e);
+                log.error("processStreamChatResponse [{}] error", request.getConversationId(), e);
                 return Flux.just(AiUtils.getErrorContent());
             }
         } else if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.JSON.getValue().equalsIgnoreCase(request.getResponseType())) {
+            log.info("processStreamChatResponse [{}] json", request.getConversationId());
             try {
-                log.info("processChatStreamResponse [{}] json", request.getConversationId());
-                Flux<String> flux = spec.stream().content().map(AiUtils::getTextContent);
+                Flux<String> flux = AiUtils.processStream(spec.stream().content());
                 return Flux.concat(Mono.just(AiUtils.getStartContent()), flux, Mono.just(AiUtils.getEndContent()));
             } catch (Exception e) {
-                log.error("processChatStreamResponse [{}] error", request.getConversationId(), e);
+                log.error("processStreamChatResponse [{}] error", request.getConversationId(), e);
                 return Flux.just(AiUtils.getErrorContent());
             }
         } else {
-            log.info("processChatStreamResponse [{}] text", request.getConversationId());
+            log.info("processStreamChatResponse [{}] text", request.getConversationId());
             return spec.stream().content();
         }
     }
