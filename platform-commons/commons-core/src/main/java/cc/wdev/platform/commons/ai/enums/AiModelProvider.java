@@ -16,7 +16,6 @@ public enum AiModelProvider implements BaseEnum<String> {
     DEEPSEEK("deepseek", "深度求索", true,
         new Model[]{
             new Model("deepseek-v4-flash", true, false, AiModelType.TEXT),
-            new Model("deepseek-v4-pro", true, false, AiModelType.TEXT)
         },
         new AiModelType[]{AiModelType.TEXT}
     ),
@@ -24,7 +23,6 @@ public enum AiModelProvider implements BaseEnum<String> {
     ALIYUN("aliyun", "阿里云", true,
         new Model[]{
             new Model("deepseek-v4-flash", true, false, AiModelType.TEXT),
-            new Model("deepseek-v4-pro", true, false, AiModelType.TEXT),
             new Model("qwen-plus", true, false, AiModelType.TEXT),
             new Model("qwen-image", true, false, AiModelType.IMAGE),
             new Model("qwen-image-plus", true, false, AiModelType.IMAGE),
@@ -47,8 +45,6 @@ public enum AiModelProvider implements BaseEnum<String> {
             new Model("orcarouter/free", true, false, AiModelType.TEXT),
             new Model("deepseek/deepseek-v4-flash-free", true, false, AiModelType.TEXT),
             new Model("deepseek/deepseek-v4-flash-0731", true, false, AiModelType.TEXT),
-            new Model("deepseek/deepseek-v4-pro-0813", true, false, AiModelType.TEXT),
-            new Model("deepseek/deepseek-v4-flash-vision-exp", true, false, AiModelType.TEXT)
         },
         new AiModelType[]{AiModelType.TEXT}
     ),

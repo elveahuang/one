@@ -117,7 +117,7 @@ platform:
                 commons:
                     api-key: ${DEEPSEEK_API_KEY}
                 chat:
-                    name: deepseek-v4-flash
+                    name: deepseek-v4.1-flash-expires-on-0910
             openai:
                 enabled: true
                 commons:
@@ -160,10 +160,8 @@ platform:
                 enabled: true
             pgvector:
                 enabled: true
-        skills:
+        agent:
             enabled: true
-            paths:
-                - file:../../tools/ai/skills
         memory:
             enabled: true
             path: file:../../tools/ai/memory

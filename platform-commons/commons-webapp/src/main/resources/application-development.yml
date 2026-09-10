@@ -82,8 +82,6 @@ springdoc:
         enabled: true
     swagger-ui:
         enabled: true
-arthas:
-    app-name: webapp
 cosid:
     enabled: true
     namespace: ${spring.application.name}
@@ -114,7 +112,7 @@ platform:
                 commons:
                     api-key: ${DEEPSEEK_API_KEY}
                 chat:
-                    name: deepseek-v4-flash
+                    name: deepseek-v4.1-flash-expires-on-0910
             openai:
                 enabled: true
                 commons:
