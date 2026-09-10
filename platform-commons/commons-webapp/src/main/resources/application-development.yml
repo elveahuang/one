@@ -112,7 +112,7 @@ platform:
                 commons:
                     api-key: ${DEEPSEEK_API_KEY}
                 chat:
-                    name: deepseek-v4.1-flash-expires-on-0910
+                    name: deepseek-flash
             openai:
                 enabled: true
                 commons:
@@ -156,6 +156,11 @@ platform:
                 enabled: true
             pgvector:
                 enabled: true
+        agent:
+            enabled: true
+        memory:
+            enabled: true
+            path: ./.agent/memory
     data:
         core:
             enabled: true

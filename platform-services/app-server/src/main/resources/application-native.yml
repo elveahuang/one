@@ -54,7 +54,7 @@ spring:
                     enabled: true
                 default-requeue-rejected: true
     elasticsearch:
-        uris: http://127.0.0.1:9200
+        uris: https://es.elvea.cn
         username: elastic
         password: elastic
     quartz:
@@ -117,7 +117,7 @@ platform:
                 commons:
                     api-key: ${DEEPSEEK_API_KEY}
                 chat:
-                    name: deepseek-v4-flash
+                    name: deepseek-flash
             openai:
                 enabled: true
                 commons:
@@ -151,10 +151,17 @@ platform:
             type: elasticsearch
             elasticsearch:
                 enabled: true
-            redis:
-                enabled: true
             pgvector:
                 enabled: true
+        agent:
+            enabled: true
+            agents:
+                - file:${user.dir}/tools/agent/agents
+            skills:
+                - file:${user.dir}/tools/agent/skills
+        memory:
+            enabled: true
+            path: ${user.dir}/tools/agent/memory
     data:
         core:
             enabled: true

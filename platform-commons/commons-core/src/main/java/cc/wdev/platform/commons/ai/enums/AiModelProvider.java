@@ -15,7 +15,7 @@ import java.util.Optional;
 public enum AiModelProvider implements BaseEnum<String> {
     DEEPSEEK("deepseek", "深度求索", true,
         new Model[]{
-            new Model("deepseek-v4-flash", true, false, AiModelType.TEXT),
+            new Model("deepseek-flash", true, false, AiModelType.TEXT),
         },
         new AiModelType[]{AiModelType.TEXT}
     ),

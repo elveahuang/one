@@ -90,7 +90,7 @@ public abstract class AiUtils {
         request.setUserId(null != request.getUserId() && request.getUserId() > 0 ? request.getUserId() : SecurityUtils.getUid());
         request.setConversationId(StringUtils.nvl(request.getConversationId(), StringUtils.uuid()));
         request.setResponseType(StringUtils.nvl(request.getResponseType(), AiResponseType.TEXT.getValue()));
-        request.setChatType(StringUtils.nvl(request.getResponseType(), AiChatType.STATIC.getValue()));
+        request.setChatType(StringUtils.nvl(request.getChatType(), AiChatType.STATIC.getValue()));
     }
 
     /**

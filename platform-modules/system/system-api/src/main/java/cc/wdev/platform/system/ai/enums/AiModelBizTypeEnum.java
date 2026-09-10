@@ -13,7 +13,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum AiModelBizTypeEnum implements BaseAiModelBizTypeEnum {
     // DeepSeek
-    DEEPSEEK_V4_FLASH(AiServiceProvider.SPRING_AI_DEEPSEEK.getValue(), AiModelProvider.DEEPSEEK.getValue(), AiModelType.TEXT.getValue(), "deepseek-v4-flash", "deepseek-v4-flash"),
+    DEEPSEEK_V4_FLASH(AiServiceProvider.SPRING_AI_DEEPSEEK.getValue(), AiModelProvider.DEEPSEEK.getValue(), AiModelType.TEXT.getValue(), "deepseek-flash", "DeepSeek V4.1 Flash"),
     DEEPSEEK_V4_PRO(AiServiceProvider.SPRING_AI_DEEPSEEK.getValue(), AiModelProvider.DEEPSEEK.getValue(), AiModelType.TEXT.getValue(), "deepseek-v4-pro", "deepseek-v4-pro"),
     // Aliyun
     ALIYUN_DEEPSEEK_FLASH(AiServiceProvider.SPRING_AI_OPENAI.getValue(), AiModelProvider.ALIYUN.getValue(), AiModelType.TEXT.getValue(), "deepseek-v4-flash", "deepseek-v4-flash"),

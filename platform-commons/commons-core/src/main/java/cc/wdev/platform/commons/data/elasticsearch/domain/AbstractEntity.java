@@ -10,9 +10,6 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  */
 public abstract class AbstractEntity implements IdEntity {
 
-    /**
-     * 租户ID
-     */
     @Field(type = FieldType.Keyword, ignoreAbove = 256)
     protected String id;
 
