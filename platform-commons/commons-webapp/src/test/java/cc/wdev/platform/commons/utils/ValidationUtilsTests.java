@@ -1,6 +1,6 @@
 package cc.wdev.platform.commons.utils;
 
-import cc.wdev.dev.webapp.BaseTests;
+import cc.wdev.webapp.BaseTests;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;

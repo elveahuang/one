@@ -1,7 +1,7 @@
-package cc.wdev.dev.webapp.ai;
+package cc.wdev.webapp.ai;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.ai.AiManager;
+import cc.wdev.webapp.BaseTests;
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.agent.RuntimeContext;
 import io.agentscope.core.message.Msg;

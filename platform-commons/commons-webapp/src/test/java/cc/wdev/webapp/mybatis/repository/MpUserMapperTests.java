@@ -1,7 +1,6 @@
-package cc.wdev.dev.webapp.mybatis.repository;
+package cc.wdev.webapp.mybatis.repository;
 
-import cc.wdev.dev.webapp.BaseTests;
-import cc.wdev.webapp.mybatis.repository.MpUserRepository;
+import cc.wdev.webapp.BaseTests;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

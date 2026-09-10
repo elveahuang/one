@@ -1,9 +1,9 @@
 package cc.wdev.platform.commons.ai.factory;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
+import cc.wdev.webapp.BaseTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;

@@ -1,9 +1,9 @@
 package cc.wdev.platform.commons.data.jdbc;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.core.sequence.Sequence;
 import cc.wdev.platform.commons.data.jdbc.dao.Dao;
 import cc.wdev.platform.commons.utils.StopWatchUtils;
+import cc.wdev.webapp.BaseTests;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Lists;
 import org.junit.jupiter.api.Assertions;

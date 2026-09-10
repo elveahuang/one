@@ -1,11 +1,11 @@
 package cc.wdev.platform.commons.extensions;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.annotations.SensitiveEncrypt;
 import cc.wdev.platform.commons.annotations.SensitiveMark;
 import cc.wdev.platform.commons.extensions.sensitive.encrypt.SensitiveEncryptModule;
 import cc.wdev.platform.commons.extensions.sensitive.mark.SensitiveMarkModule;
 import cc.wdev.platform.commons.utils.jackson.CommonModule;
+import cc.wdev.webapp.BaseTests;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

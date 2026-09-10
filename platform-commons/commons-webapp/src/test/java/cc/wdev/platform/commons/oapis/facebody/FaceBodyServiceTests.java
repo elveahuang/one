@@ -1,6 +1,6 @@
 package cc.wdev.platform.commons.oapis.facebody;
 
-import cc.wdev.dev.webapp.BaseTests;
+import cc.wdev.webapp.BaseTests;
 import cn.hutool.core.codec.Base64;
 import com.google.common.io.ByteStreams;
 import lombok.extern.slf4j.Slf4j;

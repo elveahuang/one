@@ -1,6 +1,5 @@
 package cc.wdev.platform.commons.core.storage.service;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.core.storage.StorageFactory;
 import cc.wdev.platform.commons.core.storage.StorageService;
 import cc.wdev.platform.commons.core.storage.aws.AwsStorageService;
@@ -8,6 +7,7 @@ import cc.wdev.platform.commons.core.storage.model.FileObject;
 import cc.wdev.platform.commons.core.storage.model.FileOptions;
 import cc.wdev.platform.commons.core.storage.oss.OssStorageService;
 import cc.wdev.platform.commons.core.tenant.TenantContext;
+import cc.wdev.webapp.BaseTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,6 @@
-package cc.wdev.dev.webapp.mybatis.service;
+package cc.wdev.webapp.mybatis.service;
 
-import cc.wdev.dev.webapp.BaseTests;
-import cc.wdev.webapp.mybatis.service.MpUserCachingService;
+import cc.wdev.webapp.BaseTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

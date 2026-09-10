@@ -1,10 +1,9 @@
-package cc.wdev.dev.webapp.es.service;
+package cc.wdev.webapp.es.service;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.core.sequence.SequenceManager;
 import cc.wdev.platform.commons.web.request.PageRequest;
+import cc.wdev.webapp.BaseTests;
 import cc.wdev.webapp.es.domain.entity.CourseElasticEntity;
-import cc.wdev.webapp.es.service.CourseElasticService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

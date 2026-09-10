@@ -1,7 +1,6 @@
-package cc.wdev.dev.webapp.jpa.service;
+package cc.wdev.webapp.jpa.service;
 
-import cc.wdev.dev.webapp.BaseTests;
-import cc.wdev.webapp.jpa.service.JpaUserCachingService;
+import cc.wdev.webapp.BaseTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

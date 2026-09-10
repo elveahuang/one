@@ -1,7 +1,7 @@
 package cc.wdev.platform.commons.oapis.lark;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.oapis.lark.service.LarkService;
+import cc.wdev.webapp.BaseTests;
 import com.lark.oapi.service.contact.v3.model.ListDepartmentReq;
 import com.lark.oapi.service.contact.v3.model.ListDepartmentResp;
 import com.lark.oapi.service.contact.v3.model.ListUserReq;

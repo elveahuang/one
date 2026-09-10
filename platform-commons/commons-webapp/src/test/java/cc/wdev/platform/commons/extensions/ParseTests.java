@@ -1,10 +1,10 @@
 package cc.wdev.platform.commons.extensions;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.extensions.parser.ParseManager;
 import cc.wdev.platform.commons.extensions.parser.domain.ParseRequest;
 import cc.wdev.platform.commons.extensions.parser.domain.ParseResult;
 import cc.wdev.platform.commons.extensions.parser.utils.ParseUtils;
+import cc.wdev.webapp.BaseTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

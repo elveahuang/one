@@ -1,11 +1,11 @@
 package cc.wdev.platform.commons.ai.service;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.ai.AiServiceManager;
 import cc.wdev.platform.commons.ai.domain.request.SimpleEmbeddingRequest;
 import cc.wdev.platform.commons.ai.domain.response.SimpleEmbeddingResponse;
 import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
 import cc.wdev.platform.commons.ai.service.embedding.EmbeddingModelService;
+import cc.wdev.webapp.BaseTests;
 import com.google.common.collect.Lists;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

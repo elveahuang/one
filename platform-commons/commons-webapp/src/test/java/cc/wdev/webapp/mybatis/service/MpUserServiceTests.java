@@ -1,9 +1,8 @@
-package cc.wdev.dev.webapp.mybatis.service;
+package cc.wdev.webapp.mybatis.service;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.data.mybatis.utils.MyBatisPlusUtils;
+import cc.wdev.webapp.BaseTests;
 import cc.wdev.webapp.mybatis.domain.entity.MpUserEntity;
-import cc.wdev.webapp.mybatis.service.MpUserService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.junit.jupiter.api.Assertions;

@@ -1,10 +1,10 @@
 package cc.wdev.platform.commons.ai.sdk;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.AiServiceManager;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiAliyunProperties;
 import cc.wdev.platform.commons.utils.GsonUtils;
+import cc.wdev.webapp.BaseTests;
 import com.alibaba.dashscope.audio.asr.transcription.*;
 import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;

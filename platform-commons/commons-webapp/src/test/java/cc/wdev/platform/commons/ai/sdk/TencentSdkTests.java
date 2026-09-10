@@ -1,10 +1,10 @@
 package cc.wdev.platform.commons.ai.sdk;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.ai.AiConfig;
 import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.AiServiceManager;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiTencentProperties;
+import cc.wdev.webapp.BaseTests;
 import com.alibaba.dashscope.audio.asr.transcription.*;
 import com.google.gson.GsonBuilder;
 import org.junit.jupiter.api.Assertions;

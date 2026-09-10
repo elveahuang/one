@@ -1,11 +1,11 @@
 package cc.wdev.platform.commons.extensions;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.enums.CaptchaTypeEnum;
 import cc.wdev.platform.commons.extensions.captcha.Captcha;
 import cc.wdev.platform.commons.extensions.captcha.request.CaptchaCheckRequest;
 import cc.wdev.platform.commons.extensions.captcha.request.CaptchaRequest;
 import cc.wdev.platform.commons.extensions.captcha.service.CaptchaService;
+import cc.wdev.webapp.BaseTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

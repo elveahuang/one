@@ -1,6 +1,6 @@
-package cc.wdev.dev.webapp.web;
+package cc.wdev.webapp.web;
 
-import cc.wdev.dev.webapp.BaseWebTests;
+import cc.wdev.webapp.BaseWebTests;
 import org.junit.jupiter.api.Test;
 
 /**

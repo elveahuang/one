@@ -1,7 +1,7 @@
 package cc.wdev.platform.commons.ai.agentic;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.ai.AiManager;
+import cc.wdev.webapp.BaseTests;
 import io.github.agentic.spring.ai.graph.agent.ReactAgent;
 import io.github.agentic.spring.ai.graph.exception.GraphRunnerException;
 import org.junit.jupiter.api.Assertions;

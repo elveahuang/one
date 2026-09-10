@@ -1,4 +1,4 @@
-package cc.wdev.dev.webapp.ai;
+package cc.wdev.webapp.ai;
 
 import org.junit.jupiter.api.Test;
 

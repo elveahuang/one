@@ -1,7 +1,7 @@
 package cc.wdev.platform.commons.ai.sdk;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.ai.AiManager;
+import cc.wdev.webapp.BaseTests;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

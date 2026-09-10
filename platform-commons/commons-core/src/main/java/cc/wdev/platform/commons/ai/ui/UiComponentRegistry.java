@@ -1,8 +1,8 @@
 package cc.wdev.platform.commons.ai.ui;
 
+import cc.wdev.platform.commons.utils.JacksonUtils;
 import lombok.NoArgsConstructor;
 import org.apache.commons.compress.utils.Lists;
-import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.util.List;
@@ -15,8 +15,6 @@ public class UiComponentRegistry {
 
     private final List<UiComponentDefinition> definitions = Lists.newArrayList();
 
-    private final ObjectMapper mapper = new ObjectMapper();
-
     public void register(List<UiComponentDefinition> definitions) {
         this.definitions.addAll(definitions);
     }
@@ -25,8 +23,12 @@ public class UiComponentRegistry {
         this.definitions.add(definition);
     }
 
+    public UiOutputConverter getConverter() {
+        return new UiOutputConverter(this.buildJsonSchema());
+    }
+
     public String buildJsonSchema() {
-        ObjectNode root = mapper.createObjectNode();
+        ObjectNode root = JacksonUtils.getSimpleObjectMapper().createObjectNode();
         root.put("type", "object");
 
         ObjectNode properties = root.putObject("properties");
@@ -37,7 +39,7 @@ public class UiComponentRegistry {
         var oneOf = items.putArray("oneOf");
 
         for (UiComponentDefinition definition : definitions) {
-            ObjectNode block = mapper.createObjectNode();
+            ObjectNode block = JacksonUtils.getSimpleObjectMapper().createObjectNode();
             block.put("type", "object");
 
             ObjectNode blockProps = block.putObject("properties");
@@ -64,7 +66,7 @@ public class UiComponentRegistry {
     public String buildComponentInstructions() {
         StringBuilder sb = new StringBuilder();
         sb.append("Allowed UI components and props:\n");
-        for (UiComponentDefinition definition : definitions) {
+        for (UiComponentDefinition definition : this.definitions) {
             sb.append("- ")
                 .append(definition.type())
                 .append(": ")

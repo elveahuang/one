@@ -1,11 +1,11 @@
 package cc.wdev.platform.commons.ai.service;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.ai.AiServiceManager;
 import cc.wdev.platform.commons.ai.domain.request.SimpleTranscriptionRequest;
 import cc.wdev.platform.commons.ai.domain.response.SimpleTranscriptionResponse;
 import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
 import cc.wdev.platform.commons.ai.service.audio.TranscriptionModelService;
+import cc.wdev.webapp.BaseTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

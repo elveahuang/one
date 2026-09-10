@@ -1,7 +1,7 @@
 package cc.wdev.platform.commons.oapis.sms;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.autoconfigure.core.properties.TestProperties;
+import cc.wdev.webapp.BaseTests;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;

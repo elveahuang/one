@@ -1,10 +1,10 @@
-package cc.wdev.dev.webapp.ai;
+package cc.wdev.webapp.ai;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.tools.CommonTools;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
 import cc.wdev.platform.commons.utils.CollectionUtils;
+import cc.wdev.webapp.BaseTests;
 import com.google.common.collect.Maps;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -20,6 +20,7 @@ import cc.wdev.platform.commons.ai.factory.vectorstore.PgVectorStoreFactory;
 import cc.wdev.platform.commons.ai.factory.vectorstore.VectorStoreFactory;
 import cc.wdev.platform.commons.ai.tools.CommonTools;
 import cc.wdev.platform.commons.ai.ui.UiComponentDefinition;
+import cc.wdev.platform.commons.ai.ui.UiComponentManager;
 import cc.wdev.platform.commons.ai.ui.UiComponentRegistry;
 import cc.wdev.platform.commons.ai.ui.components.TextComponentDefinition;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
@@ -335,6 +336,9 @@ public class AiAutoConfiguration {
         UiComponentRegistry registry = new UiComponentRegistry();
         registry.register(definitions);
         registry.register(new TextComponentDefinition());
+
+        UiComponentManager.setRegistry(registry);
+
         return registry;
     }
 

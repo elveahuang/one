@@ -12,10 +12,15 @@ import cc.wdev.platform.commons.ai.enums.AiContentType;
 import cc.wdev.platform.commons.ai.enums.AiResponseType;
 import cc.wdev.platform.commons.ai.model.ModelConfig;
 import cc.wdev.platform.commons.ai.model.SimpleModelConfig;
-import cc.wdev.platform.commons.utils.*;
+import cc.wdev.platform.commons.ai.ui.UiBlock;
+import cc.wdev.platform.commons.ai.ui.UiComponentManager;
+import cc.wdev.platform.commons.ai.ui.UiOutputConverter;
+import cc.wdev.platform.commons.ai.ui.UiResponse;
+import cc.wdev.platform.commons.utils.CollectionUtils;
+import cc.wdev.platform.commons.utils.GsonUtils;
+import cc.wdev.platform.commons.utils.SecurityUtils;
+import cc.wdev.platform.commons.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -25,8 +30,6 @@ import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.ChatOptions;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
@@ -37,8 +40,6 @@ import org.springframework.ai.session.SessionService;
 import org.springframework.ai.session.advisor.SessionMemoryAdvisor;
 import org.springframework.ai.session.compaction.SlidingWindowCompactionStrategy;
 import org.springframework.ai.session.compaction.TurnCountTrigger;
-import org.springframework.ai.tool.ToolCallback;
-import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -75,31 +76,90 @@ public abstract class AiUtils {
 
     public static final String JSON_RENDER_END_TAG = "```";
 
-    /**
-     * 生成新的对话ID
-     */
-    public static String generateConversationId() {
-        return StringUtils.uuid();
-    }
+    // ------------------------------------------------------------------------------
+    // Chat
+    // ------------------------------------------------------------------------------
 
     /**
-     * 处理提示词
+     * 预处理请求
+     * 1. 重要参数，比如租户和用户信息等，不管前端有没有传参数过来都直接覆盖
+     * 2. 其他参数，前端没传参数过来，那么按预设的复制
      */
-    public static String renderPrompt(String prompt, Map<String, Object> context) {
-        if (MapUtils.isNotEmpty(context)) {
-            PromptTemplate promptTemplate = PromptTemplate
-                .builder()
-                .template(prompt)
-                .variables(context)
-                .build();
-            return promptTemplate.render();
+    public static void processChatRequest(SimpleChatRequest request) {
+        request.setTenantId(SecurityUtils.getTid());
+        request.setUserId(null != request.getUserId() && request.getUserId() > 0 ? request.getUserId() : SecurityUtils.getUid());
+        request.setConversationId(StringUtils.nvl(request.getConversationId(), StringUtils.uuid()));
+        request.setResponseType(StringUtils.nvl(request.getResponseType(), AiResponseType.TEXT.getValue()));
+        request.setChatType(StringUtils.nvl(request.getResponseType(), AiChatType.STATIC.getValue()));
+    }
+
+    public static ChatClient.ChatClientRequestSpec processChatSpec(ChatClient chatClient, SimpleChatRequest request) {
+        ChatClient.ChatClientRequestSpec spec = chatClient.prompt().advisors(a -> {
+            a.param(CAHT_CONTEXT_SESSION_ID_KEY, request.getConversationId());
+            a.param(CAHT_CONTEXT_USER_ID_KEY, String.valueOf(request.getUserId()));
+            a.param(CAHT_CONTEXT_TENANT_ID_KEY, request.getTenantId());
+        }).user(u -> {
+            u.text(request.getPrompt());
+
+            u.metadata(METADATA_SESSION_ID, request.getConversationId());
+            u.metadata(METADATA_TENANT_ID, request.getTenantId());
+            u.metadata(METADATA_USER_ID, String.valueOf(request.getUserId()));
+            u.metadata(METADATA_CHAT_TYPE, request.getChatType());
+            u.metadata(METADATA_AGENT_CODE, StringUtils.nvl(request.getAgentCode()));
+        });
+        // 工具上下文
+        spec.toolContext(Map.of(AiConstants.METADATA_USER_ID, request.getUserId()));
+        // 系统提示词
+        if (StringUtils.isNotEmpty(request.getSystemPrompt())) {
+            spec = spec.system(request.getSystemPrompt());
         }
-        return prompt;
+        // 温度参数
+        if (request.getTemperature() != null && request.getTemperature() > 0) {
+            spec = spec.options(ChatOptions.builder().temperature(request.getTemperature().doubleValue()));
+        }
+        return spec;
     }
 
-    // ------------------------------------------------------------------------------
-    // Stream Content
-    // ------------------------------------------------------------------------------
+    public static String processChatResponse(ChatClient.ChatClientRequestSpec spec, SimpleChatRequest request) {
+        log.info("processChatResponse [{}] text", request.getConversationId());
+        return spec.call().content();
+    }
+
+    public static Flux<String> processStreamChatResponse(ChatClient.ChatClientRequestSpec spec, SimpleChatRequest request) {
+        if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.BLOCK.getValue().equalsIgnoreCase(request.getResponseType())) {
+            try {
+                log.info("processChatStreamResponse [{}] block", request.getConversationId());
+                UiOutputConverter converter = UiComponentManager.getRegistry().getConverter();
+                UiResponse response = spec.call().entity(converter, ChatClient.EntityParamSpec::validateSchema);
+                List<UiBlock> blocks = response != null ? response.blocks() : Collections.emptyList();
+                Flux<String> flux = Flux.fromIterable(CollectionUtils.nvl(blocks)).map(AiUtils::getBlockContent);
+                return Flux.concat(Mono.just(AiUtils.getStartContent()), flux, Mono.just(AiUtils.getEndContent()));
+            } catch (Exception e) {
+                log.error("processChatStreamResponse [{}] error", request.getConversationId(), e);
+                return Flux.just(AiUtils.getErrorContent());
+            }
+        } else if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.JSON.getValue().equalsIgnoreCase(request.getResponseType())) {
+            try {
+                log.info("processChatStreamResponse [{}] json", request.getConversationId());
+                Flux<String> flux = spec.stream().content().map(AiUtils::getTextContent);
+                return Flux.concat(Mono.just(AiUtils.getStartContent()), flux, Mono.just(AiUtils.getEndContent()));
+            } catch (Exception e) {
+                log.error("processChatStreamResponse [{}] error", request.getConversationId(), e);
+                return Flux.just(AiUtils.getErrorContent());
+            }
+        } else {
+            log.info("processChatStreamResponse [{}] text", request.getConversationId());
+            return spec.stream().content();
+        }
+    }
+
+    public static @Nullable String getChatResponseContent(ChatResponse chatResponse) {
+        return Optional.ofNullable(chatResponse)
+            .map(ChatResponse::getResult)
+            .map(Generation::getOutput)
+            .map(AbstractMessage::getText)
+            .orElse(null);
+    }
 
     public static String getStartContent() {
         return GsonUtils.toJson(STREAM_CONTENT_START);
@@ -129,13 +189,10 @@ public abstract class AiUtils {
     }
 
     /**
-     * Citation Block（引用溯源）
+     * UI Block
      */
-    public static String getCitationContent(List<cc.wdev.platform.commons.ai.domain.chat.SimpleCitation> citations) {
-        return GsonUtils.toJson(SimpleChatContent.builder()
-            .type(AiContentType.CITATION.getValue())
-            .citations(citations)
-            .build());
+    public static String getBlockContent(UiBlock block) {
+        return GsonUtils.toJson(block);
     }
 
     /**
@@ -199,48 +256,6 @@ public abstract class AiUtils {
     }
 
     // ------------------------------------------------------------------------------
-    // ChatClient
-    // ------------------------------------------------------------------------------
-
-    public static ChatResponse chatCompletion(ChatClient chatClient, SimpleChatRequest request) {
-        ChatClient.ChatClientRequestSpec spec = processChatSpec(chatClient, request);
-        return spec.call().chatResponse();
-    }
-
-    public static ChatResponse chatCompletion(ChatClient chatClient, Prompt prompt) {
-        return chatClient.prompt(prompt).call().chatResponse();
-    }
-
-    public static String chatCompletionText(ChatClient chatClient, SimpleChatRequest request) {
-        ChatClient.ChatClientRequestSpec spec = processChatSpec(chatClient, request);
-        return spec.call().content();
-    }
-
-    public static Flux<String> streamChatCompletionText(ChatClient chatClient, SimpleChatRequest request) {
-        ChatClient.ChatClientRequestSpec spec = processChatSpec(chatClient, request);
-        return spec.stream().content();
-    }
-
-    public static Flux<ChatResponse> streamChatCompletion(ChatClient chatClient, SimpleChatRequest request) {
-        ChatClient.ChatClientRequestSpec spec = processChatSpec(chatClient, request);
-        return spec.stream().chatResponse();
-    }
-
-    public static Flux<ChatResponse> streamChatCompletion(ChatClient chatClient, Prompt prompt) {
-        return chatClient.prompt(prompt).stream().chatResponse();
-    }
-
-    // ------------------------------------------------------------------------------
-    // Rag
-    // ------------------------------------------------------------------------------
-
-    public static QuestionAnswerAdvisor getQuestionAnswerAdvisor(VectorStore vectorStore) {
-        return QuestionAnswerAdvisor.builder(vectorStore)
-            .searchRequest(SearchRequest.builder().similarityThreshold(0.8d).topK(6).build())
-            .build();
-    }
-
-    // ------------------------------------------------------------------------------
     // Utils
     // ------------------------------------------------------------------------------
 
@@ -251,7 +266,6 @@ public abstract class AiUtils {
     public static CustomLoggingAdvisor getCustomLoggingAdvisor() {
         return new CustomLoggingAdvisor();
     }
-
 
     public static SessionService getSessionService() {
         return DefaultSessionService.builder()
@@ -309,102 +323,9 @@ public abstract class AiUtils {
             .build();
     }
 
-    /**
-     * 预处理请求
-     * 1. 重要参数，比如租户和用户信息等，不管前端有没有传参数过来都直接覆盖
-     * 2. 其他参数，前端没传参数过来，那么按预设的复制
-     */
-    public static void processChatRequest(SimpleChatRequest request) {
-        request.setTenantId(SecurityUtils.getTid());
-        request.setUserId(null != request.getUserId() && request.getUserId() > 0 ? request.getUserId() : SecurityUtils.getUid());
-        request.setConversationId(StringUtils.nvl(request.getConversationId(), AiUtils.generateConversationId()));
-        request.setResponseType(StringUtils.nvl(request.getResponseType(), AiResponseType.TEXT.getValue()));
-        request.setChatType(StringUtils.nvl(request.getResponseType(), AiChatType.STATIC.getValue()));
-    }
-
-    public static ChatClient.ChatClientRequestSpec processChatSpec(ChatClient chatClient, SimpleChatRequest request) {
-        ChatClient.ChatClientRequestSpec spec = chatClient.prompt().advisors(a -> {
-            a.param(CAHT_CONTEXT_SESSION_ID_KEY, request.getConversationId());
-            a.param(CAHT_CONTEXT_USER_ID_KEY, String.valueOf(request.getUserId()));
-            a.param(CAHT_CONTEXT_TENANT_ID_KEY, request.getTenantId());
-        }).user(u -> {
-            u.text(request.getPrompt());
-
-            u.metadata(METADATA_SESSION_ID, request.getConversationId());
-            u.metadata(METADATA_TENANT_ID, request.getTenantId());
-            u.metadata(METADATA_USER_ID, String.valueOf(request.getUserId()));
-            u.metadata(METADATA_CHAT_TYPE, request.getChatType());
-            u.metadata(METADATA_AGENT_CODE, StringUtils.nvl(request.getAgentCode()));
-        });
-        // 工具上下文
-        spec.toolContext(Map.of(AiConstants.METADATA_USER_ID, request.getUserId()));
-        // 系统提示词
-        if (StringUtils.isNotEmpty(request.getSystemPrompt())) {
-            spec = spec.system(request.getSystemPrompt());
-        }
-        // 温度参数
-        if (request.getTemperature() != null && request.getTemperature() > 0) {
-            spec = spec.options(ChatOptions.builder().temperature(request.getTemperature().doubleValue()));
-        }
-        return spec;
-    }
-
-    public static String processChatResponse(ChatClient.ChatClientRequestSpec spec, SimpleChatRequest request) {
-        log.info("processChatResponse [{}] text", request.getConversationId());
-        return spec.call().content();
-    }
-
-    public static Flux<String> processStreamChatResponse(ChatClient.ChatClientRequestSpec spec, SimpleChatRequest request) {
-        if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.JSON.getValue().equalsIgnoreCase(request.getResponseType())) {
-            try {
-                log.info("processChatStreamResponse [{}] json", request.getConversationId());
-                Flux<String> flux = spec.stream().content().map(AiUtils::getTextContent);
-                return Flux.concat(Mono.just(AiUtils.getStartContent()), flux, Mono.just(AiUtils.getEndContent()));
-            } catch (Exception e) {
-                log.error("processChatStreamResponse [{}] error", request.getConversationId(), e);
-                return Flux.just(AiUtils.getErrorContent());
-            }
-        } else {
-            log.info("processChatStreamResponse [{}] text", request.getConversationId());
-            return spec.stream().content();
-        }
-    }
-
-    public static @Nullable String getChatResponseContent(ChatResponse chatResponse) {
-        return Optional.ofNullable(chatResponse)
-            .map(ChatResponse::getResult)
-            .map(Generation::getOutput)
-            .map(AbstractMessage::getText)
-            .orElse(null);
-    }
-
-    @NonNull
-    public static List<ToolCallback> getToolObject(List<String> toolNames) {
-        if (CollectionUtils.isEmpty(toolNames)) {
-            return Collections.emptyList();
-        }
-
-        List<ToolCallback> objects = Lists.newArrayList();
-        SpringUtils.getBeanProvider(ToolCallbackResolver.class).ifAvailable(resolver -> {
-            for (String toolName : toolNames) {
-                ToolCallback object = resolver.resolve(toolName);
-                if (object != null) {
-                    objects.add(object);
-                }
-            }
-        });
-        return objects;
-    }
-
-    // ------------------------------------------------------------------------------
-    // Agent
-    // ------------------------------------------------------------------------------
-
-
     // ------------------------------------------------------------------------------
     // Config
     // ------------------------------------------------------------------------------
-
 
     public static ModelConfig buildChatModelConfig(ModelCommonsConfig parentConfig, ModelChatConfig modelConfig) {
         String baseUrl = nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());

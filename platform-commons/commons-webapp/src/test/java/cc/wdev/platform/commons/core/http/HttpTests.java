@@ -1,11 +1,11 @@
 package cc.wdev.platform.commons.core.http;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.extensions.http.HttpConfig;
 import cc.wdev.platform.commons.extensions.http.HttpManger;
 import cc.wdev.platform.commons.extensions.http.enums.HttpClientTypeEnum;
 import cc.wdev.platform.commons.extensions.http.executor.HttpExecutor;
 import cc.wdev.platform.commons.extensions.http.executor.HttpGetRequestExecutor;
+import cc.wdev.webapp.BaseTests;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
 package cc.wdev.platform.commons.extensions;
 
-import cc.wdev.dev.webapp.BaseTests;
 import cc.wdev.platform.commons.extensions.ip.GlobalIpManager;
 import cc.wdev.platform.commons.extensions.ip.Ip;
 import cc.wdev.platform.commons.extensions.ip.ip2region.Ip2Region;
+import cc.wdev.webapp.BaseTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

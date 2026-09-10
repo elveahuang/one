@@ -11,7 +11,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum AiResponseType implements BaseEnum<String> {
     TEXT("TEXT", "普通文本"),
-    JSON("JSON", "JSON文本");
+    JSON("JSON", "JSON文本"),
+    BLOCK("BLOCK", "UI Block");
 
     private final String value;
     private final String description;
