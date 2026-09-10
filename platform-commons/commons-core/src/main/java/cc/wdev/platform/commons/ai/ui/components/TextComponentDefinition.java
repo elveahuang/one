@@ -1,8 +1,8 @@
 package cc.wdev.platform.commons.ai.ui.components;
 
 import cc.wdev.platform.commons.ai.ui.UiComponentDefinition;
-import cc.wdev.platform.commons.utils.JacksonUtils;
-import tools.jackson.databind.node.ObjectNode;
+
+import java.util.Map;
 
 /**
  * @author elvea
@@ -20,13 +20,13 @@ public class TextComponentDefinition implements UiComponentDefinition {
     }
 
     @Override
-    public ObjectNode propsSchema() {
-        ObjectNode schema = JacksonUtils.getSimpleObjectMapper().createObjectNode();
-        schema.put("type", "object");
-        schema.putArray("required").add("content");
-        ObjectNode props = schema.putObject("properties");
-        props.putObject("content").put("type", "string");
-        return schema;
+    public Map<String, Object> propsSchema() {
+        return Map.of(
+            "type", "object",
+            "properties", Map.of("content", Map.of("type", "string")),
+            "required", java.util.List.of("content"),
+            "additionalProperties", false
+        );
     }
 
 }

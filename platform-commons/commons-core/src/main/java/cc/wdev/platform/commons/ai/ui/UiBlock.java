@@ -1,9 +1,9 @@
 package cc.wdev.platform.commons.ai.ui;
 
-import tools.jackson.databind.JsonNode;
+import java.util.Map;
 
 /**
  * @author elvea
  */
-public record UiBlock(String id, String type, JsonNode props) {
+public record UiBlock(String id, String type, Map<String, Object> props) {
 }

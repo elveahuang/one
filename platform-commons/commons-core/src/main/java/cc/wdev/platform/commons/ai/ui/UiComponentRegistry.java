@@ -1,11 +1,13 @@
 package cc.wdev.platform.commons.ai.ui;
 
+import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.JacksonUtils;
+import com.google.common.collect.Maps;
 import lombok.NoArgsConstructor;
 import org.apache.commons.compress.utils.Lists;
-import tools.jackson.databind.node.ObjectNode;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author elvea
@@ -13,69 +15,50 @@ import java.util.List;
 @NoArgsConstructor
 public class UiComponentRegistry {
 
-    private final List<UiComponentDefinition> definitions = Lists.newArrayList();
+    private final Map<String, UiComponentDefinition> definitions = Maps.newHashMap();
 
     public void register(List<UiComponentDefinition> definitions) {
-        this.definitions.addAll(definitions);
+        CollectionUtils.nvl(definitions, Lists.newArrayList()).forEach(this::register);
     }
 
     public void register(UiComponentDefinition definition) {
-        this.definitions.add(definition);
+        this.definitions.put(definition.type(), definition);
+    }
+
+    public String buildJsonSchema() {
+        List<Map<String, Object>> variants = definitions.values().stream().map(d -> Map.of(
+            "type", "object",
+            "properties", Map.of(
+                "id", Map.of("type", "string"),
+                "type", Map.of("type", "string", "const", d.type()),
+                "props", d.propsSchema()
+            ),
+            "required", List.of("id", "type", "props"),
+            "additionalProperties", false
+        )).toList();
+
+        Map<String, Object> schema = Map.of(
+            "$schema", "https://json-schema.org/draft/2020-12/schema",
+            "type", "object",
+            "properties", Map.of(
+                "blocks", Map.of(
+                    "type", "array",
+                    "items", Map.of("oneOf", variants)
+                )
+            ),
+            "required", List.of("blocks"),
+            "additionalProperties", false
+        );
+
+        try {
+            return JacksonUtils.toJson(schema);
+        } catch (Exception e) {
+            throw new IllegalStateException("Cannot build UI schema", e);
+        }
     }
 
     public UiOutputConverter getConverter() {
         return new UiOutputConverter(this.buildJsonSchema());
-    }
-
-    public String buildJsonSchema() {
-        ObjectNode root = JacksonUtils.getSimpleObjectMapper().createObjectNode();
-        root.put("type", "object");
-
-        ObjectNode properties = root.putObject("properties");
-        ObjectNode blocks = properties.putObject("blocks");
-        blocks.put("type", "array");
-
-        ObjectNode items = blocks.putObject("items");
-        var oneOf = items.putArray("oneOf");
-
-        for (UiComponentDefinition definition : definitions) {
-            ObjectNode block = JacksonUtils.getSimpleObjectMapper().createObjectNode();
-            block.put("type", "object");
-
-            ObjectNode blockProps = block.putObject("properties");
-            blockProps.putObject("id").put("type", "string");
-
-            var type = blockProps.putObject("type");
-            type.put("type", "string");
-            type.put("const", definition.type());
-
-            blockProps.set("props", definition.propsSchema());
-
-            block.putArray("required")
-                .add("id")
-                .add("type")
-                .add("props");
-
-            oneOf.add(block);
-        }
-
-        root.putArray("required").add("blocks");
-        return root.toString();
-    }
-
-    public String buildComponentInstructions() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Allowed UI components and props:\n");
-        for (UiComponentDefinition definition : this.definitions) {
-            sb.append("- ")
-                .append(definition.type())
-                .append(": ")
-                .append(definition.description())
-                .append("; props schema = ")
-                .append(definition.propsSchema().toPrettyString())
-                .append('\n');
-        }
-        return sb.toString();
     }
 
 }

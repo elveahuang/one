@@ -8,7 +8,9 @@ import org.springframework.ai.converter.StructuredOutputConverter;
  * @author elvea
  */
 public class UiOutputConverter implements StructuredOutputConverter<UiResponse> {
+
     private final BeanOutputConverter<UiResponse> delegate = new BeanOutputConverter<>(UiResponse.class);
+
     private final String schema;
 
     public UiOutputConverter(String schema) {

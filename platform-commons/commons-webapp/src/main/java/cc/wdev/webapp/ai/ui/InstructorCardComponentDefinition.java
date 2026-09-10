@@ -1,9 +1,10 @@
 package cc.wdev.webapp.ai.ui;
 
 import cc.wdev.platform.commons.ai.ui.UiComponentDefinition;
-import cc.wdev.platform.commons.utils.JacksonUtils;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.node.ObjectNode;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author elvea
@@ -22,15 +23,19 @@ public class InstructorCardComponentDefinition implements UiComponentDefinition 
     }
 
     @Override
-    public ObjectNode propsSchema() {
-        ObjectNode schema = JacksonUtils.getSimpleObjectMapper().createObjectNode();
-        schema.put("type", "object");
-        ObjectNode props = schema.putObject("properties");
-        props.putObject("instructorId").put("type", "string");
-        props.putObject("instructorName").put("type", "string");
-        props.putObject("instructorDetails").put("type", "string");
-        schema.putArray("required").add("content");
-        return schema;
+    public Map<String, Object> propsSchema() {
+        Map<String, Object> properties = Map.of(
+            "instructorId", Map.of("type", "string"),
+            "instructorName", Map.of("type", "string"),
+            "instructorDetails", Map.of("type", "string")
+        );
+
+        return Map.of(
+            "type", "object",
+            "properties", properties,
+            "required", List.of("instructorId"),
+            "additionalProperties", false
+        );
     }
 
 }

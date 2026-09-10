@@ -1,6 +1,6 @@
 package cc.wdev.platform.commons.ai.ui;
 
-import tools.jackson.databind.node.ObjectNode;
+import java.util.Map;
 
 /**
  * @author elvea
@@ -11,6 +11,6 @@ public interface UiComponentDefinition {
 
     String description();
 
-    ObjectNode propsSchema();
+    Map<String, Object> propsSchema();
 
 }
