@@ -12,6 +12,7 @@ import lombok.Getter;
 public enum AiContentType implements BaseEnum<String> {
     START("[START]", "开始标记"),
     TEXT("text", "文本"),
+    BLOCK("block", "UI 卡片"),
     CITATION("citation", "引用"),
     INTERACTION("interaction", "交互"),
     ERROR("error", "Connection timeout."),

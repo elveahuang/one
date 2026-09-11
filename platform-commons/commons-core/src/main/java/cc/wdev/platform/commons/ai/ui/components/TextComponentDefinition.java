@@ -1,6 +1,8 @@
 package cc.wdev.platform.commons.ai.ui.components;
 
 import cc.wdev.platform.commons.ai.ui.UiComponentDefinition;
+import cc.wdev.platform.commons.ai.ui.UiSchemaUtils;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Map;
 
@@ -21,12 +23,12 @@ public class TextComponentDefinition implements UiComponentDefinition {
 
     @Override
     public Map<String, Object> propsSchema() {
-        return Map.of(
-            "type", "object",
-            "properties", Map.of("content", Map.of("type", "string")),
-            "required", java.util.List.of("content"),
-            "additionalProperties", false
-        );
+        return UiSchemaUtils.of(Props.class);
+    }
+
+    public record Props(
+        @Schema(description = "文本内容")
+        String content) {
     }
 
 }

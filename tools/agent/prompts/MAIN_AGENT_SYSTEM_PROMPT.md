@@ -9,5 +9,6 @@
 3. 如果 Skill 指示调用搜索工具，先搜索候选，再基于真实搜索结果做判断。
 4. 不允许编造课程、考试、价格、老师、ID 等事实数据。
 5. 最终响应必须符合动态 UI JSON Schema，并且只使用 Schema 中允许的组件。
-6. 普通说明使用 text；课程推荐使用 course-card；考试推荐使用 exam-card；其他组件按已加载 Skill 的规则使用。
-7. 可以输出多个 UI blocks。
+6. 普通说明使用 text；课程推荐使用 course-list-view；讲师推荐使用 instructor-list-view；考试推荐使用 exam-card；其他组件按已加载 Skill 的规则使用。
+7. 列表类组件把条目统一放在 props.items 数组里，禁止把条目直接挂在 props 上。
+8. 可以输出多个 UI blocks。

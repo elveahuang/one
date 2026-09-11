@@ -7,48 +7,53 @@ description: 当用户需要查找、了解或推荐讲师/老师时使用。先
 
 ## 目标
 
-根据用户的教学与讲师咨询需求，检索真实讲师，并通过 json-render 代码块把讲师卡片交给前端渲染。
+根据用户的教学与讲师咨询需求检索真实讲师，并通过 `json-render` 代码块把讲师卡片交给前端渲染。
 
 ## 严格流水线规范（必须按序执行）
 
 1. **意图理解**：提取学科方向、讲师姓名、技术特长等意图。
 2. **检索候选集**：调用 `searchInstructor` 工具搜索，关键字取用户诉求中的核心词。
 3. **相关性过滤**：仅保留高度匹配的讲师，静默丢弃无关项。
-4. **交付渲染块**：在正文末尾输出 **唯一一个** 语言标识为 `json-render` 的代码块。
-5. **生成正文**：正文只写讲师的教学特色评价及后续选课/咨询建议，不得复述讲师清单。
+4. **生成正文**：正文只写讲师的教学特色评价及后续选课/咨询建议，不得复述讲师清单。
+5. **交付渲染块**：在正文末尾输出 **唯一一个** 语言标识为 `json-render` 的代码块。
 
 ## 渲染块规范
 
-- 块内必须是合法 JSON 数组，元素结构固定为：
+- 块内是合法 JSON 数组，条目统一放在 `props.items` 数组里，严禁把条目直接挂在 `props` 上。
+- 组件字段与数据来源固定如下，多余字段会被前端 Schema 拒绝：
 
-  {"type":"instructor-card","props":{"instructorId":"<讲师id>","name":"<讲师姓名>"}}
+  | type | item 字段 | 数据来源 |
+      | --- | --- | --- |
+  | `instructor-list-view` | `instructorId`、`instructorName` | `searchInstructor` 返回的 `id`、`name` |
+  | `course-list-view` | `courseId`、`courseTitle` | `searchCourse` 返回的 `id`、`title` |
 
-- `instructorId`、`name` 必须原样复制 `searchInstructor` 返回结果中的 `id`、`name`。
-- `searchInstructor` 只返回 `id` 与 `name`，严禁补充资历、简介、评分等工具未返回的字段。
-- 卡片不超过 5 条，优先保留最匹配的。
+- 元素结构固定为：
+
+  {"type":"instructor-list-view","props":{"items":[{"instructorId":"<讲师id>","instructorName":"<讲师姓名>"}]}}
+
+- `items` 中的字段必须原样复制工具返回结果，两个字段都必填；严禁补充资历、简介、评分等工具未返回的字段。
+- `items` 不超过 5 条，优先保留最匹配的。
 - 除该代码块外，正文严禁用 Markdown 列表、粗体或表格复述讲师清单。
 
-## 附带课程卡片
+## 混合交付
 
-- 仅当用户明确还想了解该讲师的主讲课程时，才补充调用 `searchCourse`。
-- 课程卡片必须写在 **同一个** json-render 数组内，严禁再开第二个代码块，字段要求同课程推荐 Skill：
+- 默认只交付本轮主组件；仅当用户明确还想了解该讲师的主讲课程时，才补充调用 `searchCourse`。
+- 课程卡片必须写进 **同一个** `json-render` 数组，严禁再开第二个代码块。
 
-  {"type":"course-card","props":{"courseId":"<课程id>","title":"<课程名称>"}}
-
-示例：
+## 示例
 
 已为你找到匹配讲师，建议先了解教学风格再决定跟课。
 
 ```json-render
-[{"type":"instructor-card","props":{"instructorId":"7","name":"李老师"}}]
+[{"type":"instructor-list-view","props":{"items":[{"instructorId":"7","instructorName":"李老师"}]}}]
 ```
 
 ## 空结果分支
 
-若检索整体为空或无合适讲师， **不得输出 json-render 代码块**，直接在正文中正向说明。
+若检索整体为空或无合适讲师， **不得输出 `json-render` 代码块**，直接在正文中正向说明。
 
 ## 🚨 核心禁令（违规将被视为严重故障）
 
 1. 绝对禁止伪造异常免责声明（“卡片渲染异常”“讲师卡片加载失败”“暂以文字形式呈现”等）。
-2. 绝对禁止在正文中重复罗列讲师清单——清单只能出现在 json-render 块内。
+2. 绝对禁止在正文中重复罗列讲师清单——清单只能出现在 `json-render` 块内。
 3. 正向交付：只要有推荐结果，严禁提及“未找到xx讲师”或罗列未命中分支。
