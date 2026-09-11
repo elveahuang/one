@@ -104,8 +104,16 @@ public class AiHelper {
      * 获取知识库对应的向量存储
      */
     public VectorStore resolveVectorStore(@NonNull AiKbVo kb) {
-        ModelConfig modelConfig = this.resolveModelConfig(kb.getEmbeddingModel());
-        return this.aiManager.getVectorStore(modelConfig, kb.getCollectionName());
+        if (ObjectUtils.isValidId(kb.getEmbeddingModelId())) {
+            ModelConfig modelConfig = this.resolveModelConfig(kb.getEmbeddingModel());
+            return this.aiManager.getVectorStore(modelConfig, kb.getCollectionName());
+        } else {
+            if (this.aiManager.getConfig().isFallbackEnabled()) {
+                log.info("Invalid embedding model ID for knowledge base [{}], fallback to default vector store", kb.getId());
+                return this.aiManager.getVectorStore();
+            }
+            throw new RuntimeException("Unavailable VectorStore");
+        }
     }
 
     /**

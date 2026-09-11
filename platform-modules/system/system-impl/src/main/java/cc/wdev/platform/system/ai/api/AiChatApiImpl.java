@@ -21,7 +21,6 @@ import cc.wdev.platform.system.ai.domain.vo.AiChatVo;
 import cc.wdev.platform.system.ai.domain.vo.AiKbVo;
 import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
 import cc.wdev.platform.system.ai.helpers.AiHelper;
-import cc.wdev.platform.system.ai.service.AiChatMemoryService;
 import cc.wdev.platform.system.ai.service.AiSessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,8 +63,6 @@ public class AiChatApiImpl implements AiChatApi {
     private final SessionService sessionService;
 
     private final AiSessionService aiSessionService;
-
-    private final AiChatMemoryService aiChatMemoryService;
 
     /**
      * @see AiChatApi#chatText(SimpleChatRequest)
@@ -125,7 +122,6 @@ public class AiChatApiImpl implements AiChatApi {
             AiSessionEntity session = this.aiSessionService.findBySessionIdAndUser(sessionId, userId, tenantId);
             if (StringUtils.isNotEmpty(sessionId) && session != null) {
                 this.sessionService.delete(sessionId);
-                this.aiChatMemoryService.deleteByConversationId(sessionId);
             }
         }
         return true;

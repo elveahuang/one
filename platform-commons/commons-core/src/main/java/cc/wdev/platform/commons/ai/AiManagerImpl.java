@@ -169,7 +169,14 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public ChatModelFactory getChatModelFactory() {
-        return getChatModelFactory(AiServiceProvider.getChatFactoryProvider(config.getFactory().getText()));
+        AiServiceProvider defaultProvider = AiServiceProvider.getChatFactoryProvider(config.getFactory().getText());
+        return this.chatModelFactories.stream()
+            .filter(f -> {
+                AiServiceProvider provider = f.getServiceProvider();
+                return provider.isEnabled() && provider.equals(defaultProvider);
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Unavailable ChatModelFactory."));
     }
 
     /**
@@ -177,11 +184,21 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public ChatModelFactory getChatModelFactory(AiServiceProvider serviceProvider) {
-        return this.chatModelFactories.stream()
-            .filter(service -> service.getServiceProvider().equals(serviceProvider))
-            .filter(service -> service.getServiceProvider().isEnabled())
+        ChatModelFactory factory = this.chatModelFactories.stream()
+            .filter(f -> {
+                AiServiceProvider provider = f.getServiceProvider();
+                return provider.isEnabled() && provider.equals(serviceProvider);
+            })
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Unavailable ChatModelFactory."));
+            .orElse(null);
+
+        if (factory != null) {
+            return factory;
+        } else if (this.getConfig().isFallbackEnabled()) {
+            return this.getChatModelFactory();
+        } else {
+            throw new RuntimeException("Unavailable ChatModelFactory.");
+        }
     }
 
     /**
@@ -263,7 +280,14 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public EmbeddingModelFactory getEmbeddingModelFactory() {
-        return getEmbeddingModelFactory(AiServiceProvider.getEmbeddingFactoryProvider(config.getFactory().getEmbedding()));
+        AiServiceProvider defaultProvider = AiServiceProvider.getEmbeddingFactoryProvider(config.getFactory().getEmbedding());
+        return this.embeddingModelFactories.stream()
+            .filter(f -> {
+                AiServiceProvider provider = f.getServiceProvider();
+                return provider.isEnabled() && provider.equals(defaultProvider);
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Unavailable EmbeddingModelFactory."));
     }
 
     /**
@@ -271,11 +295,21 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public EmbeddingModelFactory getEmbeddingModelFactory(AiServiceProvider serviceProvider) {
-        return this.embeddingModelFactories.stream()
-            .filter(service -> service.getServiceProvider().equals(serviceProvider))
-            .filter(service -> service.getServiceProvider().isEnabled())
+        EmbeddingModelFactory factory = this.embeddingModelFactories.stream()
+            .filter(f -> {
+                AiServiceProvider provider = f.getServiceProvider();
+                return provider.isEnabled() && provider.equals(serviceProvider);
+            })
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Unavailable EmbeddingModelFactory."));
+            .orElse(null);
+
+        if (factory != null) {
+            return factory;
+        } else if (this.getConfig().isFallbackEnabled()) {
+            return this.getEmbeddingModelFactory();
+        } else {
+            throw new RuntimeException("Unavailable EmbeddingModelFactory.");
+        }
     }
 
     /**
@@ -333,7 +367,14 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public TranscriptionModelFactory getTranscriptionModelFactory() {
-        return getTranscriptionModelFactory(AiServiceProvider.getTranscriptionFactoryProvider(config.getFactory().getTranscription()));
+        AiServiceProvider defaultProvider = AiServiceProvider.getTranscriptionFactoryProvider(config.getFactory().getTranscription());
+        return this.transcriptionModelFactories.stream()
+            .filter(f -> {
+                AiServiceProvider provider = f.getServiceProvider();
+                return provider.isEnabled() && provider.equals(defaultProvider);
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Unavailable TranscriptionModelFactory."));
     }
 
     /**
@@ -341,11 +382,21 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public TranscriptionModelFactory getTranscriptionModelFactory(AiServiceProvider serviceProvider) {
-        return this.transcriptionModelFactories.stream()
-            .filter(service -> service.getServiceProvider().equals(serviceProvider))
-            .filter(service -> service.getServiceProvider().isEnabled())
+        TranscriptionModelFactory factory = this.transcriptionModelFactories.stream()
+            .filter(f -> {
+                AiServiceProvider provider = f.getServiceProvider();
+                return provider.isEnabled() && provider.equals(serviceProvider);
+            })
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Unavailable TranscriptionModelFactory."));
+            .orElse(null);
+
+        if (factory != null) {
+            return factory;
+        } else if (this.getConfig().isFallbackEnabled()) {
+            return this.getTranscriptionModelFactory();
+        } else {
+            throw new RuntimeException("Unavailable TranscriptionModelFactory.");
+        }
     }
 
     /**
@@ -379,7 +430,14 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public SpeechModelFactory getSpeechModelFactory() {
-        return getSpeechModelFactory(AiServiceProvider.getSpeechFactoryProvider(config.getFactory().getTranscription()));
+        AiServiceProvider defaultProvider = AiServiceProvider.getSpeechFactoryProvider(config.getFactory().getSpeech());
+        return this.speechModelFactories.stream()
+            .filter(f -> {
+                AiServiceProvider provider = f.getServiceProvider();
+                return provider.isEnabled() && provider.equals(defaultProvider);
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Unavailable SpeechModelFactory."));
     }
 
     /**
@@ -387,11 +445,21 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public SpeechModelFactory getSpeechModelFactory(AiServiceProvider serviceProvider) {
-        return this.speechModelFactories.stream()
-            .filter(service -> service.getServiceProvider().equals(serviceProvider))
-            .filter(service -> service.getServiceProvider().isEnabled())
+        SpeechModelFactory factory = this.speechModelFactories.stream()
+            .filter(f -> {
+                AiServiceProvider provider = f.getServiceProvider();
+                return provider.isEnabled() && provider.equals(serviceProvider);
+            })
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Unavailable SpeechModelFactory."));
+            .orElse(null);
+
+        if (factory != null) {
+            return factory;
+        } else if (this.getConfig().isFallbackEnabled()) {
+            return this.getSpeechModelFactory();
+        } else {
+            throw new RuntimeException("Unavailable SpeechModelFactory.");
+        }
     }
 
     /**

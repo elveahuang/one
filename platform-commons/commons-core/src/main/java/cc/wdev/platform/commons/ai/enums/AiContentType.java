@@ -10,13 +10,11 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum AiContentType implements BaseEnum<String> {
-    START("[START]", "开始标记"),
-    TEXT("text", "文本"),
-    BLOCK("block", "UI 卡片"),
-    CITATION("citation", "引用"),
-    INTERACTION("interaction", "交互"),
+    START("[START]", "Start"),
+    TEXT("text", "Markdown Text"),
+    BLOCK("block", "UI Block"),
     ERROR("error", "Connection timeout."),
-    END("[DONE]", "结束标记");
+    END("[DONE]", "End");
 
     private final String value;
     private final String description;

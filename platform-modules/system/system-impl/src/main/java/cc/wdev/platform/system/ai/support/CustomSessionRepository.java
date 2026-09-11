@@ -46,7 +46,7 @@ public class CustomSessionRepository implements SessionRepository {
     private final AiSessionEventService aiSessionEventService;
 
     // -------------------------------------------------------------------------
-    // SessionRepository — session lifecycle
+    // SessionRepository — Session lifecycle
     // -------------------------------------------------------------------------
 
     @Override
