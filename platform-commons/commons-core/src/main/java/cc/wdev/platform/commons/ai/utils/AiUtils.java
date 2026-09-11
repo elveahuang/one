@@ -20,10 +20,6 @@ import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.GsonUtils;
 import cc.wdev.platform.commons.utils.SecurityUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -262,139 +258,54 @@ public abstract class AiUtils {
             AtomicBoolean interaction = new AtomicBoolean(false);
 
             StringBuilder buffer = new StringBuilder();
-            return rawStream.handle((String data, SynchronousSink<List<String>> sink) -> {
-                    buffer.append(data);
+            return rawStream.handle((String data, SynchronousSink<String> sink) -> {
+                buffer.append(data);
 
-                    int idx;
-                    String remaining = buffer.toString();
-                    if (!interaction.get()) {
-                        if (remaining.contains(JSON_RENDER_START_TAG)) {
-                            // 内容包含开始标记，那么发送标记前的内容，并开启交互模式，等待结束标记
-                            idx = remaining.indexOf(JSON_RENDER_START_TAG);
-                            String text = remaining.substring(0, idx);
-                            if (StringUtils.isNotEmpty(text)) {
-                                sink.next(List.of(getTextContent(text)));
-                            }
-
-                            idx = remaining.indexOf(JSON_RENDER_START_TAG) + JSON_RENDER_START_TAG.length();
-                            buffer.delete(0, idx);
-
-                            interaction.set(true);
-                        } else {
-                            if (remaining.length() > (JSON_RENDER_START_TAG.length() + 10)) {
-                                // 保留一个安全区域，防止开始标记被截断，影响页面渲染效果
-                                idx = remaining.length() - JSON_RENDER_START_TAG.length();
-                                sink.next(List.of(getTextContent(remaining.substring(0, idx))));
-                                buffer.delete(0, idx);
-                            }
+                int idx;
+                String remaining = buffer.toString();
+                if (!interaction.get()) {
+                    if (remaining.contains(JSON_RENDER_START_TAG)) {
+                        // 内容包含开始标记，那么发送标记前的内容，并开启交互模式，等待结束标记
+                        idx = remaining.indexOf(JSON_RENDER_START_TAG);
+                        String text = remaining.substring(0, idx);
+                        if (StringUtils.isNotEmpty(text)) {
+                            sink.next(getTextContent(text));
                         }
+
+                        idx = remaining.indexOf(JSON_RENDER_START_TAG) + JSON_RENDER_START_TAG.length();
+                        buffer.delete(0, idx);
+
+                        interaction.set(true);
                     } else {
-                        // 内容包含结束标记，截取开始标记到结束标记之间的内容，发送交互内容
-                        if (remaining.contains(JSON_RENDER_END_TAG)) {
-                            idx = remaining.indexOf(JSON_RENDER_END_TAG);
-                            String text = buffer.substring(0, idx);
-                            if (StringUtils.isNotEmpty(text)) {
-                                sink.next(toBlockContents(text));
-                            }
-
-                            idx = remaining.indexOf(JSON_RENDER_END_TAG) + JSON_RENDER_END_TAG.length();
+                        if (remaining.length() > (JSON_RENDER_START_TAG.length() + 10)) {
+                            // 保留一个安全区域，防止开始标记被截断，影响页面渲染效果
+                            idx = remaining.length() - JSON_RENDER_START_TAG.length();
+                            sink.next(getTextContent(remaining.substring(0, idx)));
                             buffer.delete(0, idx);
-
-                            interaction.set(false);
                         }
                     }
-                })
-                // handle 每个元素最多发一个分组，多块在这里展开成多条消息
-                .concatMap(Flux::fromIterable)
-                .concatWith(Flux.defer(() -> {
-                    if (!buffer.isEmpty()) {
-                        return Flux.just(getTextContent(buffer.toString()));
+                } else {
+                    // 内容包含结束标记，截取开始标记到结束标记之间的内容，发送交互内容
+                    if (remaining.contains(JSON_RENDER_END_TAG)) {
+                        idx = remaining.indexOf(JSON_RENDER_END_TAG);
+                        String text = buffer.substring(0, idx);
+                        if (StringUtils.isNotEmpty(text)) {
+                            sink.next(getJsonRenderContent(text));
+                        }
+
+                        idx = remaining.indexOf(JSON_RENDER_END_TAG) + JSON_RENDER_END_TAG.length();
+                        buffer.delete(0, idx);
+
+                        interaction.set(false);
                     }
-                    return Flux.empty();
-                }));
+                }
+            }).concatWith(Flux.defer(() -> {
+                if (!buffer.isEmpty()) {
+                    return Flux.just(getTextContent(buffer.toString()));
+                }
+                return Flux.empty();
+            }));
         });
-    }
-
-    /**
-     * json-render 围栏内容解析成卡片，一个卡片一条消息；解析失败时原样作为文本下发，避免内容丢失
-     */
-    private static List<String> toBlockContents(String text) {
-        List<UiBlock> blocks = parseBlocks(text);
-        if (blocks.isEmpty()) {
-            return List.of(getJsonRenderContent(text));
-        }
-        return blocks.stream().map(AiUtils::getBlockContent).toList();
-    }
-
-    /**
-     * 解析卡片数组，兼容 JSON 数组、{"blocks":[...]} 与单个块对象三种写法
-     */
-    private static List<UiBlock> parseBlocks(String text) {
-        try {
-            List<UiBlock> blocks = Lists.newArrayList();
-            for (JsonElement element : toBlockNodes(GsonUtils.parse(text, JsonElement.class))) {
-                if (!element.isJsonObject()) {
-                    continue;
-                }
-                JsonObject node = element.getAsJsonObject();
-                JsonElement type = node.get("type");
-                if (type == null || type.isJsonNull() || StringUtils.isEmpty(type.getAsString())) {
-                    continue;
-                }
-                blocks.add(new UiBlock(type.getAsString() + ":" + blocks.size(), type.getAsString(),
-                    toProps(node.get("props"))));
-            }
-            return blocks;
-        } catch (Exception e) {
-            log.warn("Parse json-render content failed", e);
-            return Collections.emptyList();
-        }
-    }
-
-    private static List<JsonElement> toBlockNodes(JsonElement root) {
-        if (root == null || root.isJsonNull()) {
-            return Collections.emptyList();
-        }
-        if (root.isJsonArray()) {
-            return Lists.newArrayList(root.getAsJsonArray());
-        }
-        if (root.isJsonObject()) {
-            JsonElement blocks = root.getAsJsonObject().get("blocks");
-            if (blocks != null && blocks.isJsonArray()) {
-                return Lists.newArrayList(blocks.getAsJsonArray());
-            }
-            return Collections.singletonList(root);
-        }
-        return Collections.emptyList();
-    }
-
-    /**
-     * 属性按原结构下发，嵌套的 items 保持数组与对象形态，不做字符串化
-     */
-    private static Map<String, Object> toProps(JsonElement element) {
-        Map<String, Object> props = Maps.newLinkedHashMap();
-        if (element == null || !element.isJsonObject()) {
-            return props;
-        }
-        for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
-            props.put(entry.getKey(), toValue(entry.getValue()));
-        }
-        return props;
-    }
-
-    private static Object toValue(JsonElement element) {
-        if (element == null || element.isJsonNull()) {
-            return null;
-        }
-        if (element.isJsonPrimitive()) {
-            return element.getAsString();
-        }
-        if (element.isJsonArray()) {
-            List<Object> values = Lists.newArrayList();
-            element.getAsJsonArray().forEach(item -> values.add(toValue(item)));
-            return values;
-        }
-        return toProps(element);
     }
 
     // ------------------------------------------------------------------------------
