@@ -80,6 +80,28 @@ public abstract class AiUtils {
 
     public static final String JSON_RENDER_END_TAG = "```";
 
+    /**
+     * 按响应模式生成交付形态说明
+     */
+    public static String processSystemPrompt(String prompt, String responseType) {
+        if (AiResponseType.STRICT.getValue().equalsIgnoreCase(responseType)) {
+            return prompt + "\n\n" + """
+                【当前响应模式】STRICT
+                - 只能输出符合 UI Schema 的 blocks JSON，禁止输出 json-render 围栏，禁止输出 blocks 以外的任何文字。
+                - 正文放在 {"type":"text","props":{"content":"<Markdown 正文>"}} 块里，卡片块按已加载 Skill 的卡片规范生成。""";
+        } else if (AiResponseType.JSON.getValue().equalsIgnoreCase(responseType)) {
+            return prompt + "\n\n" + """
+                【当前响应模式】JSON
+                - 正文用 Markdown 输出，并在正文末尾输出 **唯一一个** json-render 围栏。
+                - 卡片只能出现在围栏里，正文不得复述卡片清单。""";
+        } else {
+            return prompt + "\n\n" + """
+                【当前响应模式】TEXT
+                - 只输出 Markdown 正文，禁止输出 json-render 围栏或任何卡片标记。
+                - 需要展示课程、讲师等结构化信息时，用文字或 Markdown 列表说明。""";
+        }
+    }
+
     // ------------------------------------------------------------------------------
     // Chat
     // ------------------------------------------------------------------------------

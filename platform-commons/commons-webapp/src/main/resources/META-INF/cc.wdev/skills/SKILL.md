@@ -16,7 +16,9 @@ description: 当用户发送问候语（如"你好"、"hello"）或简单寒暄�
 
 ## 交付形态
 
-纯 Markdown 文本，**禁止**输出 `json-render` 代码块或任何卡片组件。
+- **STRICT**：正文放在 `{"type":"text","props":{"content":"<问候语>"}}` 块里。
+- 其他模式：直接输出纯 Markdown 文本。
+- 任何模式下都**禁止**输出 `json-render` 代码块或卡片组件。
 
 ## 示例
 

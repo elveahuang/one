@@ -13,6 +13,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 /**
  * @author elvea
  */
@@ -22,6 +25,8 @@ import reactor.core.publisher.Flux;
 public class AiServiceImpl implements AiService {
 
     private static final Resource PROMPT = new DefaultResourceLoader().getResource("classpath:/META-INF/cc.wdev/prompts/default.md");
+
+    private static final String SYSTEM = readPrompt();
 
     private final AiManager aiManager;
 
@@ -33,6 +38,7 @@ public class AiServiceImpl implements AiService {
     @Override
     public String chatText(SimpleChatRequest request) {
         AiUtils.processChatRequest(request);
+        this.processChatRequest(request);
 
         ChatClient client = this.getChatClient();
         ChatClient.ChatClientRequestSpec spec = AiUtils.processChatSpec(client, request);
@@ -46,6 +52,7 @@ public class AiServiceImpl implements AiService {
     @Override
     public Flux<String> chatStream(SimpleChatRequest request) {
         AiUtils.processChatRequest(request);
+        this.processChatRequest(request);
 
         ChatClient client = this.getChatClient();
         ChatClient.ChatClientRequestSpec spec = AiUtils.processChatSpec(client, request);
@@ -63,9 +70,21 @@ public class AiServiceImpl implements AiService {
         this.aiManager.applyMemoryAdvisor(builder);
         this.aiManager.applyAgentTool(builder);
         builder.defaultTools(coreTools);
-        builder.defaultSystem(PROMPT);
+        builder.defaultSystem(SYSTEM);
 
         return builder.build();
+    }
+
+    private void processChatRequest(SimpleChatRequest request) {
+        request.setSystemPrompt(AiUtils.processSystemPrompt(SYSTEM, request.getResponseType()));
+    }
+
+    private static String readPrompt() {
+        try {
+            return AiServiceImpl.PROMPT.getContentAsString(StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot read prompt: " + AiServiceImpl.PROMPT.getDescription(), e);
+        }
     }
 
 }
