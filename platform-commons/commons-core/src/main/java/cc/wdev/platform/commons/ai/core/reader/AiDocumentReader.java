@@ -11,6 +11,7 @@ public interface AiDocumentReader extends DocumentReader {
      * 获取Document
      */
     List<Document> getReadersToDocuments(List<AiDocumentReaderData> aiDocumentReaders);
+
     /**
      * 传入documentReaderData
      */

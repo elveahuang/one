@@ -59,7 +59,6 @@ dependencyManagement {
         mavenBom(libs.jackson.bom.get().toString())
         mavenBom(libs.bouncycastle.bom.get().toString())
         mavenBom(libs.embabel.agent.dependencies.get().toString())
-        mavenBom(libs.agentscope.bom.get().toString())
         mavenBom(libs.opentelemetry.bom.get().toString())
         mavenBom(libs.opentelemetry.instrumentation.bom.get().toString())
     }

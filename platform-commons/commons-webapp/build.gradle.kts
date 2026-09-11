@@ -31,8 +31,6 @@ dependencies {
     implementation(libs.bundles.elasticStarter)
     implementation(libs.bundles.embabelAgentCore)
     implementation(libs.bundles.embabelAgentStarter)
-    implementation(libs.bundles.agentScopeCore)
-    implementation(libs.bundles.agentScopeStarter)
     implementation(libs.bundles.storage)
     implementation(libs.bundles.ip)
     implementation(libs.bundles.im)

@@ -13,7 +13,6 @@ springAiAgentUtilsVersion = "0.12.0"
 springAiMcpSecurityVersion = "0.1.14"
 springAiAgenticVersion = "2.0.0.0"
 embabelAgentVersion = "1.5.1"
-agentScopeVersion = "2.0.3"
 grpcVersion = "1.83.1"
 nettyVersion = "4.2.17.Final"
 cosidVersion = "3.2.0"
@@ -104,7 +103,6 @@ retrofit-bom = { module = "com.squareup.retrofit2:retrofit-bom", version.ref = "
 jackson-bom = { module = "tools.jackson:jackson-bom", version.ref = "jacksonVersion" }
 bouncycastle-bom = { module = "org.bouncycastle:bc-jdk18on-bom", version.ref = "bouncycastleVersion" }
 embabel-agent-dependencies = { module = "com.embabel.agent:embabel-agent-dependencies", version.ref = "embabelAgentVersion" }
-agentscope-bom = { module = "io.agentscope:agentscope-bom", version.ref = "agentScopeVersion" }
 opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "openTelemetryVersion" }
 opentelemetry-instrumentation-bom = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom", version.ref = "openTelemetryInstrumentationVersion" }
 micrometer-bom = { module = "io.micrometer:micrometer-bom", version.ref = "micrometerVersion" }
@@ -223,11 +221,6 @@ arthas-spring-boot-starter = { module = "com.taobao.arthas:arthas-spring-boot-st
 embabel-agent-openai = { module = "com.embabel.agent:embabel-agent-openai" }
 embabel-agent-starter-openai = { module = "com.embabel.agent:embabel-agent-starter-openai" }
 embabel-agent-starter-deepseek = { module = "com.embabel.agent:embabel-agent-starter-deepseek" }
-
-# agentScope
-agentscope-core = { module = "io.agentscope:agentscope-core" }
-agentscope-harness = { module = "io.agentscope:agentscope-harness" }
-agentscope-spring-boot-starter = { module = "io.agentscope:agentscope-spring-boot-starter" }
 
 # MyBatis
 mybatis = { module = "org.mybatis:mybatis", version.ref = "mybatisVersion" }
@@ -506,10 +499,6 @@ springAiAgenticStarter = ["agentic-spring-ai-starter-dashscope-sdk"]
 # EmbabelAgent
 embabelAgentCore = ["embabel-agent-openai"]
 embabelAgentStarter = ["embabel-agent-starter-deepseek", "embabel-agent-starter-openai"]
-
-# AgentScope
-agentScopeCore = ["agentscope-core", "agentscope-harness"]
-agentScopeStarter = ["agentscope-spring-boot-starter"]
 
 # Mybatis
 mybatis = ["mybatis", "mybatis-dynamic-sql", "mybatis-spring", "mybatis-plus-annotation", "mybatis-plus-core", "mybatis-plus-extension", "mybatis-plus-jsqlparser", "jsqlparser"]

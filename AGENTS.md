@@ -48,7 +48,7 @@ one (Gradle root)
 │   ├── commons-parser        JavaCV / FFmpeg / Tesseract 原生依赖封装（多平台 classifier）
 │   ├── commons-console       Spring Shell 控制台应用（console.jar）
 │   ├── commons-native        GraalVM Native Image 验证应用（native.jar）
-│   └── commons-webapp        开发/测试宿主：JPA、MyBatis-Plus、ES、AI/AgentScope 示例；全部测试挂在此模块
+│   └── commons-webapp        开发/测试宿主：JPA、MyBatis-Plus、ES、AI 示例；全部测试挂在此模块
 ├── platform-modules
 │   ├── commons/commons-api   空聚合模块（仅转出 system-api，无源码）
 │   ├── commons/commons-starter 平台级 starter：安全默认配置（JwtAuthenticationConverter、

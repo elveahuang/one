@@ -33,6 +33,7 @@ public abstract class AiDocumentReaderBase implements AiDocumentReader {
     protected final ExtractedTextFormatter textFormatter;
     protected final AiChunkingService aiChunkingService;
     protected List<AiDocumentReaderData> aiDocumentReaders;
+
     protected AiDocumentReaderBase(AiChunkingService aiChunkingService) {
         this(aiChunkingService, List.of());
     }
