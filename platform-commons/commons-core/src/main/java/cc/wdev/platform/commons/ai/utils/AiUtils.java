@@ -136,11 +136,27 @@ public abstract class AiUtils {
 
     public static String processChatResponse(ChatClient.ChatClientRequestSpec spec, SimpleChatRequest request) {
         log.info("processChatResponse [{}] text", request.getConversationId());
-        return spec.call().content();
+        if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.STRICT.getValue().equalsIgnoreCase(request.getResponseType())) {
+            // STRICT - 严格模式，响应的数据全部经过结构化输出校验，然后按类型分块输出
+            log.info("processChatResponse [{}] strict", request.getConversationId());
+            try {
+                UiOutputConverter converter = UiComponentManager.getRegistry().getConverter();
+                UiResponse response = spec.call().entity(converter, ChatClient.EntityParamSpec::validateSchema);
+                return GsonUtils.toJson(response);
+            } catch (Exception e) {
+                log.error("processChatResponse [{}] error", request.getConversationId(), e);
+                return AiUtils.getErrorContent();
+            }
+        } else {
+            // 默认模式，响应数据由大模型直接按提示词约束生成
+            log.info("processChatResponse [{}] text", request.getConversationId());
+            return spec.call().content();
+        }
     }
 
     public static Flux<String> processStreamChatResponse(ChatClient.ChatClientRequestSpec spec, SimpleChatRequest request) {
-        if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.BLOCK.getValue().equalsIgnoreCase(request.getResponseType())) {
+        if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.STRICT.getValue().equalsIgnoreCase(request.getResponseType())) {
+            // STRICT - 严格模式，响应的数据全部经过结构化输出校验，然后按类型分块输出
             log.info("processStreamChatResponse [{}] block", request.getConversationId());
             try {
                 UiOutputConverter converter = UiComponentManager.getRegistry().getConverter();
@@ -153,6 +169,7 @@ public abstract class AiUtils {
                 return Flux.just(AiUtils.getErrorContent());
             }
         } else if (StringUtils.isNotEmpty(request.getResponseType()) && AiResponseType.JSON.getValue().equalsIgnoreCase(request.getResponseType())) {
+            // 普通模式，响应数据由大模型直接按提示词约束生成，带事件定义
             log.info("processStreamChatResponse [{}] json", request.getConversationId());
             try {
                 Flux<String> flux = AiUtils.processStream(spec.stream().content());
@@ -162,6 +179,7 @@ public abstract class AiUtils {
                 return Flux.just(AiUtils.getErrorContent());
             }
         } else {
+            // 默认模式，响应数据由大模型直接按提示词约束生成，无事件定义
             log.info("processStreamChatResponse [{}] text", request.getConversationId());
             return spec.stream().content();
         }

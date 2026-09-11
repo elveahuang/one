@@ -12,7 +12,7 @@ import lombok.Getter;
 public enum AiResponseType implements BaseEnum<String> {
     TEXT("TEXT", "普通文本"),
     JSON("JSON", "JSON文本"),
-    BLOCK("BLOCK", "UI Block");
+    STRICT("STRICT", "严格模式，全部响应数据做结构化输出，保证数据准确性");
 
     private final String value;
     private final String description;

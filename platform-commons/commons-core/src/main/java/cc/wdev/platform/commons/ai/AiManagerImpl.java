@@ -31,7 +31,6 @@ import org.springaicommunity.agent.tools.task.claude.ClaudeSubagentReferences;
 import org.springaicommunity.agent.tools.task.claude.ClaudeSubagentType;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
-import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
@@ -68,8 +67,6 @@ public class AiManagerImpl implements AiManager {
     private final ObjectProvider<ToolCallbackResolver> toolCallbackResolver;
 
     private final ObjectProvider<SessionService> sessionService;
-
-    private final ObjectProvider<ChatMemory> chatMemory;
 
     private final List<ModelFactory<?>> modelFactories;
 

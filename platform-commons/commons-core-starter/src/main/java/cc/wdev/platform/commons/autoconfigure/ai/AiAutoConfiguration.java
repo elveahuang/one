@@ -32,7 +32,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.ai.deepseek.DeepSeekChatModel;
 import org.springframework.ai.embedding.BatchingStrategy;
@@ -309,10 +308,9 @@ public class AiAutoConfiguration {
     public AiManager aiManager(AiConfig config,
                                ObjectProvider<ToolCallbackResolver> toolCallbackResolver,
                                ObjectProvider<SessionService> sessionService,
-                               ObjectProvider<ChatMemory> chatMemory,
                                List<ModelFactory<?>> modelFactories,
                                List<VectorStoreFactory> vectorStoreFactories) {
-        return new AiManagerImpl(config, toolCallbackResolver, sessionService, chatMemory,
+        return new AiManagerImpl(config, toolCallbackResolver, sessionService,
             modelFactories, vectorStoreFactories
         );
     }
