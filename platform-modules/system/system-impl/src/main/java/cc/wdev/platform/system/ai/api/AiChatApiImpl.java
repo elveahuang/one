@@ -173,6 +173,9 @@ public class AiChatApiImpl implements AiChatApi {
         if (request.getWithMemory()) {
             this.aiManager.applyMemoryAdvisor(builder);
         }
+        if (CollectionUtils.isNotEmpty(request.getToolNames())) {
+            this.aiManager.applyTools(builder, request.getToolNames());
+        }
         return builder.build();
     }
 

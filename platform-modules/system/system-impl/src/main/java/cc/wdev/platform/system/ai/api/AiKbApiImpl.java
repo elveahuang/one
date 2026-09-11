@@ -4,6 +4,8 @@ import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.config.RetrievalConfig;
 import cc.wdev.platform.commons.ai.config.SplittingConfig;
 import cc.wdev.platform.commons.ai.core.processor.DocumentProcessor;
+import cc.wdev.platform.commons.ai.core.reader.AiDocumentReader;
+import cc.wdev.platform.commons.ai.domain.rag.AiDocumentReaderData;
 import cc.wdev.platform.commons.ai.enums.AiSplittingStrategy;
 import cc.wdev.platform.commons.ai.enums.AiVectorizationStatus;
 import cc.wdev.platform.commons.ai.utils.AiRagUtils;
@@ -94,6 +96,8 @@ public class AiKbApiImpl implements AiKbApi {
     private final AiKbTaskService aiKbTaskService;
 
     private final AiUsageService aiUsageService;
+
+    private final AiDocumentReader aiDocumentReader;
 
     /**
      * @see AiKbApi#initialize()
@@ -326,6 +330,7 @@ public class AiKbApiImpl implements AiKbApi {
         item.setKbId(kb.getId());
         item.setBizType(AiKbItemTypeEnum.DOCUMENT.getValue());
         item.setTitle(StringUtils.nvl(request.getTitle(), file.getName()));
+        item.setType(request.getType());
         item.setContent(text);
         item.setContentType(StringUtils.nvl(FileUtils.getContentType(file), AiKbItemTypeEnum.DOCUMENT.getValue()));
         item.setContentHash(EncryptUtils.md5Hex(text));
@@ -369,14 +374,20 @@ public class AiKbApiImpl implements AiKbApi {
 
         AiKbItemEntity item = new AiKbItemEntity();
         item.setKbId(kb.getId());
+        item.setTenantId(kb.getTenantId());
         item.setBizType(request.getBizType());
-        item.setBizId(request.getId());
+        item.setBizId(request.getBizId());
         item.setType(bizTypeEnum.getValue());
         item.setTitle(request.getTitle());
         item.setContentType(bizTypeEnum.getValue());
-        item.setChunkStrategy(AiSplittingStrategy.TOKEN.getValue());
+        item.setChunkStrategy(StringUtils.isEmpty(request.getChunkStrategy()) ? AiSplittingStrategy.TOKEN.getValue() : request.getChunkStrategy());
         item.setVectorized(BooleanTypeEnum.FALSE.getValue());
         item.setStatus(AiVectorizationStatus.PENDING.getValue());
+        try {
+            item.setMetadata(JacksonUtils.toJson(request.getMetadata()));
+        } catch (Exception e) {
+            log.warn("createItem failed", e);
+        }
 
         if (AiKbItemTypeEnum.QA.equals(bizTypeEnum)) {
             String question = nvl(request.getQuestion());
@@ -542,7 +553,13 @@ public class AiKbApiImpl implements AiKbApi {
 
         // 开始切片
         SplittingConfig config = this.aiHelper.resolveSplittingConfig(kb);
-        List<Document> documents = DocumentProcessor.split(kbItem.getContent(), config, kbItemMetadata);
+        List<Document> documents;
+        if (StringUtils.isNotEmpty(kbItem.getChunkStrategy()) && AiSplittingStrategy.AI.getValue().equalsIgnoreCase(kbItem.getChunkStrategy())) {
+            AiDocumentReaderData readerData = AiDocumentReaderData.builder().text(kbItem.getContent()).metadata(kbItemMetadata).type(kbItem.getBizType()).build();
+            documents = new DocumentProcessor().aiSplit(aiDocumentReader, readerData);
+        } else {
+            documents = DocumentProcessor.split(kbItem.getContent(), config, kbItemMetadata);
+        }
 
         // 注入元数据
         for (int i = 0; i < documents.size(); i++) {

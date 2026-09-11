@@ -10,7 +10,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum AiSplittingStrategy implements BaseEnum<String> {
-    TOKEN("TOKEN", "TokenTextSplitter");
+    TOKEN("TOKEN", "TokenTextSplitter"),
+    AI("AI", "AiSplitter");
 
     private final String value;
 

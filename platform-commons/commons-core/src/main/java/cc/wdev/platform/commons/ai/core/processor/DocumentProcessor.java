@@ -1,6 +1,8 @@
 package cc.wdev.platform.commons.ai.core.processor;
 
 import cc.wdev.platform.commons.ai.config.SplittingConfig;
+import cc.wdev.platform.commons.ai.core.reader.AiDocumentReader;
+import cc.wdev.platform.commons.ai.domain.rag.AiDocumentReaderData;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
 import cc.wdev.platform.commons.utils.FileUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
@@ -35,6 +37,11 @@ public class DocumentProcessor {
         return getDocumentReader(file).read();
     }
 
+    public List<Document> aiSplit(AiDocumentReader aiDocumentReader, AiDocumentReaderData readerData) {
+        aiDocumentReader.setAiDocumentReaders(List.of(readerData));
+        return aiDocumentReader.get();
+    }
+
     public static List<Document> split(String text, SplittingConfig config, Map<String, Object> metadata) {
         if (StringUtils.isEmpty(text)) {
             return List.of();
@@ -43,6 +50,7 @@ public class DocumentProcessor {
             .text(text)
             .metadata(MapUtils.isEmpty(metadata) ? Maps.newHashMap() : Maps.newHashMap(metadata))
             .build();
+
         TextSplitter splitter = AiUtils.getDocumentTransformer(config);
         return splitter.split(document);
     }

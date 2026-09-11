@@ -6,7 +6,7 @@ import cc.wdev.platform.commons.core.tenant.TenantContext;
 import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.enums.BooleanTypeEnum;
 import cc.wdev.platform.commons.utils.CollectionUtils;
-import cc.wdev.platform.commons.utils.GsonUtils;
+import cc.wdev.platform.commons.utils.JacksonUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.ai.domain.converter.AiKbItemConverter;
 import cc.wdev.platform.system.ai.domain.entity.AiKbChunkEntity;
@@ -26,6 +26,8 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder.Op;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.Map;
@@ -60,8 +62,8 @@ public class AiVectorServiceImpl implements AiVectorService {
     public void submitKbItemTask(Long kbId, Long kbItemId) {
         // 创建任务
         AiKbTaskEntity task = this.createTask(kbId, kbItemId, VECTOR_TASK_TYPE_KB_ITEM);
-        // 异步执行任务
-        AsyncExecutor.execute(() -> this.executeKbItemTask(task.getId()));
+        // 等外层事务提交后再异步执行，否则异步线程读不到刚创建的任务记录
+        this.executeAfterCommit(() -> this.executeKbItemTask(task.getId()));
     }
 
     /**
@@ -98,7 +100,7 @@ public class AiVectorServiceImpl implements AiVectorService {
     @Override
     public void submitKbTask(Long kbId) {
         AiKbTaskEntity task = this.createTask(kbId, 0L, VECTOR_TASK_TYPE_KB);
-        AsyncExecutor.execute(() -> this.executeKbTask(task.getId()));
+        this.executeAfterCommit(() -> this.executeKbTask(task.getId()));
     }
 
     /**
@@ -177,7 +179,7 @@ public class AiVectorServiceImpl implements AiVectorService {
 
         List<Document> documents = Lists.newArrayList();
         for (AiKbChunkEntity entity : entities) {
-            Map<String, Object> metadata = GsonUtils.toObjectMap(entity.getMetadata());
+            Map<String, Object> metadata = JacksonUtils.toMap(entity.getMetadata());
 
             Document document = Document.builder()
                 .id(entity.getVectorDocId())
@@ -254,6 +256,23 @@ public class AiVectorServiceImpl implements AiVectorService {
     // ------------------------------------------------------------------------------
     // 私有辅助方法
     // ------------------------------------------------------------------------------
+
+    /**
+     * 无外层事务时，INSERT 已随 SQL 自动提交，可直接异步执行；
+     * 有外层事务时，任务记录尚未提交，需等待事务提交后再执行，否则异步线程读不到该记录。
+     */
+    private void executeAfterCommit(Runnable runnable) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    AsyncExecutor.execute(runnable);
+                }
+            });
+        } else {
+            AsyncExecutor.execute(runnable);
+        }
+    }
 
     /**
      * 创建任务

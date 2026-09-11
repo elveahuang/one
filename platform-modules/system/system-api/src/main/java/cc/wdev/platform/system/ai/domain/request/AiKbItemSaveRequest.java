@@ -88,4 +88,10 @@ public class AiKbItemSaveRequest implements Serializable {
     @Schema(title = "元数据", description = "元数据")
     private Map<String, Object> metadata;
 
+    /**
+     * 分片策略（TOKEN / RECURSIVE / MARKDOWN），为空使用知识库/全局配置
+     */
+    @Schema(description = "分片策略")
+    private String chunkStrategy;
+
 }
