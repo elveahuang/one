@@ -10,6 +10,7 @@ import cc.wdev.platform.system.ai.domain.vo.AiToolSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiToolVo;
 import cc.wdev.platform.system.ai.enums.BaseAiToolBizTypeEnum;
 import cc.wdev.platform.system.ai.service.AiToolService;
+import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,8 +39,8 @@ public class AiToolApiImpl implements AiToolApi {
         List<BaseAiToolBizTypeEnum> bizTypeEnumList = ClassUtils.getEnumClass(GLOABL_BASE_PACKAGE, BaseAiToolBizTypeEnum.class);
 
         // 待处理配置项实体
-        List<AiToolEntity> updateEntityList = com.google.common.collect.Lists.newArrayList();
-        List<AiToolEntity> insertEntityList = com.google.common.collect.Lists.newArrayList();
+        List<AiToolEntity> updateEntityList = Lists.newArrayList();
+        List<AiToolEntity> insertEntityList = Lists.newArrayList();
 
         if (CollectionUtils.isNotEmpty(bizTypeEnumList)) {
             for (BaseAiToolBizTypeEnum bizTypeEnum : bizTypeEnumList) {

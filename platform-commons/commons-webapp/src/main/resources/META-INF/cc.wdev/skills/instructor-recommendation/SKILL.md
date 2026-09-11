@@ -29,7 +29,7 @@ description: 当用户需要查找、了解或推荐讲师/老师时使用。先
 - 组件字段与数据来源固定如下，多余字段会被前端 Schema 拒绝：
 
   | type | item 字段 | 数据来源 |
-            | --- | --- | --- |
+              | --- | --- | --- |
   | `instructor-list-view` | `instructorId`、`instructorName` | `searchInstructor` 返回的 `id`、`name` |
   | `course-list-view` | `courseId`、`courseTitle` | `searchCourse` 返回的 `id`、`title` |
 

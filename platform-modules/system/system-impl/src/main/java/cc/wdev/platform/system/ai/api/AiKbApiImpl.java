@@ -4,8 +4,6 @@ import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.config.RetrievalConfig;
 import cc.wdev.platform.commons.ai.config.SplittingConfig;
 import cc.wdev.platform.commons.ai.core.processor.DocumentProcessor;
-import cc.wdev.platform.commons.ai.core.reader.AiDocumentReader;
-import cc.wdev.platform.commons.ai.domain.rag.AiDocumentReaderData;
 import cc.wdev.platform.commons.ai.enums.AiSplittingStrategy;
 import cc.wdev.platform.commons.ai.enums.AiVectorizationStatus;
 import cc.wdev.platform.commons.ai.utils.AiRagUtils;
@@ -36,6 +34,7 @@ import cc.wdev.platform.system.storage.domain.request.AttachmentRequest;
 import cc.wdev.platform.system.storage.domain.vo.AttachmentFileVo;
 import cc.wdev.platform.system.storage.enums.AttachmentBizTypeEnum;
 import cc.wdev.platform.system.storage.enums.AttachmentRelationBizTypeEnum;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -87,8 +86,6 @@ public class AiKbApiImpl implements AiKbApi {
 
     private final AiKbChunkService aiKbChunkService;
 
-    private final AiModelService aiModelService;
-
     private final AiRelationService aiRelationService;
 
     private final AiVectorService aiVectorService;
@@ -96,8 +93,6 @@ public class AiKbApiImpl implements AiKbApi {
     private final AiKbTaskService aiKbTaskService;
 
     private final AiUsageService aiUsageService;
-
-    private final AiDocumentReader aiDocumentReader;
 
     /**
      * @see AiKbApi#initialize()
@@ -108,8 +103,8 @@ public class AiKbApiImpl implements AiKbApi {
         List<BaseAiKbBizTypeEnum> bizTypeEnumList = ClassUtils.getEnumClass(GLOABL_BASE_PACKAGE, BaseAiKbBizTypeEnum.class);
 
         // 待处理配置项实体
-        List<AiKbEntity> updateEntityList = com.google.common.collect.Lists.newArrayList();
-        List<AiKbEntity> insertEntityList = com.google.common.collect.Lists.newArrayList();
+        List<AiKbEntity> updateEntityList = Lists.newArrayList();
+        List<AiKbEntity> insertEntityList = Lists.newArrayList();
 
         if (CollectionUtils.isNotEmpty(bizTypeEnumList)) {
             for (BaseAiKbBizTypeEnum bizTypeEnum : bizTypeEnumList) {
@@ -553,13 +548,7 @@ public class AiKbApiImpl implements AiKbApi {
 
         // 开始切片
         SplittingConfig config = this.aiHelper.resolveSplittingConfig(kb);
-        List<Document> documents;
-        if (StringUtils.isNotEmpty(kbItem.getChunkStrategy()) && AiSplittingStrategy.AI.getValue().equalsIgnoreCase(kbItem.getChunkStrategy())) {
-            AiDocumentReaderData readerData = AiDocumentReaderData.builder().text(kbItem.getContent()).metadata(kbItemMetadata).type(kbItem.getBizType()).build();
-            documents = new DocumentProcessor().aiSplit(aiDocumentReader, readerData);
-        } else {
-            documents = DocumentProcessor.split(kbItem.getContent(), config, kbItemMetadata);
-        }
+        List<Document> documents = DocumentProcessor.split(kbItem.getContent(), config, kbItemMetadata);
 
         // 注入元数据
         for (int i = 0; i < documents.size(); i++) {

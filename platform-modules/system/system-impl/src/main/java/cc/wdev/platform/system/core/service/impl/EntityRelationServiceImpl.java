@@ -47,7 +47,7 @@ public class EntityRelationServiceImpl extends BaseCachingEntityService<EntityRe
         List<EntityRelationEntity> relationList = Lists.newArrayList();
         if (CollectionUtils.isNotEmpty(saveDto.getAncestorIdList())) {
             for (Long ancestorId : saveDto.getAncestorIdList()) {
-                List<EntityRelationEntity> entityRelationList = com.google.common.collect.Lists.newArrayList();
+                List<EntityRelationEntity> entityRelationList = Lists.newArrayList();
 
                 AtomicInteger index = new AtomicInteger(1);
 
