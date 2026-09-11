@@ -1,10 +1,10 @@
 package cc.wdev.platform.system.ai.api;
 
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.system.ai.domain.request.AiApiKeyRequest;
 import cc.wdev.platform.system.ai.domain.request.AiApiKeySearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiApiKeySimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiApiKeyVo;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
 import org.jspecify.annotations.NonNull;
 import org.springaicommunity.mcp.security.server.apikey.ApiKeyEntity;
 import org.springframework.data.domain.Page;

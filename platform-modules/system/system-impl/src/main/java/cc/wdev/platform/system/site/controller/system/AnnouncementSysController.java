@@ -2,10 +2,10 @@ package cc.wdev.platform.system.site.controller.system;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
 import cc.wdev.platform.commons.core.tenant.TenantContext;
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.enums.BooleanTypeEnum;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
 import cc.wdev.platform.system.site.api.AnnouncementApi;
 import cc.wdev.platform.system.site.domain.form.AnnouncementForm;
 import cc.wdev.platform.system.site.domain.request.AnnouncementSearchRequest;

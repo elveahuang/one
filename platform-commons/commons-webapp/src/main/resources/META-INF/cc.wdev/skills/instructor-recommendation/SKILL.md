@@ -29,7 +29,7 @@ description: 当用户需要查找、了解或推荐讲师/老师时使用。先
 - 组件字段与数据来源固定如下，多余字段会被前端 Schema 拒绝：
 
   | type | item 字段 | 数据来源 |
-  | --- | --- | --- |
+    | --- | --- | --- |
   | `instructor-list-view` | `instructorId`、`instructorName` | `searchInstructor` 返回的 `id`、`name` |
   | `course-list-view` | `courseId`、`courseTitle` | `searchCourse` 返回的 `id`、`title` |
 
@@ -56,7 +56,7 @@ description: 当用户需要查找、了解或推荐讲师/老师时使用。先
 
 ## 空结果分支
 
-若检索整体为空或无合适讲师，**不得输出任何卡片**（JSON 模式下即不输出 `json-render` 代码块），直接在正文中正向说明。
+若检索整体为空或无合适讲师， **不得输出任何卡片**（JSON 模式下即不输出 `json-render` 代码块），直接在正文中正向说明。
 
 ## 🚨 核心禁令（违规将被视为严重故障）
 

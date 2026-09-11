@@ -1,6 +1,6 @@
 package cc.wdev.platform.system.region.domain.request;
 
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;

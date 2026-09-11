@@ -1,6 +1,8 @@
 package cc.wdev.platform.system.ai.controller.platform;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
+import cc.wdev.platform.commons.domain.DeleteRequest;
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
@@ -8,8 +10,6 @@ import cc.wdev.platform.system.ai.api.AiKbApi;
 import cc.wdev.platform.system.ai.domain.request.*;
 import cc.wdev.platform.system.ai.domain.vo.*;
 import cc.wdev.platform.system.ai.enums.AiKbItemTypeEnum;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
-import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import com.google.common.collect.Lists;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

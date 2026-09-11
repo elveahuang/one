@@ -1,8 +1,8 @@
 package cc.wdev.platform.system.site.controller.system;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.domain.R;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
 import cc.wdev.platform.system.site.api.KeywordApi;
 import cc.wdev.platform.system.site.domain.form.KeywordForm;
 import cc.wdev.platform.system.site.domain.request.KeywordCheckRequest;

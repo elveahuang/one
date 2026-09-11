@@ -1,4 +1,4 @@
-package cc.wdev.platform.system.commons.domain.request;
+package cc.wdev.platform.commons.domain;
 
 import cc.wdev.platform.commons.web.request.Request;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -1,10 +1,10 @@
 package cc.wdev.platform.system.security.controller.platform;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.web.request.PageRequest;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
 import cc.wdev.platform.system.security.domain.entity.ClientEntity;
 import cc.wdev.platform.system.security.domain.form.ClientForm;
 import cc.wdev.platform.system.security.domain.request.ClientCheckRequest;

@@ -1,12 +1,12 @@
 package cc.wdev.platform.system.ai.service;
 
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.service.CachingEntityService;
 import cc.wdev.platform.system.ai.domain.entity.AiModelEntity;
 import cc.wdev.platform.system.ai.domain.request.AiModelSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiModelSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiModelSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
-import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

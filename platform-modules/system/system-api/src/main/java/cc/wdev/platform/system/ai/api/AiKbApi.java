@@ -1,9 +1,9 @@
 package cc.wdev.platform.system.ai.api;
 
+import cc.wdev.platform.commons.domain.DeleteRequest;
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.system.ai.domain.request.*;
 import cc.wdev.platform.system.ai.domain.vo.*;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
-import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;

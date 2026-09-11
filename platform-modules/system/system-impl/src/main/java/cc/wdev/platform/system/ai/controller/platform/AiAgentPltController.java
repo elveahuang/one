@@ -1,6 +1,8 @@
 package cc.wdev.platform.system.ai.controller.platform;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
+import cc.wdev.platform.commons.domain.DeleteRequest;
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
 import cc.wdev.platform.system.ai.api.AiAgentApi;
@@ -11,8 +13,6 @@ import cc.wdev.platform.system.ai.domain.request.AiAgentSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentParamVo;
 import cc.wdev.platform.system.ai.domain.vo.AiAgentVo;
 import cc.wdev.platform.system.ai.service.AiAgentService;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
-import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

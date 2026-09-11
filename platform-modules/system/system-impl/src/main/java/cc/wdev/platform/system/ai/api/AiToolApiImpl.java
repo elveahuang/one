@@ -1,5 +1,6 @@
 package cc.wdev.platform.system.ai.api;
 
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.utils.ClassUtils;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.system.ai.domain.entity.AiToolEntity;
@@ -9,7 +10,6 @@ import cc.wdev.platform.system.ai.domain.vo.AiToolSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiToolVo;
 import cc.wdev.platform.system.ai.enums.BaseAiToolBizTypeEnum;
 import cc.wdev.platform.system.ai.service.AiToolService;
-import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

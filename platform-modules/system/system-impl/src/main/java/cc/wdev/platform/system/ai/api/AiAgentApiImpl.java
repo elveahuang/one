@@ -1,5 +1,7 @@
 package cc.wdev.platform.system.ai.api;
 
+import cc.wdev.platform.commons.domain.DeleteRequest;
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.enums.ActiveTypeEnum;
 import cc.wdev.platform.commons.enums.StatusTypeEnum;
 import cc.wdev.platform.commons.exception.ServiceException;
@@ -18,8 +20,6 @@ import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
 import cc.wdev.platform.system.ai.enums.AiRelationBizTypeEnum;
 import cc.wdev.platform.system.ai.enums.BaseAiAgentBizTypeEnum;
 import cc.wdev.platform.system.ai.service.*;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
-import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

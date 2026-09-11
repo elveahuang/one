@@ -1,12 +1,12 @@
 package cc.wdev.platform.system.ai.api;
 
 import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
+import cc.wdev.platform.commons.domain.DeleteRequest;
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiModelSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiModelSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiModelSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiModelVo;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
-import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.data.domain.Page;
 

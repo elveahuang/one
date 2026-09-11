@@ -1,6 +1,7 @@
 package cc.wdev.platform.system.core.controller.system;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.enums.ResponseCodeEnum;
 import cc.wdev.platform.commons.exception.ServiceException;
@@ -8,7 +9,6 @@ import cc.wdev.platform.commons.utils.ArrayUtils;
 import cc.wdev.platform.commons.utils.SecurityUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
 import cc.wdev.platform.system.core.api.UserApi;
 import cc.wdev.platform.system.core.domain.dto.UserInfoDto;
 import cc.wdev.platform.system.core.domain.form.UserForm;

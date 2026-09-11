@@ -1,13 +1,13 @@
 package cc.wdev.platform.system.ai.controller.platform;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
 import cc.wdev.platform.system.ai.domain.request.AiMcpServerSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiMcpServerSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiMcpServerVo;
 import cc.wdev.platform.system.ai.service.AiMcpServerService;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

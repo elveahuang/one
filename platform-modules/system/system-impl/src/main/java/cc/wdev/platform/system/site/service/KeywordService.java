@@ -1,7 +1,7 @@
 package cc.wdev.platform.system.site.service;
 
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.service.CachingEntityService;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
 import cc.wdev.platform.system.site.domain.entity.KeywordEntity;
 import cc.wdev.platform.system.site.domain.form.KeywordForm;
 import cc.wdev.platform.system.site.domain.request.KeywordCheckRequest;

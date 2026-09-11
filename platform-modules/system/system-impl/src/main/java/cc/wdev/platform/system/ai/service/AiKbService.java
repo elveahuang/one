@@ -1,11 +1,11 @@
 package cc.wdev.platform.system.ai.service;
 
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.service.CachingEntityService;
 import cc.wdev.platform.system.ai.domain.entity.AiKbEntity;
 import cc.wdev.platform.system.ai.domain.request.AiKbSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiKbSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiKbVo;
-import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

@@ -1,10 +1,10 @@
 package cc.wdev.platform.system.ai.api;
 
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiToolSimpleVo;
 import cc.wdev.platform.system.ai.domain.vo.AiToolVo;
-import cc.wdev.platform.system.commons.domain.request.GetRequest;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

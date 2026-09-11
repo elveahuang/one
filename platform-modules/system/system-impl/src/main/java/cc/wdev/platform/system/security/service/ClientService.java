@@ -1,8 +1,8 @@
 package cc.wdev.platform.system.security.service;
 
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.service.CachingEntityService;
 import cc.wdev.platform.commons.service.EntityService;
-import cc.wdev.platform.system.commons.domain.request.DeleteRequest;
 import cc.wdev.platform.system.security.domain.entity.ClientEntity;
 import cc.wdev.platform.system.security.domain.form.ClientForm;
 import cc.wdev.platform.system.security.domain.request.ClientCheckRequest;
