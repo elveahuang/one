@@ -13,11 +13,11 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum AiServiceProvider implements BaseEnum<String> {
-    SPRING_AI_DEEPSEEK("SPRING_AI_DEEPSEEK", "深度求索 - Spring AI DeekSeek", true),
-    SPRING_AI_OPENAI("SPRING_AI_OPENAI", "OpenAI - Spring AI OpenAI", true),
-    AGENTIC_SPRING_AI("AGENTIC_SPRING_AI", "Agentic Spring AI", true),
-    ALIYUN_DASHSCOPE_SDK("ALIYUN_DASHSCOPE_SDK", "阿里云 - DashScope SDK", true),
-    TENCENT_HUNYUAN_SDK("TENCENT_HUNYUAN_SDK", "腾讯云 - HunYuan SDK", false),
+    SPRING_AI_DEEPSEEK("SPRING_AI_DEEPSEEK", "Spring AI DeepSeek", true),
+    SPRING_AI_OPENAI("SPRING_AI_OPENAI", "Spring AI OpenAI", true),
+    SPRING_AI_DASHSCOPE("SPRING_AI_DASHSCOPE", "Agentic Spring AI DashScope", true),
+    ALIYUN_DASHSCOPE_SDK("ALIYUN_DASHSCOPE_SDK", "Aliyun DashScope SDK", true),
+    TENCENT_HUNYUAN_SDK("TENCENT_HUNYUAN_SDK", "Tencent HunYuan SDK", true),
     OPENAI_SDK("OPENAI_SDK", "OpenAI SDK", true),
     CUSTOM("CUSTOM", "Custom Service", true);
 
@@ -75,10 +75,6 @@ public enum AiServiceProvider implements BaseEnum<String> {
 
     public static AiServiceProvider getTranscriptionFactoryProvider(String provider) {
         return BaseEnum.getEnumByValue(provider, AiServiceProvider.class, AiServiceProvider.SPRING_AI_OPENAI);
-    }
-
-    public static AiServiceProvider getRerankFactoryProvider(String provider) {
-        return BaseEnum.getEnumByValue(provider, AiServiceProvider.class, AiServiceProvider.ALIYUN_DASHSCOPE_SDK);
     }
 
 }

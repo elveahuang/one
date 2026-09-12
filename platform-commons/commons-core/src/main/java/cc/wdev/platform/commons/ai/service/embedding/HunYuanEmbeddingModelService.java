@@ -24,7 +24,7 @@ public class HunYuanEmbeddingModelService extends AbstractEmbeddingModelService 
      */
     @Override
     public AiServiceProvider getServiceProvider() {
-        return AiServiceProvider.ALIYUN_DASHSCOPE_SDK;
+        return AiServiceProvider.TENCENT_HUNYUAN_SDK;
     }
 
     /**

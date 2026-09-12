@@ -45,7 +45,7 @@ public class DashScopeEmbeddingModelFactory extends AbstractEmbeddingModelFactor
      */
     @Override
     public AiServiceProvider getServiceProvider() {
-        return AiServiceProvider.ALIYUN_DASHSCOPE_SDK;
+        return AiServiceProvider.SPRING_AI_DASHSCOPE;
     }
 
     /**

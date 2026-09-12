@@ -112,8 +112,7 @@ public class AiAutoConfiguration {
                 .embedding(getEmbeddingFactoryProvider(factory.getEmbedding()).getValue())
                 .image(getImageFactoryProvider(factory.getImage()).getValue())
                 .speech(getSpeechFactoryProvider(factory.getSpeech()).getValue())
-                .transcription(getTranscriptionFactoryProvider(factory.getSpeech()).getValue())
-                .rerank(getRerankFactoryProvider(factory.getRerank()).getValue())
+                .transcription(getTranscriptionFactoryProvider(factory.getTranscription()).getValue())
                 .build())
             .vectorStore(properties.getVectorstore())
             .splitting(AiUtils.resolveSplittingConfig(SplittingConfig.builder().build(), properties.getSplitting()))
@@ -189,7 +188,7 @@ public class AiAutoConfiguration {
         ObjectProvider<MeterRegistry> meterRegistry,
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
-        return new OpenAiTranscriptionModelFactory(properties.getCommons(), properties.getTranslation(),
+        return new OpenAiTranscriptionModelFactory(properties.getCommons(), properties.getTranscription(),
             observationRegistry, meterRegistry, httpClientBuilderCustomizers);
     }
 
@@ -198,10 +197,10 @@ public class AiAutoConfiguration {
     @ConditionalOnProperty(prefix = AiProperties.PROVIDER_ALIYUN, name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(DashScopeSdkAudioTranscriptionModel.class)
     public DashScopeTranscriptionModelFactory dashScopeTranscriptionModelFactory(
-        AiOpenAiProperties properties,
+        AiAliyunProperties properties,
         ObjectProvider<RetryTemplate> retryTemplate
     ) {
-        return new DashScopeTranscriptionModelFactory(properties.getCommons(), properties.getTranslation(), retryTemplate);
+        return new DashScopeTranscriptionModelFactory(properties.getCommons(), properties.getTranscription(), retryTemplate);
     }
 
     // ------------------------------------------------------------------------------

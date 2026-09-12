@@ -31,7 +31,7 @@ public class AiOpenAiProperties {
     private ModelImageConfig image = new ModelImageConfig();
 
     @NestedConfigurationProperty
-    private ModelTranscriptionConfig translation = new ModelTranscriptionConfig();
+    private ModelTranscriptionConfig transcription = new ModelTranscriptionConfig();
 
     @NestedConfigurationProperty
     private ModelSpeechConfig speech = new ModelSpeechConfig();

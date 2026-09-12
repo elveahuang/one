@@ -44,7 +44,7 @@ public class DashScopeChatModelFactory extends AbstractChatModelFactory {
      */
     @Override
     public AiServiceProvider getServiceProvider() {
-        return AiServiceProvider.AGENTIC_SPRING_AI;
+        return AiServiceProvider.SPRING_AI_DASHSCOPE;
     }
 
     /**

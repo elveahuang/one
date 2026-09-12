@@ -46,7 +46,7 @@ public class DashScopeImageModelFactory extends AbstractImageModelFactory {
      */
     @Override
     public AiServiceProvider getServiceProvider() {
-        return AiServiceProvider.SPRING_AI_OPENAI;
+        return AiServiceProvider.SPRING_AI_DASHSCOPE;
     }
 
     /**
