@@ -16,7 +16,7 @@ import cc.wdev.platform.commons.autoconfigure.ai.properties.AiAliyunProperties;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiOpenAiProperties;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiProperties;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiTencentProperties;
-import com.alibaba.dashscope.common.DashScopeResult;
+import com.openai.client.OpenAIClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -50,7 +50,7 @@ public class AiServiceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(DashScopeResult.class)
+    @ConditionalOnClass(OpenAIClient.class)
     @ConditionalOnProperty(prefix = AiProperties.PROVIDER_OPENAI, name = "enabled", havingValue = "true", matchIfMissing = true)
     public OpenAiChatModelService openAiChatModelService(AiOpenAiProperties properties) {
         return new OpenAiChatModelService(properties.getCommons(), properties.getChat());

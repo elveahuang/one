@@ -96,20 +96,24 @@ public class AiAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public AiConfig aiConfig(AiProperties properties) {
+        ServiceProviderConfig factory = properties.getFactory();
+        ServiceProviderConfig service = properties.getService();
+
         return AiConfig.builder().service(ServiceProviderConfig.builder()
-                .text(getChatServiceProvider(properties.getService().getText()).getValue())
-                .embedding(getEmbeddingServiceProvider(properties.getService().getEmbedding()).getValue())
-                .image(getImageServiceProvider(properties.getService().getImage()).getValue())
-                .speech(getSpeechServiceProvider(properties.getService().getSpeech()).getValue())
-                .transcription(getTranscriptionServiceProvider(properties.getService().getTranscription()).getValue())
-                .rerank(getRerankServiceProvider(properties.getService().getRerank()).getValue())
+                .text(getChatServiceProvider(service.getText()).getValue())
+                .embedding(getEmbeddingServiceProvider(service.getEmbedding()).getValue())
+                .image(getImageServiceProvider(service.getImage()).getValue())
+                .speech(getSpeechServiceProvider(service.getSpeech()).getValue())
+                .transcription(getTranscriptionServiceProvider(service.getTranscription()).getValue())
+                .rerank(getRerankServiceProvider(service.getRerank()).getValue())
                 .build())
             .factory(ServiceProviderConfig.builder()
-                .text(getChatFactoryProvider(properties.getFactory().getText()).getValue())
-                .embedding(getEmbeddingFactoryProvider(properties.getFactory().getEmbedding()).getValue())
-                .image(getImageFactoryProvider(properties.getFactory().getImage()).getValue())
-                .speech(getSpeechFactoryProvider(properties.getFactory().getSpeech()).getValue())
-                .transcription(getTranscriptionFactoryProvider(properties.getFactory().getSpeech()).getValue())
+                .text(getChatFactoryProvider(factory.getText()).getValue())
+                .embedding(getEmbeddingFactoryProvider(factory.getEmbedding()).getValue())
+                .image(getImageFactoryProvider(factory.getImage()).getValue())
+                .speech(getSpeechFactoryProvider(factory.getSpeech()).getValue())
+                .transcription(getTranscriptionFactoryProvider(factory.getSpeech()).getValue())
+                .rerank(getRerankFactoryProvider(factory.getRerank()).getValue())
                 .build())
             .vectorStore(properties.getVectorstore())
             .splitting(AiUtils.resolveSplittingConfig(SplittingConfig.builder().build(), properties.getSplitting()))

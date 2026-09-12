@@ -91,7 +91,14 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public ChatModelService getChatModelService() {
-        return getChatModelService(AiServiceProvider.getChatServiceProvider(config.getService().getText()));
+        AiServiceProvider defaultProvider = AiServiceProvider.getChatServiceProvider(config.getService().getText());
+        return this.chatModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(defaultProvider);
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Unavailable ChatModelService."));
     }
 
     /**
@@ -99,11 +106,21 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public ChatModelService getChatModelService(AiServiceProvider serviceProvider) {
-        return this.chatModelServices.stream()
-            .filter(service -> service.getServiceProvider().equals(serviceProvider))
-            .filter(service -> service.getServiceProvider().isEnabled())
+        ChatModelService service = this.chatModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(serviceProvider);
+            })
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Unavailable ChatModelService."));
+            .orElse(null);
+
+        if (service != null) {
+            return service;
+        } else if (this.getConfig().isFallbackEnabled()) {
+            return this.getChatModelService();
+        } else {
+            throw new RuntimeException("Unavailable ChatModelService.");
+        }
     }
 
     /**
@@ -137,7 +154,14 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public EmbeddingModelService getEmbeddingModelService() {
-        return getEmbeddingModelService(AiServiceProvider.getEmbeddingServiceProvider(config.getService().getEmbedding()));
+        AiServiceProvider defaultProvider = AiServiceProvider.getEmbeddingServiceProvider(config.getService().getEmbedding());
+        return this.embeddingModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(defaultProvider);
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Unavailable EmbeddingModelService."));
     }
 
     /**
@@ -145,11 +169,21 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public EmbeddingModelService getEmbeddingModelService(AiServiceProvider serviceProvider) {
-        return this.embeddingModelServices.stream()
-            .filter(service -> service.getServiceProvider().equals(serviceProvider))
-            .filter(service -> service.getServiceProvider().isEnabled())
+        EmbeddingModelService service = this.embeddingModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(serviceProvider);
+            })
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Unavailable EmbeddingModelService."));
+            .orElse(null);
+
+        if (service != null) {
+            return service;
+        } else if (this.getConfig().isFallbackEnabled()) {
+            return this.getEmbeddingModelService();
+        } else {
+            throw new RuntimeException("Unavailable EmbeddingModelService.");
+        }
     }
 
     /**
@@ -183,7 +217,14 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public ImageModelService getImageService() {
-        return getImageService(AiServiceProvider.getImageServiceProvider(config.getService().getImage()));
+        AiServiceProvider defaultProvider = AiServiceProvider.getImageServiceProvider(config.getService().getImage());
+        return this.imageModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(defaultProvider);
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Unavailable ImageModelService."));
     }
 
     /**
@@ -191,11 +232,21 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public ImageModelService getImageService(AiServiceProvider serviceProvider) {
-        return this.imageModelServices.stream()
-            .filter(service -> service.getServiceProvider().equals(serviceProvider))
-            .filter(service -> service.getServiceProvider().isEnabled())
+        ImageModelService service = this.imageModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(serviceProvider);
+            })
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Unavailable ImageModelService."));
+            .orElse(null);
+
+        if (service != null) {
+            return service;
+        } else if (this.getConfig().isFallbackEnabled()) {
+            return this.getImageService();
+        } else {
+            throw new RuntimeException("Unavailable ImageModelService.");
+        }
     }
 
     /**
@@ -230,7 +281,14 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public TranscriptionModelService getTranscriptionModelService() {
-        return getTranscriptionModelService(AiServiceProvider.getTranscriptionServiceProvider(config.getService().getTranscription()));
+        AiServiceProvider defaultProvider = AiServiceProvider.getTranscriptionServiceProvider(config.getService().getTranscription());
+        return this.transcriptionModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(defaultProvider);
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Unavailable TranscriptionModelService."));
     }
 
     /**
@@ -238,11 +296,21 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public TranscriptionModelService getTranscriptionModelService(AiServiceProvider serviceProvider) {
-        return this.transcriptionModelServices.stream()
-            .filter(service -> service.getServiceProvider().equals(serviceProvider))
-            .filter(service -> service.getServiceProvider().isEnabled())
+        TranscriptionModelService service = this.transcriptionModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(serviceProvider);
+            })
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Unavailable TranscriptionModelService."));
+            .orElse(null);
+
+        if (service != null) {
+            return service;
+        } else if (this.getConfig().isFallbackEnabled()) {
+            return this.getTranscriptionModelService();
+        } else {
+            throw new RuntimeException("Unavailable TranscriptionModelService.");
+        }
     }
 
     /**
@@ -276,7 +344,14 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public RerankModelService getRerankModelService() {
-        return getRerankModelService(AiServiceProvider.getRerankServiceProvider(config.getService().getRerank()));
+        AiServiceProvider defaultProvider = AiServiceProvider.getRerankServiceProvider(config.getService().getRerank());
+        return this.rerankModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(defaultProvider);
+            })
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Unavailable RerankModelService."));
     }
 
     /**
@@ -284,11 +359,21 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public RerankModelService getRerankModelService(AiServiceProvider serviceProvider) {
-        return this.rerankModelServices.stream()
-            .filter(service -> service.getServiceProvider().equals(serviceProvider))
-            .filter(service -> service.getServiceProvider().isEnabled())
+        RerankModelService service = this.rerankModelServices.stream()
+            .filter(s -> {
+                AiServiceProvider provider = s.getServiceProvider();
+                return provider.isEnabled() && provider.equals(serviceProvider);
+            })
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Unavailable RerankModelService."));
+            .orElse(null);
+
+        if (service != null) {
+            return service;
+        } else if (this.getConfig().isFallbackEnabled()) {
+            return this.getRerankModelService();
+        } else {
+            throw new RuntimeException("Unavailable RerankModelService.");
+        }
     }
 
     /**

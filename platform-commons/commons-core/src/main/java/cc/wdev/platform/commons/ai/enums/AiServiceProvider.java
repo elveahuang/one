@@ -77,4 +77,8 @@ public enum AiServiceProvider implements BaseEnum<String> {
         return BaseEnum.getEnumByValue(provider, AiServiceProvider.class, AiServiceProvider.SPRING_AI_OPENAI);
     }
 
+    public static AiServiceProvider getRerankFactoryProvider(String provider) {
+        return BaseEnum.getEnumByValue(provider, AiServiceProvider.class, AiServiceProvider.ALIYUN_DASHSCOPE_SDK);
+    }
+
 }
