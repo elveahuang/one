@@ -133,6 +133,33 @@ one (Gradle root)
 - 现有测试依赖真实 PostgreSQL/Redis/ES 且 `@Rollback(false)`，会污染本地库；**新测试优先使用 mock / 内存库（如 H2），不要依赖外部服务**
 - CI（`.github/workflows/build.yml`）目前只执行 `clean bootJar`，不运行测试——改动公共层后请本地手动运行相关测试
 
+## AI 模块架构与响应模式
+
+### 1. 技术实现与模型供应商分离 (Service Provider vs Model Provider)
+
+平台采用正交解耦的双层抽象，彻底分离"技术实现（底层协议/SDK）"与"模型供应商（厂商实体/凭证画像）"：
+
+- **技术实现方案（`AiServiceProvider`）**：定义底层通信协议与技术引擎。
+  - 核心值：`SPRING_AI_OPENAI`、`SPRING_AI_ANTHROPIC`、`SPRING_AI_DEEPSEEK`、`AGENTIC_SPRING_AI_DASHSCOPE`、`ALIYUN_DASHSCOPE_SDK`、`TENCENT_HUNYUAN_SDK`、`OPENAI_SDK`。
+  - 职责：关注网络通信、协议封包（OpenAI 兼容协议 / Anthropic Messages API / 厂商原生 RPC）、SSE Token 流式解析与 Spring AI Advisor/Tool 适配。
+- **模型供应商（`AiModelProvider`）**：定义厂商实体、凭证与模型能力画像。
+  - 核心值：`OPENAI`、`ANTHROPIC`、`DEEPSEEK`、`ALIYUN`、`TENCENT`、`ORCAROUTER`。
+  - 职责：关注商业身份、`apiKey`、`baseUrl`、模型清单（`Model` record 支持深度思考、联网搜索等）及能力类型矩阵（`TEXT`、`AUDIO`、`EMBEDDING`、`RERANK`）。
+- **架构解耦价值**：
+  - **M:N 协议复用**：所有兼容 OpenAI 规范的厂商（DeepSeek、OrcaRouter、Aliyun Compatible 等）统一复用 `OpenAiChatModelFactory`，无需为每个厂商重复编写客户端。
+  - **双轨调用体系**：`ModelFactory`（面向 Spring AI 生态，产出 `ChatModel`/`ChatClient`，支持记忆/RAG/日志/Tool/Advisor 链）与 `ModelService`（面向原生 SDK 极速同步直连）。
+  - **扁平化配置规范**：配置项 `platform.ai.factory.*-service-provider`（选引擎）与 `platform.ai.providers.*`（配厂商凭证）完全解耦。
+
+### 2. AiResponseType 三种响应模式与执行链路
+
+以 `platform-commons/commons-webapp` 中的 `ChatController`（`/chat/text`、`/chat/stream`）与 `AiServiceImpl` 为接入入口，通过 `AiResponseType` 驱动不同的提示词约束与数据处理管道：
+
+| 响应类型 | 约束机制 | 同步处理 (`chatText`) | 流式处理 (`chatStream`) | 典型场景 |
+|---|---|---|---|---|
+| **`TEXT`**（普通文本） | Prompt 注入限制：只输出 Markdown 正文，禁止任何卡片或围栏标记。 | `spec.call().content()` 直接返回文本。 | `spec.stream().content()` 直接透传 Token 流，首字延迟（TTFT）最低。 | 纯文本问答、知识库检索（RAG）、长文创作。 |
+| **`JSON`**（围栏交互卡片） | Prompt 注入限制：Markdown 正文 + 末尾唯一一个 ` ```json-render ` 围栏。 | `spec.call().content()` 返回图文混合文本。 | `AiUtils.processStream` 状态机滑动窗口解析：正文实时流式打字机推送，尾部卡片完整积攒后一次性推入 `json-render` 块，并带 `START`/`END`/`ERROR` 包装。 | 渐进式流式图文交互、答疑推荐商品/课程卡片。 |
+| **`STRICT`**（严格结构化） | 强约束：基于 `UiComponentRegistry` 动态合成 `UiResponseSchema` 的 JSON Schema，禁止输出非 blocks 内容。 | `spec.call().entity(converter, validateSchema)` 进行强制 Schema 校验，序列化返回。 | 先执行整包校验反序列化，再按 `UiBlock` 块切分并包装为 `SimpleChatContent(type="block")` 事件流下发。 | 动态表单、微前端组件驱动（Blocks UI）、高可靠 Agent 调度决策。 |
+
 ## 构建与依赖
 
 - 新依赖优先在 `gradle/libs.versions.toml` 的 `[versions]` / `[libraries]` / `[bundles]` 中声明，不要在 `build.gradle.kts` 里裸写坐标
