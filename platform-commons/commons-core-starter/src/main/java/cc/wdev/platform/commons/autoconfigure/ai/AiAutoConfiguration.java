@@ -3,9 +3,7 @@ package cc.wdev.platform.commons.autoconfigure.ai;
 import cc.wdev.platform.commons.ai.AiConfig;
 import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.AiManagerImpl;
-import cc.wdev.platform.commons.ai.config.ModelProviderConfig;
-import cc.wdev.platform.commons.ai.config.RetrievalConfig;
-import cc.wdev.platform.commons.ai.config.SplittingConfig;
+import cc.wdev.platform.commons.ai.config.*;
 import cc.wdev.platform.commons.ai.enums.AiModelProvider;
 import cc.wdev.platform.commons.ai.factory.ModelFactory;
 import cc.wdev.platform.commons.ai.factory.audio.DashScopeTranscriptionModelFactory;
@@ -31,6 +29,7 @@ import cc.wdev.platform.commons.autoconfigure.ai.properties.AiVectorStoreElastic
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiVectorStoreMariaDBProperties;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiVectorStorePgVectorProperties;
 import cc.wdev.platform.commons.utils.CollectionUtils;
+import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
 import com.google.common.collect.Maps;
@@ -105,12 +104,12 @@ public class AiAutoConfiguration {
     public AiConfig aiConfig(AiProperties properties) {
         AiConfig.AiConfigBuilder builder = AiConfig.builder()
             .fallbackEnabled(properties.isFallbackEnabled())
-            .service(properties.getService())
-            .factory(properties.getFactory())
-            .vectorStore(properties.getVectorstore())
+            .service(ObjectUtils.nvl(properties.getService(), new ServiceProviderConfig()))
+            .factory(ObjectUtils.nvl(properties.getFactory(), new ServiceProviderConfig()))
             .splitting(AiUtils.resolveSplittingConfig(SplittingConfig.builder().build(), properties.getSplitting()))
+            .vectorStore(AiUtils.resolveVectorStoreConfig(VectorStoreConfig.builder().build(), properties.getVectorstore()))
             .retrieval(AiUtils.resolveRetrievalConfig(RetrievalConfig.builder().build(), properties.getRetrieval()))
-            .vectorization(properties.getVectorization())
+            .vectorization(AiUtils.resolveVectorizationConfig(VectorizationConfig.builder().build(), properties.getVectorization()))
             .agent(properties.getAgent())
             .memory(properties.getMemory());
 
@@ -141,8 +140,8 @@ public class AiAutoConfiguration {
         ObjectProvider<ChatModelObservationConvention> observationConvention
     ) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            StringUtils.nvl(config.getFactory().getChatModelProvider()).toLowerCase(), AiModelProvider.DEEPSEEK.name().toLowerCase())
-        );
+            config.getFactory().getChatModelProvider(), AiModelProvider.DEEPSEEK.name()
+        ).toLowerCase());
         return new DeepSeekChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
             retryTemplate, responseErrorHandler, observationRegistry, observationConvention);
     }
@@ -158,8 +157,8 @@ public class AiAutoConfiguration {
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            StringUtils.nvl(config.getFactory().getChatModelProvider()).toLowerCase(), AiModelProvider.OPENAI.name().toLowerCase())
-        );
+            config.getFactory().getChatModelProvider(), AiModelProvider.OPENAI.name()
+        ).toLowerCase());
         return new OpenAiChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
             observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
     }
@@ -175,8 +174,8 @@ public class AiAutoConfiguration {
         ObjectProvider<AnthropicHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            StringUtils.nvl(config.getFactory().getChatModelProvider()).toLowerCase(), AiModelProvider.ANTHROPIC.name().toLowerCase())
-        );
+            config.getFactory().getChatModelProvider(), AiModelProvider.ANTHROPIC.name()
+        ).toLowerCase());
         return new AnthropicChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
             observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
     }
@@ -191,8 +190,8 @@ public class AiAutoConfiguration {
         ObjectProvider<ChatModelObservationConvention> observationConvention
     ) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            StringUtils.nvl(config.getFactory().getChatModelProvider()).toLowerCase(), AiModelProvider.ALIYUN.name().toLowerCase())
-        );
+            config.getFactory().getChatModelProvider(), AiModelProvider.ALIYUN.name()
+        ).toLowerCase());
         return new DashScopeChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
             retryTemplate, observationRegistry, observationConvention);
     }
@@ -211,8 +210,8 @@ public class AiAutoConfiguration {
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            StringUtils.nvl(config.getFactory().getTranscriptionModelProvider()).toLowerCase(), AiModelProvider.OPENAI.name().toLowerCase())
-        );
+            config.getFactory().getTranscriptionModelProvider(), AiModelProvider.OPENAI.name()
+        ).toLowerCase());
         return new OpenAiTranscriptionModelFactory(providerConfig.getCommons(), providerConfig.getTranscription(),
             observationRegistry, meterRegistry, httpClientBuilderCustomizers);
     }
@@ -225,8 +224,8 @@ public class AiAutoConfiguration {
         ObjectProvider<RetryTemplate> retryTemplate
     ) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            StringUtils.nvl(config.getFactory().getTranscriptionModelProvider()).toLowerCase(), AiModelProvider.ALIYUN.name().toLowerCase())
-        );
+            config.getFactory().getTranscriptionModelProvider(), AiModelProvider.ALIYUN.name()
+        ).toLowerCase());
         return new DashScopeTranscriptionModelFactory(providerConfig.getCommons(), providerConfig.getTranscription(), retryTemplate);
     }
 
@@ -245,8 +244,8 @@ public class AiAutoConfiguration {
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            StringUtils.nvl(config.getFactory().getEmbeddingModelProvider()).toLowerCase(), AiModelProvider.OPENAI.name().toLowerCase())
-        );
+            config.getFactory().getEmbeddingModelProvider(), AiModelProvider.OPENAI.name()
+        ).toLowerCase());
         return new OpenAiEmbeddingModelFactory(providerConfig.getCommons(), providerConfig.getEmbedding(),
             observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
     }
@@ -266,8 +265,8 @@ public class AiAutoConfiguration {
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            StringUtils.nvl(config.getFactory().getImageModelProvider()).toLowerCase(), AiModelProvider.OPENAI.name().toLowerCase())
-        );
+            config.getFactory().getImageModelProvider(), AiModelProvider.OPENAI.name()
+        ).toLowerCase());
         return new OpenAiImageModelFactory(providerConfig.getCommons(), providerConfig.getImage(),
             observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
     }

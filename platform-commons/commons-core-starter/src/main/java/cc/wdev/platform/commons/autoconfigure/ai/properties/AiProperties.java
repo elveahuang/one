@@ -25,6 +25,8 @@ public class AiProperties {
 
     public static final String PROVIDER_OPENAI = PROVIDER_PREFIX + ".openai";
 
+    public static final String PROVIDER_ANTHROPIC = PROVIDER_PREFIX + ".anthropic";
+
     public static final String PROVIDER_TENCENT = PROVIDER_PREFIX + ".tencent";
 
     public static final String PROVIDER_ALIYUN = PROVIDER_PREFIX + ".aliyun";

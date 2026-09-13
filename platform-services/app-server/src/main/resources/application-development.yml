@@ -112,19 +112,34 @@ platform:
     ai:
         enabled: true
         factory:
-            chat:
-                modelProvider: deepseek
-                serviceProvider: deepseek
-            transcription:
-                modelProvider: aliyun
-                serviceProvider: aliyun-dashscope-sdk
-            embedding:
-                modelProvider: aliyun
-                serviceProvider: spring-ai-openai
-            image:
-                modelProvider: aliyun
-                serviceProvider: aliyun-dashscope-sdk
+            chat-model-provider: deepseek
+            chat-service-provider: deepseek
+            transcription-model-provider: aliyun
+            transcription-service-provider: aliyun-dashscope-sdk
+            embedding-model-provider: aliyun
+            embedding-service-provider: spring-ai-openai
+            image-model-provider: aliyun
+            image-service-provider: aliyun-dashscope-sdk
+            rerank-model-provider: aliyun
+            rerank-service-provider: aliyun-dashscope-sdk
+        service:
+            chat-model-provider: deepseek
+            chat-service-provider: deepseek
+            transcription-model-provider: aliyun
+            transcription-service-provider: aliyun-dashscope-sdk
+            embedding-model-provider: aliyun
+            embedding-service-provider: spring-ai-openai
+            image-model-provider: aliyun
+            image-service-provider: aliyun-dashscope-sdk
+            rerank-model-provider: aliyun
+            rerank-service-provider: aliyun-dashscope-sdk
         providers:
+            anthropic:
+                enabled: true
+                commons:
+                    api-key: ${ANTHROPIC_API_KEY}
+                chat:
+                    name: claude-3-7-sonnet
             deepseek:
                 enabled: true
                 commons:

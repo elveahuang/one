@@ -106,12 +106,6 @@ platform:
         enabled: true
     ai:
         enabled: true
-        factory:
-            chat-model-provider: deepseek
-            chat-service-provider: deepseek
-        service:
-            chat-model-provider: deepseek
-            chat-service-provider: deepseek
         providers:
             deepseek:
                 enabled: true
@@ -122,12 +116,17 @@ platform:
             openai:
                 enabled: true
                 commons:
-                    api-key: ${DASHSCOPE_API_KEY}
-                    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+                    api-key: ${OPENAI_API_KEY}
                 chat:
                     name: deepseek-v4-flash
                 embedding:
                     name: text-embedding-v4
+            anthropic:
+                enabled: true
+                commons:
+                    api-key: ${ANTHROPIC_API_KEY}
+                chat:
+                    name: claude-3-7-sonnet
             aliyun:
                 enabled: true
                 commons:

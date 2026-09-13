@@ -38,6 +38,7 @@ public class RerankServiceTests extends BaseTests {
         );
 
         SimpleRerankRequest request = SimpleRerankRequest.builder()
+            .query("重排序")
             .documents(documents)
             .build();
         SimpleRerankResponse<?> response = service.call(request);

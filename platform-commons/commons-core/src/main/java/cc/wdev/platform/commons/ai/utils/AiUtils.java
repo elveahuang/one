@@ -382,7 +382,14 @@ public abstract class AiUtils {
     // ------------------------------------------------------------------------------
 
     public static ModelProviderConfig resolveModelProviderConfig(AiConfig config, String modelProvider) {
-        return config.getProviders().get(modelProvider);
+        if (config == null || config.getProviders() == null) {
+            return ModelProviderConfig.builder().build();
+        }
+        ModelProviderConfig providerConfig = null;
+        if (StringUtils.isNotEmpty(modelProvider)) {
+            providerConfig = config.getProviders().get(modelProvider.toLowerCase());
+        }
+        return providerConfig != null ? providerConfig : ModelProviderConfig.builder().build();
     }
 
     public static ModelConfig buildChatModelConfig(ModelCommonsConfig parentConfig, ModelChatConfig modelConfig) {
@@ -439,6 +446,20 @@ public abstract class AiUtils {
         RetrievalConfig.RetrievalConfigBuilder builder = RetrievalConfig.builder();
         builder.topK(nvl(config.getTopK(), defaultConfig.getTopK()));
         builder.similarityThreshold(nvl(config.getSimilarityThreshold(), defaultConfig.getSimilarityThreshold()));
+        return builder.build();
+    }
+
+    public static VectorStoreConfig resolveVectorStoreConfig(@NonNull VectorStoreConfig defaultConfig, @NonNull VectorStoreConfig config) {
+        VectorStoreConfig.VectorStoreConfigBuilder builder = VectorStoreConfig.builder();
+        builder.type(nvl(config.getType(), defaultConfig.getType()));
+        builder.embeddingProvider(nvl(config.getEmbeddingProvider(), defaultConfig.getEmbeddingProvider()));
+        builder.indexPrefix(nvl(config.getIndexPrefix(), defaultConfig.getIndexPrefix()));
+        return builder.build();
+    }
+
+    public static VectorizationConfig resolveVectorizationConfig(@NonNull VectorizationConfig defaultConfig, @NonNull VectorizationConfig config) {
+        VectorizationConfig.VectorizationConfigBuilder builder = VectorizationConfig.builder();
+        builder.batchSize(nvl(config.getBatchSize(), defaultConfig.getBatchSize()));
         return builder.build();
     }
 
