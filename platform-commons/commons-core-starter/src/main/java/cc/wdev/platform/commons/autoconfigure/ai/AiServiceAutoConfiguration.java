@@ -3,6 +3,8 @@ package cc.wdev.platform.commons.autoconfigure.ai;
 import cc.wdev.platform.commons.ai.AiConfig;
 import cc.wdev.platform.commons.ai.AiServiceManager;
 import cc.wdev.platform.commons.ai.AiServiceManagerImpl;
+import cc.wdev.platform.commons.ai.config.ModelProviderConfig;
+import cc.wdev.platform.commons.ai.enums.AiModelProvider;
 import cc.wdev.platform.commons.ai.service.ModelService;
 import cc.wdev.platform.commons.ai.service.audio.DashScopeTranscriptionModelService;
 import cc.wdev.platform.commons.ai.service.audio.HunYuanTranscriptionModelService;
@@ -11,11 +13,10 @@ import cc.wdev.platform.commons.ai.service.embedding.DashScopeEmbeddingModelServ
 import cc.wdev.platform.commons.ai.service.image.DashScopeImageModelService;
 import cc.wdev.platform.commons.ai.service.image.HunYuanImageModelService;
 import cc.wdev.platform.commons.ai.service.rerank.DashScopeRerankModelService;
-import cc.wdev.platform.commons.ai.service.rerank.RerankModelService;
-import cc.wdev.platform.commons.autoconfigure.ai.properties.AiAliyunProperties;
-import cc.wdev.platform.commons.autoconfigure.ai.properties.AiOpenAiProperties;
+import cc.wdev.platform.commons.ai.utils.AiUtils;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiProperties;
-import cc.wdev.platform.commons.autoconfigure.ai.properties.AiTencentProperties;
+import cc.wdev.platform.commons.utils.StringUtils;
+import com.alibaba.dashscope.rerank.TextReRank;
 import com.openai.client.OpenAIClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -51,35 +52,33 @@ public class AiServiceAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(OpenAIClient.class)
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_OPENAI, name = "enabled", havingValue = "true", matchIfMissing = true)
-    public OpenAiChatModelService openAiChatModelService(AiOpenAiProperties properties) {
-        return new OpenAiChatModelService(properties.getCommons(), properties.getChat());
+    public OpenAiChatModelService openAiChatModelService(AiConfig config) {
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getService().getChatModelProvider(), AiModelProvider.OPENAI.name().toLowerCase())
+        );
+        return new OpenAiChatModelService(providerConfig.getCommons(), providerConfig.getChat());
     }
 
     // ------------------------------------------------------------------------------
-    // Audio Service
+    // Transcription Service
     // ------------------------------------------------------------------------------
 
     @Bean
-    @ConditionalOnMissingBean(DashScopeTranscriptionModelService.class)
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_ALIYUN, name = "enabled", havingValue = "true", matchIfMissing = true)
-    public DashScopeTranscriptionModelService dashScopeTranscriptionModelService(AiAliyunProperties properties) {
-        return new DashScopeTranscriptionModelService(properties.getCommons(), properties.getTranscription());
+    @ConditionalOnMissingBean
+    public DashScopeTranscriptionModelService dashScopeTranscriptionModelService(AiConfig config) {
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getService().getTranscriptionModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+        );
+        return new DashScopeTranscriptionModelService(providerConfig.getCommons(), providerConfig.getTranscription());
     }
 
     @Bean
-    @ConditionalOnMissingBean(RerankModelService.class)
-    @ConditionalOnClass(com.alibaba.dashscope.rerank.TextReRank.class)
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_ALIYUN, name = "enabled", havingValue = "true", matchIfMissing = true)
-    public DashScopeRerankModelService dashScopeRerankModelService(AiAliyunProperties properties) {
-        return new DashScopeRerankModelService(properties.getCommons(), properties.getRerank());
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(HunYuanTranscriptionModelService.class)
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_TENCENT, name = "enabled", havingValue = "true", matchIfMissing = true)
-    public HunYuanTranscriptionModelService hunYuanTranscriptionModelService(AiTencentProperties properties) {
-        return new HunYuanTranscriptionModelService(properties.getCommons(), properties.getTranscription());
+    @ConditionalOnMissingBean
+    public HunYuanTranscriptionModelService hunYuanTranscriptionModelService(AiConfig config) {
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getService().getTranscriptionModelProvider(), AiModelProvider.TENCENT.name().toLowerCase())
+        );
+        return new HunYuanTranscriptionModelService(providerConfig.getCommons(), providerConfig.getTranscription());
     }
 
     // ------------------------------------------------------------------------------
@@ -87,10 +86,12 @@ public class AiServiceAutoConfiguration {
     // ------------------------------------------------------------------------------
 
     @Bean
-    @ConditionalOnMissingBean(DashScopeEmbeddingModelService.class)
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_ALIYUN, name = "enabled", havingValue = "true", matchIfMissing = true)
-    public DashScopeEmbeddingModelService dashScopeEmbeddingModelService(AiAliyunProperties properties) {
-        return new DashScopeEmbeddingModelService(properties.getCommons(), properties.getEmbedding());
+    @ConditionalOnMissingBean
+    public DashScopeEmbeddingModelService dashScopeEmbeddingModelService(AiConfig config) {
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getService().getEmbeddingModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+        );
+        return new DashScopeEmbeddingModelService(providerConfig.getCommons(), providerConfig.getEmbedding());
     }
 
     // ------------------------------------------------------------------------------
@@ -98,17 +99,35 @@ public class AiServiceAutoConfiguration {
     // ------------------------------------------------------------------------------
 
     @Bean
-    @ConditionalOnMissingBean(DashScopeImageModelService.class)
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_ALIYUN, name = "enabled", havingValue = "true", matchIfMissing = true)
-    public DashScopeImageModelService dashScopeImageModelService(AiAliyunProperties properties) {
-        return new DashScopeImageModelService(properties.getCommons(), properties.getImage());
+    @ConditionalOnMissingBean
+    public DashScopeImageModelService dashScopeImageModelService(AiConfig config) {
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getService().getImageModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+        );
+        return new DashScopeImageModelService(providerConfig.getCommons(), providerConfig.getImage());
     }
 
     @Bean
-    @ConditionalOnMissingBean(HunYuanImageModelService.class)
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_TENCENT, name = "enabled", havingValue = "true", matchIfMissing = true)
-    public HunYuanImageModelService hunYuanImageModelService(AiTencentProperties properties) {
-        return new HunYuanImageModelService(properties.getCommons(), properties.getImage());
+    @ConditionalOnMissingBean
+    public HunYuanImageModelService hunYuanImageModelService(AiConfig config) {
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getService().getImageModelProvider(), AiModelProvider.TENCENT.name().toLowerCase())
+        );
+        return new HunYuanImageModelService(providerConfig.getCommons(), providerConfig.getImage());
+    }
+
+    // ------------------------------------------------------------------------------
+    // Rerank Service
+    // ------------------------------------------------------------------------------
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(TextReRank.class)
+    public DashScopeRerankModelService dashScopeRerankModelService(AiConfig config) {
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getService().getRerankModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+        );
+        return new DashScopeRerankModelService(providerConfig.getCommons(), providerConfig.getRerank());
     }
 
     // ------------------------------------------------------------------------------

@@ -1,12 +1,14 @@
 package cc.wdev.platform.commons.ai;
 
 import cc.wdev.platform.commons.ai.config.*;
+import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @author elvea
@@ -23,6 +25,12 @@ public class AiConfig implements Serializable {
      */
     @Builder.Default
     private boolean fallbackEnabled = false;
+
+    /**
+     * 模型供应商配置
+     */
+    @Builder.Default
+    private Map<String, ModelProviderConfig> providers = Maps.newHashMap();
 
     private ServiceProviderConfig service;
 

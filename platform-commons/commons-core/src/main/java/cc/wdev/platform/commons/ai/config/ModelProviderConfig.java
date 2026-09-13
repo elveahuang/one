@@ -1,42 +1,51 @@
-package cc.wdev.platform.commons.autoconfigure.ai.properties;
+package cc.wdev.platform.commons.ai.config;
 
-import cc.wdev.platform.commons.ai.config.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+
+import java.io.Serializable;
 
 /**
  * @author elvea
  */
 @Data
+@Builder
 @NoArgsConstructor
-@ConfigurationProperties(prefix = AiAliyunProperties.PREFIX)
-public class AiAliyunProperties {
+@AllArgsConstructor
+public class ModelProviderConfig implements Serializable {
 
-    public static final String PREFIX = "platform.ai.providers.aliyun";
+    @Builder.Default
+    private boolean enabled = true;
 
-    private boolean enabled = false;
-
+    @Builder.Default
     @NestedConfigurationProperty
     private ModelCommonsConfig commons = new ModelCommonsConfig();
 
+    @Builder.Default
     @NestedConfigurationProperty
     private ModelChatConfig chat = new ModelChatConfig();
 
+    @Builder.Default
     @NestedConfigurationProperty
     private ModelEmbeddingConfig embedding = new ModelEmbeddingConfig();
 
-    @NestedConfigurationProperty
-    private ModelRerankConfig rerank = new ModelRerankConfig();
-
+    @Builder.Default
     @NestedConfigurationProperty
     private ModelImageConfig image = new ModelImageConfig();
 
+    @Builder.Default
     @NestedConfigurationProperty
     private ModelTranscriptionConfig transcription = new ModelTranscriptionConfig();
 
+    @Builder.Default
     @NestedConfigurationProperty
     private ModelSpeechConfig speech = new ModelSpeechConfig();
+
+    @Builder.Default
+    @NestedConfigurationProperty
+    private ModelRerankConfig rerank = new ModelRerankConfig();
 
 }

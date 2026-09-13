@@ -106,6 +106,12 @@ platform:
         enabled: true
     ai:
         enabled: true
+        factory:
+            chat-model-provider: deepseek
+            chat-service-provider: deepseek
+        service:
+            chat-model-provider: deepseek
+            chat-service-provider: deepseek
         providers:
             deepseek:
                 enabled: true

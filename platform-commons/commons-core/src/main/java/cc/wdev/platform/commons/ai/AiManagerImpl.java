@@ -169,11 +169,12 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public ChatModelFactory getChatModelFactory() {
-        AiServiceProvider defaultProvider = AiServiceProvider.getChatFactoryProvider(config.getFactory().getText());
+        AiServiceProvider serviceProvider = AiServiceProvider.getChatFactoryProvider(this.config.getFactory().getChatServiceProvider());
+
         return this.chatModelFactories.stream()
             .filter(f -> {
                 AiServiceProvider provider = f.getServiceProvider();
-                return provider.isEnabled() && provider.equals(defaultProvider);
+                return provider.isEnabled() && provider.equals(serviceProvider);
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Unavailable ChatModelFactory."));
@@ -209,9 +210,6 @@ public class AiManagerImpl implements AiManager {
         if (StringUtils.isEmpty(config.getServiceProvider())) {
             throw new IllegalArgumentException("ChatModelFactory - serviceProvider cannot be null");
         }
-        if (StringUtils.isEmpty(config.getModelProvider())) {
-            throw new IllegalArgumentException("ChatModelFactory - modelProvider cannot be null");
-        }
         if (config.getName() == null) {
             throw new IllegalArgumentException("ChatModelFactory - modelName cannot be null");
         }
@@ -244,7 +242,7 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public ChatClient getChatClient(ModelConfig config) {
-        return this.getChatModelFactory(config).getChatClient();
+        return this.getChatModelFactory(config).getChatClient(config);
     }
 
     /**
@@ -280,11 +278,12 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public EmbeddingModelFactory getEmbeddingModelFactory() {
-        AiServiceProvider defaultProvider = AiServiceProvider.getEmbeddingFactoryProvider(config.getFactory().getEmbedding());
+        AiServiceProvider serviceProvider = AiServiceProvider.getEmbeddingFactoryProvider(this.config.getFactory().getEmbeddingServiceProvider());
+
         return this.embeddingModelFactories.stream()
             .filter(f -> {
                 AiServiceProvider provider = f.getServiceProvider();
-                return provider.isEnabled() && provider.equals(defaultProvider);
+                return provider.isEnabled() && provider.equals(serviceProvider);
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Unavailable EmbeddingModelFactory."));
@@ -319,9 +318,6 @@ public class AiManagerImpl implements AiManager {
     public EmbeddingModelFactory getEmbeddingModelFactory(ModelConfig config) {
         if (StringUtils.isEmpty(config.getServiceProvider())) {
             throw new IllegalArgumentException("EmbeddingModelFactory - serviceProvider cannot be null");
-        }
-        if (StringUtils.isEmpty(config.getModelProvider())) {
-            throw new IllegalArgumentException("EmbeddingModelFactory - modelProvider cannot be null");
         }
         if (config.getName() == null) {
             throw new IllegalArgumentException("EmbeddingModelFactory - modelName cannot be null");
@@ -367,11 +363,12 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public TranscriptionModelFactory getTranscriptionModelFactory() {
-        AiServiceProvider defaultProvider = AiServiceProvider.getTranscriptionFactoryProvider(config.getFactory().getTranscription());
+        AiServiceProvider serviceProvider = AiServiceProvider.getTranscriptionFactoryProvider(this.config.getFactory().getTranscriptionServiceProvider());
+
         return this.transcriptionModelFactories.stream()
             .filter(f -> {
                 AiServiceProvider provider = f.getServiceProvider();
-                return provider.isEnabled() && provider.equals(defaultProvider);
+                return provider.isEnabled() && provider.equals(serviceProvider);
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Unavailable TranscriptionModelFactory."));
@@ -407,9 +404,6 @@ public class AiManagerImpl implements AiManager {
         if (StringUtils.isEmpty(config.getServiceProvider())) {
             throw new IllegalArgumentException("TranscriptionModelFactory - serviceProvider cannot be null");
         }
-        if (StringUtils.isEmpty(config.getModelProvider())) {
-            throw new IllegalArgumentException("TranscriptionModelFactory - modelProvider cannot be null");
-        }
         if (config.getName() == null) {
             throw new IllegalArgumentException("TranscriptionModelFactory - modelName cannot be null");
         }
@@ -430,11 +424,12 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public SpeechModelFactory getSpeechModelFactory() {
-        AiServiceProvider defaultProvider = AiServiceProvider.getSpeechFactoryProvider(config.getFactory().getSpeech());
+        AiServiceProvider serviceProvider = AiServiceProvider.getSpeechFactoryProvider(this.config.getFactory().getSpeechServiceProvider());
+
         return this.speechModelFactories.stream()
             .filter(f -> {
                 AiServiceProvider provider = f.getServiceProvider();
-                return provider.isEnabled() && provider.equals(defaultProvider);
+                return provider.isEnabled() && provider.equals(serviceProvider);
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Unavailable SpeechModelFactory."));
@@ -469,9 +464,6 @@ public class AiManagerImpl implements AiManager {
     public SpeechModelFactory getSpeechModelFactory(ModelConfig config) {
         if (StringUtils.isEmpty(config.getServiceProvider())) {
             throw new IllegalArgumentException("SpeechModelFactory - serviceProvider cannot be null");
-        }
-        if (StringUtils.isEmpty(config.getModelProvider())) {
-            throw new IllegalArgumentException("SpeechModelFactory - modelProvider cannot be null");
         }
         if (config.getName() == null) {
             throw new IllegalArgumentException("SpeechModelFactory - modelName cannot be null");

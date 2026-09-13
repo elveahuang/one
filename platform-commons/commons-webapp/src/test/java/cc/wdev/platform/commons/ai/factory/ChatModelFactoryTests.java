@@ -67,4 +67,23 @@ public class ChatModelFactoryTests extends BaseTests {
         Assertions.assertNotNull(response);
     }
 
+    @Test
+    public void defaultChatClientTest() {
+        ChatClient chatClient = this.aiManager.getChatClient();
+        Assertions.assertNotNull(chatClient);
+    }
+
+    @Test
+    public void dynamicProviderChatClientTest() {
+        cc.wdev.platform.commons.ai.model.ModelConfig config = cc.wdev.platform.commons.ai.model.SimpleModelConfig.builder()
+            .modelProvider("siliconflow")
+            .serviceProvider("spring-ai-openai")
+            .name("deepseek-ai/DeepSeek-V3")
+            .baseUrl("https://api.siliconflow.cn/v1")
+            .apiKey("sk-mock-test-key")
+            .build();
+        ChatClient chatClient = this.aiManager.getChatClient(config);
+        Assertions.assertNotNull(chatClient);
+    }
+
 }

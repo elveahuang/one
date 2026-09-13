@@ -13,14 +13,19 @@ import java.util.Optional;
 @Getter
 @AllArgsConstructor
 public enum AiModelProvider implements BaseEnum<String> {
-    DEEPSEEK("deepseek", "深度求索", true,
+    OPENAI("OPENAI", "OpenAI", true,
+        new Model[]{},
+        new AiModelType[]{AiModelType.TEXT, AiModelType.EMBEDDING}
+    ),
+
+    DEEPSEEK("DEEPSEEK", "深度求索", true,
         new Model[]{
             new Model("deepseek-flash", true, false, AiModelType.TEXT),
         },
         new AiModelType[]{AiModelType.TEXT}
     ),
 
-    ALIYUN("aliyun", "阿里云", true,
+    ALIYUN("ALIYUN", "阿里云", true,
         new Model[]{
             new Model("deepseek-v4-flash", true, false, AiModelType.TEXT),
             new Model("qwen-plus", true, false, AiModelType.TEXT),
@@ -40,6 +45,11 @@ public enum AiModelProvider implements BaseEnum<String> {
         new AiModelType[]{AiModelType.TEXT, AiModelType.AUDIO_TRANSCRIPTION, AiModelType.EMBEDDING, AiModelType.RERANK}
     ),
 
+    TENCENT("TENCENT", "TENCENT", true,
+        new Model[]{},
+        new AiModelType[]{AiModelType.TEXT, AiModelType.EMBEDDING}
+    ),
+
     ORCAROUTER("ORCAROUTER", "OrcaRouter", true,
         new Model[]{
             new Model("orcarouter/free", true, false, AiModelType.TEXT),
@@ -49,10 +59,7 @@ public enum AiModelProvider implements BaseEnum<String> {
         new AiModelType[]{AiModelType.TEXT}
     ),
 
-    OPENAI("openai", "OpenAI", true,
-        new Model[]{},
-        new AiModelType[]{AiModelType.TEXT, AiModelType.EMBEDDING}
-    );
+    ;
 
     private final String value;
     private final String description;

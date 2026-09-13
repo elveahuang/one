@@ -16,16 +16,28 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class ServiceProviderConfig implements Serializable {
 
-    private String text;
+    private String chatModelProvider;
 
-    private String image;
+    private String chatServiceProvider;
 
-    private String transcription;
+    private String embeddingModelProvider;
 
-    private String speech;
+    private String embeddingServiceProvider;
 
-    private String embedding;
+    private String rerankModelProvider;
 
-    private String rerank;
+    private String rerankServiceProvider;
+
+    private String transcriptionModelProvider;
+
+    private String transcriptionServiceProvider;
+
+    private String speechModelProvider;
+
+    private String speechServiceProvider;
+
+    private String imageModelProvider;
+
+    private String imageServiceProvider;
 
 }

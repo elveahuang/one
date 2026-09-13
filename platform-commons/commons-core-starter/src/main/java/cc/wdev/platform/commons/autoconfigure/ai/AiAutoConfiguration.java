@@ -3,9 +3,10 @@ package cc.wdev.platform.commons.autoconfigure.ai;
 import cc.wdev.platform.commons.ai.AiConfig;
 import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.AiManagerImpl;
+import cc.wdev.platform.commons.ai.config.ModelProviderConfig;
 import cc.wdev.platform.commons.ai.config.RetrievalConfig;
-import cc.wdev.platform.commons.ai.config.ServiceProviderConfig;
 import cc.wdev.platform.commons.ai.config.SplittingConfig;
+import cc.wdev.platform.commons.ai.enums.AiModelProvider;
 import cc.wdev.platform.commons.ai.factory.ModelFactory;
 import cc.wdev.platform.commons.ai.factory.audio.DashScopeTranscriptionModelFactory;
 import cc.wdev.platform.commons.ai.factory.audio.OpenAiTranscriptionModelFactory;
@@ -24,8 +25,14 @@ import cc.wdev.platform.commons.ai.ui.UiComponentManager;
 import cc.wdev.platform.commons.ai.ui.UiComponentRegistry;
 import cc.wdev.platform.commons.ai.ui.components.TextComponentDefinition;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
-import cc.wdev.platform.commons.autoconfigure.ai.properties.*;
+import cc.wdev.platform.commons.autoconfigure.ai.properties.AiProperties;
+import cc.wdev.platform.commons.autoconfigure.ai.properties.AiVectorStoreElasticsearchProperties;
+import cc.wdev.platform.commons.autoconfigure.ai.properties.AiVectorStoreMariaDBProperties;
+import cc.wdev.platform.commons.autoconfigure.ai.properties.AiVectorStorePgVectorProperties;
+import cc.wdev.platform.commons.utils.CollectionUtils;
+import cc.wdev.platform.commons.utils.StringUtils;
 import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
+import com.google.common.collect.Maps;
 import io.github.agentic.spring.ai.dashscope.sdk.audio.transcription.DashScopeSdkAudioTranscriptionModel;
 import io.github.agentic.spring.ai.dashscope.sdk.chat.DashScopeSdkChatModel;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -66,9 +73,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.ResponseErrorHandler;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import static cc.wdev.platform.commons.ai.enums.AiServiceProvider.*;
 
 /**
  * @author elvea
@@ -78,9 +84,7 @@ import static cc.wdev.platform.commons.ai.enums.AiServiceProvider.*;
 @ConditionalOnProperty(prefix = AiProperties.PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties({
     AiProperties.class,
-    AiVectorStoreElasticsearchProperties.class, AiVectorStorePgVectorProperties.class, AiVectorStoreMariaDBProperties.class,
-    AiDeepSeekProperties.class, AiAliyunProperties.class, AiTencentProperties.class, AiOpenAiProperties.class,
-    AiOrcaRouterProperties.class
+    AiVectorStoreElasticsearchProperties.class, AiVectorStorePgVectorProperties.class, AiVectorStoreMariaDBProperties.class
 })
 @ImportRuntimeHints(AiAutoConfiguration.AiRuntimeHints.class)
 public class AiAutoConfiguration {
@@ -96,31 +100,27 @@ public class AiAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public AiConfig aiConfig(AiProperties properties) {
-        ServiceProviderConfig factory = properties.getFactory();
-        ServiceProviderConfig service = properties.getService();
-
-        return AiConfig.builder().service(ServiceProviderConfig.builder()
-                .text(getChatServiceProvider(service.getText()).getValue())
-                .embedding(getEmbeddingServiceProvider(service.getEmbedding()).getValue())
-                .image(getImageServiceProvider(service.getImage()).getValue())
-                .speech(getSpeechServiceProvider(service.getSpeech()).getValue())
-                .transcription(getTranscriptionServiceProvider(service.getTranscription()).getValue())
-                .rerank(getRerankServiceProvider(service.getRerank()).getValue())
-                .build())
-            .factory(ServiceProviderConfig.builder()
-                .text(getChatFactoryProvider(factory.getText()).getValue())
-                .embedding(getEmbeddingFactoryProvider(factory.getEmbedding()).getValue())
-                .image(getImageFactoryProvider(factory.getImage()).getValue())
-                .speech(getSpeechFactoryProvider(factory.getSpeech()).getValue())
-                .transcription(getTranscriptionFactoryProvider(factory.getTranscription()).getValue())
-                .build())
+        AiConfig.AiConfigBuilder builder = AiConfig.builder()
+            .fallbackEnabled(properties.isFallbackEnabled())
+            .service(properties.getService())
+            .factory(properties.getFactory())
             .vectorStore(properties.getVectorstore())
             .splitting(AiUtils.resolveSplittingConfig(SplittingConfig.builder().build(), properties.getSplitting()))
             .retrieval(AiUtils.resolveRetrievalConfig(RetrievalConfig.builder().build(), properties.getRetrieval()))
             .vectorization(properties.getVectorization())
             .agent(properties.getAgent())
-            .memory(properties.getMemory())
-            .build();
+            .memory(properties.getMemory());
+
+        // 统一模型供应商的标识转为小写
+        if (CollectionUtils.isNotEmpty(properties.getProviders())) {
+            Map<String, ModelProviderConfig> providers = Maps.newHashMap();
+            properties.getProviders().forEach((key, value) -> {
+                providers.put(key.toLowerCase(), value);
+            });
+            builder.providers(providers);
+        }
+
+        return builder.build();
     }
 
     // ------------------------------------------------------------------------------
@@ -129,48 +129,51 @@ public class AiAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_DEEPSEEK, name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(DeepSeekChatModel.class)
     public DeepSeekChatModelFactory deepSeekChatModelFactory(
-        AiDeepSeekProperties properties,
+        AiConfig config,
         ObjectProvider<RetryTemplate> retryTemplate,
         ObjectProvider<ResponseErrorHandler> responseErrorHandler,
         ObjectProvider<ObservationRegistry> observationRegistry,
         ObjectProvider<ChatModelObservationConvention> observationConvention
     ) {
-        return new DeepSeekChatModelFactory(
-            properties.getCommons(), properties.getChat(),
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getFactory().getChatModelProvider(), AiModelProvider.DEEPSEEK.name().toLowerCase())
+        );
+        return new DeepSeekChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
             retryTemplate, responseErrorHandler, observationRegistry, observationConvention);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_OPENAI, name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(OpenAiChatModel.class)
     public OpenAiChatModelFactory openAiChatModelFactory(
-        AiOpenAiProperties properties,
+        AiConfig config,
         ObjectProvider<ObservationRegistry> observationRegistry,
         ObjectProvider<MeterRegistry> meterRegistry,
         ObjectProvider<ChatModelObservationConvention> observationConvention,
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
-        return new OpenAiChatModelFactory(
-            properties.getCommons(), properties.getChat(),
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getFactory().getChatModelProvider(), AiModelProvider.OPENAI.name().toLowerCase())
+        );
+        return new OpenAiChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
             observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_ALIYUN, name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(DashScopeSdkChatModel.class)
     public DashScopeChatModelFactory dashScopeChatModelFactory(
-        AiAliyunProperties properties,
+        AiConfig config,
         ObjectProvider<RetryTemplate> retryTemplate,
         ObjectProvider<ObservationRegistry> observationRegistry,
         ObjectProvider<ChatModelObservationConvention> observationConvention
     ) {
-        return new DashScopeChatModelFactory(
-            properties.getCommons(), properties.getChat(),
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getFactory().getChatModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+        );
+        return new DashScopeChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
             retryTemplate, observationRegistry, observationConvention);
     }
 
@@ -180,27 +183,31 @@ public class AiAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_OPENAI, name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(OpenAiAudioTranscriptionModel.class)
     public OpenAiTranscriptionModelFactory openAiAudioModelFactory(
-        AiOpenAiProperties properties,
+        AiConfig config,
         ObjectProvider<ObservationRegistry> observationRegistry,
         ObjectProvider<MeterRegistry> meterRegistry,
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
-        return new OpenAiTranscriptionModelFactory(properties.getCommons(), properties.getTranscription(),
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getFactory().getTranscriptionModelProvider(), AiModelProvider.OPENAI.name().toLowerCase())
+        );
+        return new OpenAiTranscriptionModelFactory(providerConfig.getCommons(), providerConfig.getTranscription(),
             observationRegistry, meterRegistry, httpClientBuilderCustomizers);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_ALIYUN, name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(DashScopeSdkAudioTranscriptionModel.class)
     public DashScopeTranscriptionModelFactory dashScopeTranscriptionModelFactory(
-        AiAliyunProperties properties,
+        AiConfig config,
         ObjectProvider<RetryTemplate> retryTemplate
     ) {
-        return new DashScopeTranscriptionModelFactory(properties.getCommons(), properties.getTranscription(), retryTemplate);
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getFactory().getTranscriptionModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+        );
+        return new DashScopeTranscriptionModelFactory(providerConfig.getCommons(), providerConfig.getTranscription(), retryTemplate);
     }
 
     // ------------------------------------------------------------------------------
@@ -209,16 +216,18 @@ public class AiAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_OPENAI, name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(OpenAiEmbeddingModel.class)
     public OpenAiEmbeddingModelFactory openAiEmbeddingModelFactory(
-        AiOpenAiProperties properties,
+        AiConfig config,
         ObjectProvider<ObservationRegistry> observationRegistry,
         ObjectProvider<MeterRegistry> meterRegistry,
         ObjectProvider<EmbeddingModelObservationConvention> observationConvention,
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
-        return new OpenAiEmbeddingModelFactory(properties.getCommons(), properties.getEmbedding(),
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getFactory().getEmbeddingModelProvider(), AiModelProvider.OPENAI.name().toLowerCase())
+        );
+        return new OpenAiEmbeddingModelFactory(providerConfig.getCommons(), providerConfig.getEmbedding(),
             observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
     }
 
@@ -228,16 +237,18 @@ public class AiAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = AiProperties.PROVIDER_OPENAI, name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnClass(OpenAiImageModel.class)
     public OpenAiImageModelFactory openAiImageModelFactory(
-        AiOpenAiProperties properties,
+        AiConfig config,
         ObjectProvider<ObservationRegistry> observationRegistry,
         ObjectProvider<MeterRegistry> meterRegistry,
         ObjectProvider<ImageModelObservationConvention> observationConvention,
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
-        return new OpenAiImageModelFactory(properties.getCommons(), properties.getImage(),
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getFactory().getImageModelProvider(), AiModelProvider.OPENAI.name().toLowerCase())
+        );
+        return new OpenAiImageModelFactory(providerConfig.getCommons(), providerConfig.getImage(),
             observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
     }
 
@@ -254,7 +265,6 @@ public class AiAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(ElasticsearchVectorStore.class)
-    @ConditionalOnProperty(prefix = AiVectorStoreElasticsearchProperties.PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
     public ElasticsearchVectorStoreFactory elasticsearchVectorStoreFactory(
         ObjectProvider<Rest5Client> restClientProvider,
         ObjectProvider<ObservationRegistry> observationRegistry,

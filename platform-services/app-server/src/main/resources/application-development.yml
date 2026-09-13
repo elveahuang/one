@@ -111,6 +111,19 @@ platform:
         enabled: true
     ai:
         enabled: true
+        factory:
+            chat:
+                modelProvider: deepseek
+                serviceProvider: deepseek
+            transcription:
+                modelProvider: aliyun
+                serviceProvider: aliyun-dashscope-sdk
+            embedding:
+                modelProvider: aliyun
+                serviceProvider: spring-ai-openai
+            image:
+                modelProvider: aliyun
+                serviceProvider: aliyun-dashscope-sdk
         providers:
             deepseek:
                 enabled: true

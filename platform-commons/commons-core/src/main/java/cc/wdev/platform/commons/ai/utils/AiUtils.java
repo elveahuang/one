@@ -1,5 +1,6 @@
 package cc.wdev.platform.commons.ai.utils;
 
+import cc.wdev.platform.commons.ai.AiConfig;
 import cc.wdev.platform.commons.ai.AiConstants;
 import cc.wdev.platform.commons.ai.advisor.CustomContextAdvisor;
 import cc.wdev.platform.commons.ai.advisor.CustomLoggingAdvisor;
@@ -379,6 +380,10 @@ public abstract class AiUtils {
     // ------------------------------------------------------------------------------
     // Config
     // ------------------------------------------------------------------------------
+
+    public static ModelProviderConfig resolveModelProviderConfig(AiConfig config, String modelProvider) {
+        return config.getProviders().get(modelProvider);
+    }
 
     public static ModelConfig buildChatModelConfig(ModelCommonsConfig parentConfig, ModelChatConfig modelConfig) {
         String baseUrl = nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());

@@ -91,11 +91,12 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public ChatModelService getChatModelService() {
-        AiServiceProvider defaultProvider = AiServiceProvider.getChatServiceProvider(config.getService().getText());
+        AiServiceProvider serviceProvider = AiServiceProvider.getChatServiceProvider(this.config.getService().getChatServiceProvider());
+
         return this.chatModelServices.stream()
             .filter(s -> {
                 AiServiceProvider provider = s.getServiceProvider();
-                return provider.isEnabled() && provider.equals(defaultProvider);
+                return provider.isEnabled() && provider.equals(serviceProvider);
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Unavailable ChatModelService."));
@@ -131,9 +132,6 @@ public class AiServiceManagerImpl implements AiServiceManager {
         if (StringUtils.isEmpty(modelConfig.getServiceProvider())) {
             throw new IllegalArgumentException("ChatModelService - serviceProvider cannot be null");
         }
-        if (StringUtils.isEmpty(modelConfig.getModelProvider())) {
-            throw new IllegalArgumentException("ChatModelService - modelProvider cannot be null");
-        }
         if (modelConfig.getName() == null) {
             throw new IllegalArgumentException("ChatModelService - modelName cannot be null");
         }
@@ -154,11 +152,12 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public EmbeddingModelService getEmbeddingModelService() {
-        AiServiceProvider defaultProvider = AiServiceProvider.getEmbeddingServiceProvider(config.getService().getEmbedding());
+        AiServiceProvider serviceProvider = AiServiceProvider.getEmbeddingServiceProvider(this.config.getService().getEmbeddingServiceProvider());
+
         return this.embeddingModelServices.stream()
             .filter(s -> {
                 AiServiceProvider provider = s.getServiceProvider();
-                return provider.isEnabled() && provider.equals(defaultProvider);
+                return provider.isEnabled() && provider.equals(serviceProvider);
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Unavailable EmbeddingModelService."));
@@ -194,9 +193,6 @@ public class AiServiceManagerImpl implements AiServiceManager {
         if (StringUtils.isEmpty(modelConfig.getServiceProvider())) {
             throw new IllegalArgumentException("EmbeddingModelService - serviceProvider cannot be null");
         }
-        if (StringUtils.isEmpty(modelConfig.getModelProvider())) {
-            throw new IllegalArgumentException("EmbeddingModelService - modelProvider cannot be null");
-        }
         if (modelConfig.getName() == null) {
             throw new IllegalArgumentException("EmbeddingModelService - modelName cannot be null");
         }
@@ -217,11 +213,12 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public ImageModelService getImageService() {
-        AiServiceProvider defaultProvider = AiServiceProvider.getImageServiceProvider(config.getService().getImage());
+        AiServiceProvider serviceProvider = AiServiceProvider.getImageServiceProvider(this.config.getService().getImageServiceProvider());
+
         return this.imageModelServices.stream()
             .filter(s -> {
                 AiServiceProvider provider = s.getServiceProvider();
-                return provider.isEnabled() && provider.equals(defaultProvider);
+                return provider.isEnabled() && provider.equals(serviceProvider);
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Unavailable ImageModelService."));
@@ -257,9 +254,6 @@ public class AiServiceManagerImpl implements AiServiceManager {
         if (StringUtils.isEmpty(config.getServiceProvider())) {
             throw new IllegalArgumentException("ImageModelService - serviceProvider cannot be null");
         }
-        if (StringUtils.isEmpty(config.getModelProvider())) {
-            throw new IllegalArgumentException("ImageModelService - modelProvider cannot be null");
-        }
         if (config.getName() == null) {
             throw new IllegalArgumentException("ImageModelService - modelName cannot be null");
         }
@@ -281,11 +275,12 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public TranscriptionModelService getTranscriptionModelService() {
-        AiServiceProvider defaultProvider = AiServiceProvider.getTranscriptionServiceProvider(config.getService().getTranscription());
+        AiServiceProvider serviceProvider = AiServiceProvider.getTranscriptionServiceProvider(this.config.getService().getTranscriptionServiceProvider());
+
         return this.transcriptionModelServices.stream()
             .filter(s -> {
                 AiServiceProvider provider = s.getServiceProvider();
-                return provider.isEnabled() && provider.equals(defaultProvider);
+                return provider.isEnabled() && provider.equals(serviceProvider);
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Unavailable TranscriptionModelService."));
@@ -321,9 +316,6 @@ public class AiServiceManagerImpl implements AiServiceManager {
         if (StringUtils.isEmpty(config.getServiceProvider())) {
             throw new IllegalArgumentException("TranscriptionModelService - serviceProvider cannot be null");
         }
-        if (StringUtils.isEmpty(config.getModelProvider())) {
-            throw new IllegalArgumentException("TranscriptionModelService - modelProvider cannot be null");
-        }
         if (config.getName() == null) {
             throw new IllegalArgumentException("TranscriptionModelService - modelName cannot be null");
         }
@@ -344,11 +336,12 @@ public class AiServiceManagerImpl implements AiServiceManager {
      */
     @Override
     public RerankModelService getRerankModelService() {
-        AiServiceProvider defaultProvider = AiServiceProvider.getRerankServiceProvider(config.getService().getRerank());
+        AiServiceProvider serviceProvider = AiServiceProvider.getRerankServiceProvider(this.config.getService().getRerankServiceProvider());
+
         return this.rerankModelServices.stream()
             .filter(s -> {
                 AiServiceProvider provider = s.getServiceProvider();
-                return provider.isEnabled() && provider.equals(defaultProvider);
+                return provider.isEnabled() && provider.equals(serviceProvider);
             })
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Unavailable RerankModelService."));
