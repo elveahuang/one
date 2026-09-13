@@ -141,7 +141,7 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public QuestionAnswerAdvisor getQuestionAnswerAdvisor() {
-        return AiUtils.getQuestionAnswerAdvisor(this.getVectorStore(), this.getConfig().getRetrieval());
+        return AiUtils.getQuestionAnswerAdvisor(this.getVectorStore(), this.getConfig().getRag().getRetrieval());
     }
 
     /**
@@ -149,7 +149,7 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public RetrievalAugmentationAdvisor getRetrievalAugmentationAdvisor() {
-        return AiUtils.getRetrievalAugmentationAdvisor(this.getVectorStore(), this.getConfig().getRetrieval());
+        return AiUtils.getRetrievalAugmentationAdvisor(this.getVectorStore(), this.getConfig().getRag().getRetrieval());
     }
 
     /**
@@ -486,7 +486,7 @@ public class AiManagerImpl implements AiManager {
     @Override
     public VectorStoreFactory getVectorStoreFactory() {
         AiVectorStoreType vectorStoreType = BaseEnum.getEnumByValue(
-            this.config.getVectorStore().getType(), AiVectorStoreType.class, AiVectorStoreType.ELASTICSEARCH);
+            this.config.getRag().getStore().getType(), AiVectorStoreType.class, AiVectorStoreType.ELASTICSEARCH);
         return this.getVectorStoreFactory(vectorStoreType);
     }
 
@@ -554,7 +554,7 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public TextSplitter getDocumentTransformer() {
-        return AiUtils.getDocumentTransformer(this.config.getSplitting());
+        return AiUtils.getDocumentTransformer(this.config.getRag().getSplitting());
     }
 
     // ------------------------------------------------------------------------

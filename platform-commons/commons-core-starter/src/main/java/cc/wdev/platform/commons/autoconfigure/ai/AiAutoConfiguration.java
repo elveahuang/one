@@ -3,7 +3,8 @@ package cc.wdev.platform.commons.autoconfigure.ai;
 import cc.wdev.platform.commons.ai.AiConfig;
 import cc.wdev.platform.commons.ai.AiManager;
 import cc.wdev.platform.commons.ai.AiManagerImpl;
-import cc.wdev.platform.commons.ai.config.*;
+import cc.wdev.platform.commons.ai.config.ModelProviderConfig;
+import cc.wdev.platform.commons.ai.config.ServiceProviderConfig;
 import cc.wdev.platform.commons.ai.enums.AiModelProvider;
 import cc.wdev.platform.commons.ai.factory.ModelFactory;
 import cc.wdev.platform.commons.ai.factory.audio.DashScopeTranscriptionModelFactory;
@@ -106,10 +107,7 @@ public class AiAutoConfiguration {
             .fallbackEnabled(properties.isFallbackEnabled())
             .service(ObjectUtils.nvl(properties.getService(), new ServiceProviderConfig()))
             .factory(ObjectUtils.nvl(properties.getFactory(), new ServiceProviderConfig()))
-            .splitting(AiUtils.resolveSplittingConfig(SplittingConfig.builder().build(), properties.getSplitting()))
-            .vectorStore(AiUtils.resolveVectorStoreConfig(VectorStoreConfig.builder().build(), properties.getVectorstore()))
-            .retrieval(AiUtils.resolveRetrievalConfig(RetrievalConfig.builder().build(), properties.getRetrieval()))
-            .vectorization(AiUtils.resolveVectorizationConfig(VectorizationConfig.builder().build(), properties.getVectorization()))
+            .rag(AiUtils.resolveRagConfig(properties.getRag()))
             .agent(properties.getAgent())
             .memory(properties.getMemory());
 

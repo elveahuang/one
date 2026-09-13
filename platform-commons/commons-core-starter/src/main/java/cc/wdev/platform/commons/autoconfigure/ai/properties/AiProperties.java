@@ -60,13 +60,7 @@ public class AiProperties {
     private VectorStoreConfig vectorstore = VectorStoreConfig.builder().build();
 
     @NestedConfigurationProperty
-    private SplittingConfig splitting = SplittingConfig.builder().build();
-
-    @NestedConfigurationProperty
-    private RetrievalConfig retrieval = RetrievalConfig.builder().build();
-
-    @NestedConfigurationProperty
-    private VectorizationConfig vectorization = VectorizationConfig.builder().build();
+    private RagConfig rag = RagConfig.builder().build();
 
     @NestedConfigurationProperty
     private AgentConfig agent = AgentConfig.builder().build();

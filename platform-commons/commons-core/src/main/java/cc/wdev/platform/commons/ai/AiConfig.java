@@ -44,17 +44,21 @@ public class AiConfig implements Serializable {
     @Builder.Default
     private ServiceProviderConfig factory = new ServiceProviderConfig();
 
-    private VectorStoreConfig vectorStore;
+    /**
+     * 知识检索配置
+     */
+    @Builder.Default
+    private RagConfig rag = RagConfig.builder().build();
 
-    private SplittingConfig splitting;
-
-    private RetrievalConfig retrieval;
-
-    private VectorizationConfig vectorization;
-
+    /**
+     * 智能体配置
+     */
     @Builder.Default
     private AgentConfig agent = AgentConfig.builder().build();
 
+    /**
+     * 长期记忆配置
+     */
     @Builder.Default
     private MemoryConfig memory = MemoryConfig.builder().build();
 

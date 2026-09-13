@@ -258,14 +258,14 @@ public class AiHelper {
      * 获取知识库向量存储配置
      */
     public VectorizationConfig resolveVectorizationConfig() {
-        return this.aiManager.getConfig().getVectorization();
+        return this.aiManager.getConfig().getRag().getVectorization();
     }
 
     /**
      * 获取知识库检索配置
      */
     public RetrievalConfig resolveRetrievalConfig(@NonNull AiKbVo kb) {
-        RetrievalConfig globalConfig = this.aiManager.getConfig().getRetrieval();
+        RetrievalConfig globalConfig = this.aiManager.getConfig().getRag().getRetrieval();
         return AiUtils.resolveRetrievalConfig(globalConfig, RetrievalConfig.builder().build());
     }
 
@@ -280,7 +280,7 @@ public class AiHelper {
         if (kb.getChunkOverlap() != null) {
             builder.chunkOverlap(kb.getChunkOverlap());
         }
-        SplittingConfig globalConfig = this.aiManager.getConfig().getSplitting();
+        SplittingConfig globalConfig = this.aiManager.getConfig().getRag().getSplitting();
         return AiUtils.resolveSplittingConfig(globalConfig, builder.build());
     }
 

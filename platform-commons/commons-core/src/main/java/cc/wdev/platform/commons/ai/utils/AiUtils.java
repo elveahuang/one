@@ -463,4 +463,13 @@ public abstract class AiUtils {
         return builder.build();
     }
 
+    public static RagConfig resolveRagConfig(@NonNull RagConfig config) {
+        RagConfig.RagConfigBuilder builder = RagConfig.builder();
+        builder.store(AiUtils.resolveVectorStoreConfig(VectorStoreConfig.builder().build(), config.getStore()));
+        builder.splitting(AiUtils.resolveSplittingConfig(SplittingConfig.builder().build(), config.getSplitting()));
+        builder.retrieval(AiUtils.resolveRetrievalConfig(RetrievalConfig.builder().build(), config.getRetrieval()));
+        builder.vectorization(AiUtils.resolveVectorizationConfig(VectorizationConfig.builder().build(), config.getVectorization()));
+        return builder.build();
+    }
+
 }
