@@ -59,6 +59,16 @@ public enum AiModelProvider implements BaseEnum<String> {
         new AiModelType[]{AiModelType.TEXT}
     ),
 
+    ANTHROPIC("ANTHROPIC", "Anthropic", true,
+        new Model[]{
+            new Model("claude-3-7-sonnet", true, false, AiModelType.TEXT),
+            new Model("claude-3-5-sonnet", true, false, AiModelType.TEXT),
+            new Model("claude-3-5-haiku", false, false, AiModelType.TEXT),
+            new Model("claude-3-opus", false, false, AiModelType.TEXT),
+        },
+        new AiModelType[]{AiModelType.TEXT}
+    ),
+
     ;
 
     private final String value;

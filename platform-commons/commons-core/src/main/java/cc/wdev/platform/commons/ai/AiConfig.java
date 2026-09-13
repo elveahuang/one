@@ -32,9 +32,17 @@ public class AiConfig implements Serializable {
     @Builder.Default
     private Map<String, ModelProviderConfig> providers = Maps.newHashMap();
 
-    private ServiceProviderConfig service;
+    /**
+     * 厂商服务配置
+     */
+    @Builder.Default
+    private ServiceProviderConfig service = new ServiceProviderConfig();
 
-    private ServiceProviderConfig factory;
+    /**
+     * 标准服务配置
+     */
+    @Builder.Default
+    private ServiceProviderConfig factory = new ServiceProviderConfig();
 
     private VectorStoreConfig vectorStore;
 

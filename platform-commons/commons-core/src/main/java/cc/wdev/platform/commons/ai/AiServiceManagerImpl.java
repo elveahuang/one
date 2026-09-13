@@ -377,9 +377,6 @@ public class AiServiceManagerImpl implements AiServiceManager {
         if (StringUtils.isEmpty(modelConfig.getServiceProvider())) {
             throw new IllegalArgumentException("RerankModelService - serviceProvider cannot be null");
         }
-        if (StringUtils.isEmpty(modelConfig.getModelProvider())) {
-            throw new IllegalArgumentException("RerankModelService - modelProvider cannot be null");
-        }
         if (modelConfig.getName() == null) {
             throw new IllegalArgumentException("RerankModelService - modelName cannot be null");
         }

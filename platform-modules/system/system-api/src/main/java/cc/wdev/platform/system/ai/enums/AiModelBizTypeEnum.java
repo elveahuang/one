@@ -26,6 +26,10 @@ public enum AiModelBizTypeEnum implements BaseAiModelBizTypeEnum {
     ALIYUN_PARAFORMER_V2(AiServiceProvider.ALIYUN_DASHSCOPE_SDK.getValue(), AiModelProvider.ALIYUN.getValue(), AiModelType.AUDIO_TRANSCRIPTION.getValue(), "paraformer-v2", "paraformer-v2"),
     // Rerank
     ALIYUN_GTE_RERANK(AiServiceProvider.ALIYUN_DASHSCOPE_SDK.getValue(), AiModelProvider.ALIYUN.getValue(), AiModelType.RERANK.getValue(), "gte-rerank-v3", "gte-rerank-v3"),
+    // Anthropic
+    ANTHROPIC_CLAUDE_3_7_SONNET(AiServiceProvider.SPRING_AI_ANTHROPIC.getValue(), AiModelProvider.ANTHROPIC.getValue(), AiModelType.TEXT.getValue(), "claude-3-7-sonnet", "Claude 3.7 Sonnet"),
+    ANTHROPIC_CLAUDE_3_5_SONNET(AiServiceProvider.SPRING_AI_ANTHROPIC.getValue(), AiModelProvider.ANTHROPIC.getValue(), AiModelType.TEXT.getValue(), "claude-3-5-sonnet", "Claude 3.5 Sonnet"),
+    ANTHROPIC_CLAUDE_3_5_HAIKU(AiServiceProvider.SPRING_AI_ANTHROPIC.getValue(), AiModelProvider.ANTHROPIC.getValue(), AiModelType.TEXT.getValue(), "claude-3-5-haiku", "Claude 3.5 Haiku"),
     ;
 
     private final String serviceProvider;

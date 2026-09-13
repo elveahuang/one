@@ -54,7 +54,7 @@ public class AiServiceAutoConfiguration {
     @ConditionalOnClass(OpenAIClient.class)
     public OpenAiChatModelService openAiChatModelService(AiConfig config) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getService().getChatModelProvider(), AiModelProvider.OPENAI.name().toLowerCase())
+            StringUtils.nvl(config.getService().getChatModelProvider()).toLowerCase(), AiModelProvider.OPENAI.name().toLowerCase())
         );
         return new OpenAiChatModelService(providerConfig.getCommons(), providerConfig.getChat());
     }
@@ -67,7 +67,7 @@ public class AiServiceAutoConfiguration {
     @ConditionalOnMissingBean
     public DashScopeTranscriptionModelService dashScopeTranscriptionModelService(AiConfig config) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getService().getTranscriptionModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+            StringUtils.nvl(config.getService().getTranscriptionModelProvider()).toLowerCase(), AiModelProvider.ALIYUN.name().toLowerCase())
         );
         return new DashScopeTranscriptionModelService(providerConfig.getCommons(), providerConfig.getTranscription());
     }
@@ -76,7 +76,7 @@ public class AiServiceAutoConfiguration {
     @ConditionalOnMissingBean
     public HunYuanTranscriptionModelService hunYuanTranscriptionModelService(AiConfig config) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getService().getTranscriptionModelProvider(), AiModelProvider.TENCENT.name().toLowerCase())
+            StringUtils.nvl(config.getService().getTranscriptionModelProvider()).toLowerCase(), AiModelProvider.TENCENT.name().toLowerCase())
         );
         return new HunYuanTranscriptionModelService(providerConfig.getCommons(), providerConfig.getTranscription());
     }
@@ -89,7 +89,7 @@ public class AiServiceAutoConfiguration {
     @ConditionalOnMissingBean
     public DashScopeEmbeddingModelService dashScopeEmbeddingModelService(AiConfig config) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getService().getEmbeddingModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+            StringUtils.nvl(config.getService().getEmbeddingModelProvider()).toLowerCase(), AiModelProvider.ALIYUN.name().toLowerCase())
         );
         return new DashScopeEmbeddingModelService(providerConfig.getCommons(), providerConfig.getEmbedding());
     }
@@ -102,7 +102,7 @@ public class AiServiceAutoConfiguration {
     @ConditionalOnMissingBean
     public DashScopeImageModelService dashScopeImageModelService(AiConfig config) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getService().getImageModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+            StringUtils.nvl(config.getService().getImageModelProvider()).toLowerCase(), AiModelProvider.ALIYUN.name().toLowerCase())
         );
         return new DashScopeImageModelService(providerConfig.getCommons(), providerConfig.getImage());
     }
@@ -111,7 +111,7 @@ public class AiServiceAutoConfiguration {
     @ConditionalOnMissingBean
     public HunYuanImageModelService hunYuanImageModelService(AiConfig config) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getService().getImageModelProvider(), AiModelProvider.TENCENT.name().toLowerCase())
+            StringUtils.nvl(config.getService().getImageModelProvider()).toLowerCase(), AiModelProvider.TENCENT.name().toLowerCase())
         );
         return new HunYuanImageModelService(providerConfig.getCommons(), providerConfig.getImage());
     }
@@ -125,7 +125,7 @@ public class AiServiceAutoConfiguration {
     @ConditionalOnClass(TextReRank.class)
     public DashScopeRerankModelService dashScopeRerankModelService(AiConfig config) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getService().getRerankModelProvider(), AiModelProvider.ALIYUN.name().toLowerCase())
+            StringUtils.nvl(config.getService().getRerankModelProvider()).toLowerCase(), AiModelProvider.ALIYUN.name().toLowerCase())
         );
         return new DashScopeRerankModelService(providerConfig.getCommons(), providerConfig.getRerank());
     }

@@ -173,6 +173,7 @@ spring-ai-model = { module = "org.springframework.ai:spring-ai-model" }
 spring-ai-client-chat = { module = "org.springframework.ai:spring-ai-client-chat" }
 spring-ai-openai = { module = "org.springframework.ai:spring-ai-openai" }
 spring-ai-deepseek = { module = "org.springframework.ai:spring-ai-deepseek" }
+spring-ai-anthropic = { module = "org.springframework.ai:spring-ai-anthropic" }
 spring-ai-mcp = { module = "org.springframework.ai:spring-ai-mcp" }
 spring-ai-mcp-annotations = { module = "org.springframework.ai:spring-ai-mcp-annotations" }
 spring-ai-rag = { module = "org.springframework.ai:spring-ai-rag" }
@@ -189,6 +190,7 @@ spring-ai-autoconfigure-model-tool = { module = "org.springframework.ai:spring-a
 spring-ai-autoconfigure-model-chat-observation = { module = "org.springframework.ai:spring-ai-autoconfigure-model-chat-observation" }
 spring-ai-starter-model-openai = { module = "org.springframework.ai:spring-ai-starter-model-openai" }
 spring-ai-starter-model-deepseek = { module = "org.springframework.ai:spring-ai-starter-model-deepseek" }
+spring-ai-starter-model-anthropic = { module = "org.springframework.ai:spring-ai-starter-model-anthropic" }
 spring-ai-starter-mcp-client = { module = "org.springframework.ai:spring-ai-starter-mcp-client" }
 spring-ai-starter-mcp-server-webmvc = { module = "org.springframework.ai:spring-ai-starter-mcp-server-webmvc" }
 spring-ai-starter-vector-store-mariadb = { module = "org.springframework.ai:spring-ai-starter-vector-store-mariadb" }
@@ -482,10 +484,10 @@ springCloudCoreStarter = ["spring-cloud-starter-consul-discovery", "spring-cloud
 springCloudGatewayServerStarter = ["spring-cloud-starter-gateway-server-webflux"]
 
 # Spring AI
-springAiCore = ["spring-ai-client-chat", "spring-ai-openai", "spring-ai-deepseek", "spring-ai-rag", "spring-ai-vector-store-advisor", "spring-ai-agent-utils", "spring-ai-session", ]
+springAiCore = ["spring-ai-client-chat", "spring-ai-openai", "spring-ai-deepseek", "spring-ai-anthropic", "spring-ai-rag", "spring-ai-vector-store-advisor", "spring-ai-agent-utils", "spring-ai-session"]
 springAiReader = ["spring-ai-jsoup-document-reader", "spring-ai-markdown-document-reader", "spring-ai-pdf-document-reader", "spring-ai-tika-document-reader"]
 springAiCoreStarter = ["spring-ai-autoconfigure-model-tool", "spring-ai-autoconfigure-retry", "spring-ai-autoconfigure-model-chat-observation"]
-springAiBaseStarter = ["spring-ai-starter-model-openai", "spring-ai-starter-model-deepseek"]
+springAiBaseStarter = ["spring-ai-starter-model-openai", "spring-ai-starter-model-deepseek", "spring-ai-starter-model-anthropic"]
 springAiSessionStarter = ["spring-ai-starter-session-jdbc"]
 springAiRagCore = ["spring-ai-elasticsearch-store", "spring-ai-pgvector-store", "spring-ai-mariadb-store"]
 springAiRagStarter = ["spring-ai-starter-vector-store-elasticsearch", "spring-ai-starter-vector-store-pgvector", "spring-ai-starter-vector-store-mariadb"]
