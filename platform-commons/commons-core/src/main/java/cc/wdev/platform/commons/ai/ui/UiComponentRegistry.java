@@ -19,26 +19,36 @@ public class UiComponentRegistry {
     private static final String SCHEMA_VERSION = "https://json-schema.org/draft/2020-12/schema";
 
     private final Map<String, UiComponentDefinition> definitions = Maps.newLinkedHashMap();
+    private volatile String cachedJsonSchema;
 
-    public void register(List<UiComponentDefinition> definitions) {
-        CollectionUtils.nvl(definitions, Lists.newArrayList()).forEach(this::register);
+    public synchronized void register(List<UiComponentDefinition> definitions) {
+        CollectionUtils.nvl(definitions, Lists.newArrayList()).forEach(def -> this.definitions.put(def.type(), def));
+        this.cachedJsonSchema = null;
     }
 
-    public void register(UiComponentDefinition definition) {
+    public synchronized void register(UiComponentDefinition definition) {
         this.definitions.put(definition.type(), definition);
+        this.cachedJsonSchema = null;
     }
 
     public String buildJsonSchema() {
-        Map<String, Object> schema = UiSchemaUtils.of(UiResponseSchema.class);
-        Map<String, Object> blocks = node(node(schema, "properties"), "blocks");
-        blocks.put("items", Map.of("oneOf", this.definitions.values().stream().map(this::blockSchema).toList()));
-        schema.put("$schema", SCHEMA_VERSION);
+        if (this.cachedJsonSchema == null) {
+            synchronized (this) {
+                if (this.cachedJsonSchema == null) {
+                    Map<String, Object> schema = UiSchemaUtils.of(UiResponseSchema.class);
+                    Map<String, Object> blocks = node(node(schema, "properties"), "blocks");
+                    blocks.put("items", Map.of("oneOf", this.definitions.values().stream().map(this::blockSchema).toList()));
+                    schema.put("$schema", SCHEMA_VERSION);
 
-        try {
-            return JacksonUtils.toJson(schema);
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot build UI schema", e);
+                    try {
+                        this.cachedJsonSchema = JacksonUtils.toJson(schema);
+                    } catch (Exception e) {
+                        throw new IllegalStateException("Cannot build UI schema", e);
+                    }
+                }
+            }
         }
+        return this.cachedJsonSchema;
     }
 
     /**

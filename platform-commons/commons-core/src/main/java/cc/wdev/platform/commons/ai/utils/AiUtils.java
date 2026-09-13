@@ -48,12 +48,8 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.SynchronousSink;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static cc.wdev.platform.commons.ai.AiConstants.*;
@@ -259,50 +255,67 @@ public abstract class AiUtils {
             AtomicBoolean interaction = new AtomicBoolean(false);
 
             StringBuilder buffer = new StringBuilder();
-            return rawStream.handle((String data, SynchronousSink<String> sink) -> {
+            return rawStream.concatMap(data -> {
                 buffer.append(data);
+                List<String> outputs = new ArrayList<>();
 
-                int idx;
-                String remaining = buffer.toString();
-                if (!interaction.get()) {
-                    if (remaining.contains(JSON_RENDER_START_TAG)) {
-                        // 内容包含开始标记，那么发送标记前的内容，并开启交互模式，等待结束标记
-                        idx = remaining.indexOf(JSON_RENDER_START_TAG);
-                        String text = remaining.substring(0, idx);
-                        if (StringUtils.isNotEmpty(text)) {
-                            sink.next(getTextContent(text));
+                while (true) {
+                    String remaining = buffer.toString();
+                    if (!interaction.get()) {
+                        int idx = remaining.indexOf(JSON_RENDER_START_TAG);
+                        if (idx >= 0) {
+                            // 内容包含开始标记，发送标记前的内容，并开启交互模式
+                            String text = remaining.substring(0, idx);
+                            if (StringUtils.isNotEmpty(text)) {
+                                outputs.add(getTextContent(text));
+                            }
+
+                            int nextIdx = idx + JSON_RENDER_START_TAG.length();
+                            buffer.delete(0, nextIdx);
+
+                            interaction.set(true);
+                            // 开启交互模式后继续循环，检查当前缓冲区是否已包含结束标记
+                        } else {
+                            if (remaining.length() > (JSON_RENDER_START_TAG.length() + 10)) {
+                                // 保留一个安全区域，防止开始标记被截断，影响页面渲染效果
+                                int safeIdx = remaining.length() - JSON_RENDER_START_TAG.length();
+                                outputs.add(getTextContent(remaining.substring(0, safeIdx)));
+                                buffer.delete(0, safeIdx);
+                            }
+                            break;
                         }
-
-                        idx = remaining.indexOf(JSON_RENDER_START_TAG) + JSON_RENDER_START_TAG.length();
-                        buffer.delete(0, idx);
-
-                        interaction.set(true);
                     } else {
-                        if (remaining.length() > (JSON_RENDER_START_TAG.length() + 10)) {
-                            // 保留一个安全区域，防止开始标记被截断，影响页面渲染效果
-                            idx = remaining.length() - JSON_RENDER_START_TAG.length();
-                            sink.next(getTextContent(remaining.substring(0, idx)));
-                            buffer.delete(0, idx);
-                        }
-                    }
-                } else {
-                    // 内容包含结束标记，截取开始标记到结束标记之间的内容，发送交互内容
-                    if (remaining.contains(JSON_RENDER_END_TAG)) {
-                        idx = remaining.indexOf(JSON_RENDER_END_TAG);
-                        String text = buffer.substring(0, idx);
-                        if (StringUtils.isNotEmpty(text)) {
-                            sink.next(getJsonRenderContent(text));
-                        }
+                        // 内容包含结束标记，截取开始标记到结束标记之间的内容，发送交互内容
+                        int idx = remaining.indexOf(JSON_RENDER_END_TAG);
+                        if (idx >= 0) {
+                            String text = remaining.substring(0, idx);
+                            if (StringUtils.isNotEmpty(text.trim())) {
+                                outputs.add(getJsonRenderContent(text.trim()));
+                            }
 
-                        idx = remaining.indexOf(JSON_RENDER_END_TAG) + JSON_RENDER_END_TAG.length();
-                        buffer.delete(0, idx);
+                            int nextIdx = idx + JSON_RENDER_END_TAG.length();
+                            buffer.delete(0, nextIdx);
 
-                        interaction.set(false);
+                            interaction.set(false);
+                            // 退出交互模式后继续循环，检查当前缓冲区是否还有后续正文或新标记
+                        } else {
+                            break;
+                        }
                     }
                 }
+                return Flux.fromIterable(outputs);
             }).concatWith(Flux.defer(() -> {
                 if (!buffer.isEmpty()) {
-                    return Flux.just(getTextContent(buffer.toString()));
+                    if (interaction.get()) {
+                        log.warn("Stream completed before closing tag for json-render was received, recovering unclosed card.");
+                        String text = buffer.toString().trim();
+                        if (StringUtils.isNotEmpty(text)) {
+                            return Flux.just(getJsonRenderContent(text));
+                        }
+                        return Flux.empty();
+                    } else {
+                        return Flux.just(getTextContent(buffer.toString()));
+                    }
                 }
                 return Flux.empty();
             }));

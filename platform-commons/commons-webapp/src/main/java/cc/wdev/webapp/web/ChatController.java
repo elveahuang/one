@@ -2,6 +2,7 @@ package cc.wdev.webapp.web;
 
 import cc.wdev.platform.commons.ai.domain.chat.SimpleChatResponse;
 import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
+import cc.wdev.platform.commons.annotations.Anonymous;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.webapp.ai.service.AiService;
@@ -22,6 +23,7 @@ public class ChatController {
 
     private final AiService aiService;
 
+    @Anonymous
     @GetMapping("/chat/start")
     public R<SimpleChatResponse> chatStart(@RequestParam(value = "conversationId", defaultValue = "") String conversationId) {
         conversationId = StringUtils.isNotEmpty(conversationId) ? conversationId : StringUtils.uuid();
@@ -32,11 +34,13 @@ public class ChatController {
         return R.success(response);
     }
 
+    @Anonymous
     @PostMapping("/chat/text")
     public String chatCompletionText(@RequestBody SimpleChatRequest request) {
         return this.aiService.chatText(request);
     }
 
+    @Anonymous
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chatCompletionStream(@RequestBody SimpleChatRequest request) {
         return this.aiService.chatStream(request);

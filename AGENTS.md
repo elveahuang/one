@@ -4,7 +4,9 @@
 
 ## 项目概述
 
-"one" 是一个自研的基础开发平台（单体架构，预留微服务拆分），提供后台管理端（sys）、平台端（plt）、用户端（web）三类 API，并集成 OAuth2 认证授权、多租户、多数据源、缓存、消息（RabbitMQ / WebSocket / SSE）、对象存储、Elasticsearch、Quartz 定时任务、Spring AI 多厂商模型接入，以及微信 / 钉钉 / 飞书 / 短信 / 翻译等开放平台能力。
+"one" 是一个自研的基础开发平台（单体架构，预留微服务拆分），提供后台管理端（sys）、平台端（plt）、用户端（web）三类 API，并集成 OAuth2
+认证授权、多租户、多数据源、缓存、消息（RabbitMQ / WebSocket / SSE）、对象存储、Elasticsearch、Quartz 定时任务、Spring AI 多厂商模型接入，以及微信 / 钉钉 / 飞书 / 短信 /
+翻译等开放平台能力。
 
 ## 技术栈
 
@@ -24,7 +26,8 @@ Windows 使用 `.\gradlew.bat`，Linux/macOS 使用 `./gradlew`。
 - 运行全部测试：`./gradlew test`
 - 运行测试宿主模块测试：`./gradlew :platform-commons:commons-webapp:test`
 - 本地启动主服务：`./gradlew :platform-services:app-server:bootRun`（或 IDE 运行 `AppServerApplication`；注意该 main 方法非 public，见"已知问题"）
-- 初始化本地数据库：`tools/database/bin/pgsql_init.cmd`（Windows）或 `pgsql_init.sh`（Linux）；SQL 脚本位于 `tools/database/pgsql/`，新建表必须同步追加到 `db_pgsql_schema_core.sql`
+- 初始化本地数据库：`tools/database/bin/pgsql_init.cmd`（Windows）或 `pgsql_init.sh`（Linux）；SQL 脚本位于 `tools/database/pgsql/`，新建表必须同步追加到
+  `db_pgsql_schema_core.sql`
 - CI 产物复制脚本：`tools/scripts/build.sh` / `build.cmd`
 
 ## 运行配置（Profile）
@@ -66,17 +69,18 @@ one (Gradle root)
 
 ### 业务域（system 模块内）
 
-`ai`（模型/工具/MCP/知识库/Agent）、`catalog`、`commons`（验证码/首页/仪表盘）、`config`、`core`（用户/角色/权限/租户/登录会话）、`dev`、`dict`、`i18n`、`im`、`job`（Quartz）、`log`、`message`、`open`（微信/钉钉/飞书）、`region`、`security`（OAuth2 客户端/授权/AppKey）、`site`（公告/横幅/友链）、`storage`（附件）、`tag`。
+`ai`（模型/工具/MCP/知识库/Agent）、`catalog`、`commons`（验证码/首页/仪表盘）、`config`、`core`（用户/角色/权限/租户/登录会话）、`dev`、`dict`、`i18n`、`im`、`job`（Quartz）、
+`log`、`message`、`open`（微信/钉钉/飞书）、`region`、`security`（OAuth2 客户端/授权/AppKey）、`site`（公告/横幅/友链）、`storage`（附件）、`tag`。
 
 ### 控制器分类与 URL 约定
 
-| 分类 | URL 前缀 | 说明 |
-|---|---|---|
-| `*SysController` | `/api/v1/sys/**` | 后台管理端 |
-| `*PltController` | `/api/v1/plt/**` | 平台端（运维/开发者） |
-| `*WebController` | `/api/v1/web/**` | 用户端 |
-| `*ExchangeController` | `/exchange/**` | 内部服务间调用（微服务预留） |
-| MCP Server | `/api/mcp` | Spring AI MCP |
+| 分类                  | URL 前缀         | 说明                         |
+|-----------------------|------------------|------------------------------|
+| `*SysController`      | `/api/v1/sys/**` | 后台管理端                   |
+| `*PltController`      | `/api/v1/plt/**` | 平台端（运维/开发者）        |
+| `*WebController`      | `/api/v1/web/**` | 用户端                       |
+| `*ExchangeController` | `/exchange/**`   | 内部服务间调用（微服务预留） |
+| MCP Server            | `/api/mcp`       | Spring AI MCP                |
 
 ## 代码约定（必须遵守）
 
@@ -104,9 +108,10 @@ one (Gradle root)
 
 ### 安全（红线，改动前必读）
 
-- 安全链是"默认放行"（`anyRequest().permitAll()`），没有全局兜底拒绝，安全完全依赖方法级注解。**新增任何端点必须显式加 `@PreAuthorize("hasAnyAuthority('...')")` 或 `@Authenticated`**；只有确需匿名的端点才使用 `@Anonymous` / `@PermitAll`
+- 安全链是"默认放行"（`anyRequest().permitAll()`），没有全局兜底拒绝，安全完全依赖方法级注解。 **新增任何端点必须显式加 `@PreAuthorize("hasAnyAuthority('...')")` 或
+  `@Authenticated`**；只有确需匿名的端点才使用 `@Anonymous` / `@PermitAll`
 - 权限字符串格式示例：`system:user`、`system:role`、`system:config`、`dev:ai:config:model`；角色前缀 `ROLE_`，数据范围前缀 `DATA_SCOPE_`
-- `/exchange/**` 目前无鉴权且会返回敏感数据（用户密码哈希、OAuth2 客户端密钥、系统配置）。**禁止向 exchange 接口新增更敏感的数据**；新增内部接口前先与维护者确认鉴权方案
+- `/exchange/**` 目前无鉴权且会返回敏感数据（用户密码哈希、OAuth2 客户端密钥、系统配置）。 **禁止向 exchange 接口新增更敏感的数据**；新增内部接口前先与维护者确认鉴权方案
 - 租户上下文 `TenantContext` 取自客户端请求头 `x-tenant-id` 且未被校验，服务层不能信任它代表"当前用户所属租户"；涉及租户归属的数据应以认证用户（`SecurityUtils`）为准
 - 密码必须经 `SecurityUtils.encode()`（BCrypt）后落库；禁止明文存储
 - 禁止把异常消息（`e.getLocalizedMessage()`）直接回给客户端；不要向日志写入密码、token、密钥
@@ -114,8 +119,9 @@ one (Gradle root)
 
 ### 数据层
 
-- SQL 一律参数化：XML Mapper 用 `#{}`，**禁止 `${}` 字符串拼接**
-- 新表 SQL 追加到 `tools/database/pgsql/db_pgsql_schema_core.sql`，遵循现有规范：`id BIGSERIAL` 主键、`version`、`active`、`created_by/created_at/updated_by/updated_at/deleted_by/deleted_at` 审计列、字段与表 COMMENT、必要的索引
+- SQL 一律参数化：XML Mapper 用 `#{}`， **禁止 `${}` 字符串拼接**
+- 新表 SQL 追加到 `tools/database/pgsql/db_pgsql_schema_core.sql`，遵循现有规范：`id BIGSERIAL` 主键、`version`、`active`、
+  `created_by/created_at/updated_by/updated_at/deleted_by/deleted_at` 审计列、字段与表 COMMENT、必要的索引
 - 多租户表继承 `BaseTenantEntity`；确需绕过租户过滤的查询用 `@InterceptorIgnore(tenantLine = "true")`（必须清楚后果）
 - 删除一律软删除（`softDelete*`），禁止物理 `DELETE`
 - 乐观锁 `version` 由 MyBatis-Plus 自动处理，不要手动覆盖
@@ -130,7 +136,7 @@ one (Gradle root)
 ### 测试
 
 - 测试写在 `platform-commons/commons-webapp/src/test`，命名 `*Tests`，JUnit 5
-- 现有测试依赖真实 PostgreSQL/Redis/ES 且 `@Rollback(false)`，会污染本地库；**新测试优先使用 mock / 内存库（如 H2），不要依赖外部服务**
+- 现有测试依赖真实 PostgreSQL/Redis/ES 且 `@Rollback(false)`，会污染本地库； **新测试优先使用 mock / 内存库（如 H2），不要依赖外部服务**
 - CI（`.github/workflows/build.yml`）目前只执行 `clean bootJar`，不运行测试——改动公共层后请本地手动运行相关测试
 
 ## AI 模块架构与响应模式
@@ -140,25 +146,27 @@ one (Gradle root)
 平台采用正交解耦的双层抽象，彻底分离"技术实现（底层协议/SDK）"与"模型供应商（厂商实体/凭证画像）"：
 
 - **技术实现方案（`AiServiceProvider`）**：定义底层通信协议与技术引擎。
-  - 核心值：`SPRING_AI_OPENAI`、`SPRING_AI_ANTHROPIC`、`SPRING_AI_DEEPSEEK`、`AGENTIC_SPRING_AI_DASHSCOPE`、`ALIYUN_DASHSCOPE_SDK`、`TENCENT_HUNYUAN_SDK`、`OPENAI_SDK`。
-  - 职责：关注网络通信、协议封包（OpenAI 兼容协议 / Anthropic Messages API / 厂商原生 RPC）、SSE Token 流式解析与 Spring AI Advisor/Tool 适配。
+    - 核心值：`SPRING_AI_OPENAI`、`SPRING_AI_ANTHROPIC`、`SPRING_AI_DEEPSEEK`、`AGENTIC_SPRING_AI_DASHSCOPE`、`ALIYUN_DASHSCOPE_SDK`、`TENCENT_HUNYUAN_SDK`、
+      `OPENAI_SDK`。
+    - 职责：关注网络通信、协议封包（OpenAI 兼容协议 / Anthropic Messages API / 厂商原生 RPC）、SSE Token 流式解析与 Spring AI Advisor/Tool 适配。
 - **模型供应商（`AiModelProvider`）**：定义厂商实体、凭证与模型能力画像。
-  - 核心值：`OPENAI`、`ANTHROPIC`、`DEEPSEEK`、`ALIYUN`、`TENCENT`、`ORCAROUTER`。
-  - 职责：关注商业身份、`apiKey`、`baseUrl`、模型清单（`Model` record 支持深度思考、联网搜索等）及能力类型矩阵（`TEXT`、`AUDIO`、`EMBEDDING`、`RERANK`）。
+    - 核心值：`OPENAI`、`ANTHROPIC`、`DEEPSEEK`、`ALIYUN`、`TENCENT`、`ORCAROUTER`。
+    - 职责：关注商业身份、`apiKey`、`baseUrl`、模型清单（`Model` record 支持深度思考、联网搜索等）及能力类型矩阵（`TEXT`、`AUDIO`、`EMBEDDING`、`RERANK`）。
 - **架构解耦价值**：
-  - **M:N 协议复用**：所有兼容 OpenAI 规范的厂商（DeepSeek、OrcaRouter、Aliyun Compatible 等）统一复用 `OpenAiChatModelFactory`，无需为每个厂商重复编写客户端。
-  - **双轨调用体系**：`ModelFactory`（面向 Spring AI 生态，产出 `ChatModel`/`ChatClient`，支持记忆/RAG/日志/Tool/Advisor 链）与 `ModelService`（面向原生 SDK 极速同步直连）。
-  - **扁平化配置规范**：配置项 `platform.ai.factory.*-service-provider`（选引擎）与 `platform.ai.providers.*`（配厂商凭证）完全解耦。
+    - **M:N 协议复用**：所有兼容 OpenAI 规范的厂商（DeepSeek、OrcaRouter、Aliyun Compatible 等）统一复用 `OpenAiChatModelFactory`，无需为每个厂商重复编写客户端。
+    - **双轨调用体系**：`ModelFactory`（面向 Spring AI 生态，产出 `ChatModel`/`ChatClient`，支持记忆/RAG/日志/Tool/Advisor 链）与 `ModelService`（面向原生 SDK
+      极速同步直连）。
+    - **扁平化配置规范**：配置项 `platform.ai.factory.*-service-provider`（选引擎）与 `platform.ai.providers.*`（配厂商凭证）完全解耦。
 
 ### 2. AiResponseType 三种响应模式与执行链路
 
 以 `platform-commons/commons-webapp` 中的 `ChatController`（`/chat/text`、`/chat/stream`）与 `AiServiceImpl` 为接入入口，通过 `AiResponseType` 驱动不同的提示词约束与数据处理管道：
 
-| 响应类型 | 约束机制 | 同步处理 (`chatText`) | 流式处理 (`chatStream`) | 典型场景 |
-|---|---|---|---|---|
-| **`TEXT`**（普通文本） | Prompt 注入限制：只输出 Markdown 正文，禁止任何卡片或围栏标记。 | `spec.call().content()` 直接返回文本。 | `spec.stream().content()` 直接透传 Token 流，首字延迟（TTFT）最低。 | 纯文本问答、知识库检索（RAG）、长文创作。 |
-| **`JSON`**（围栏交互卡片） | Prompt 注入限制：Markdown 正文 + 末尾唯一一个 ` ```json-render ` 围栏。 | `spec.call().content()` 返回图文混合文本。 | `AiUtils.processStream` 状态机滑动窗口解析：正文实时流式打字机推送，尾部卡片完整积攒后一次性推入 `json-render` 块，并带 `START`/`END`/`ERROR` 包装。 | 渐进式流式图文交互、答疑推荐商品/课程卡片。 |
-| **`STRICT`**（严格结构化） | 强约束：基于 `UiComponentRegistry` 动态合成 `UiResponseSchema` 的 JSON Schema，禁止输出非 blocks 内容。 | `spec.call().entity(converter, validateSchema)` 进行强制 Schema 校验，序列化返回。 | 先执行整包校验反序列化，再按 `UiBlock` 块切分并包装为 `SimpleChatContent(type="block")` 事件流下发。 | 动态表单、微前端组件驱动（Blocks UI）、高可靠 Agent 调度决策。 |
+| 响应类型                   | 约束机制                                                                                                | 同步处理 (`chatText`)                                                              | 流式处理 (`chatStream`)                                                                                                                              | 典型场景                                                       |
+|----------------------------|---------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| **`TEXT`**（普通文本）     | Prompt 注入限制：只输出 Markdown 正文，禁止任何卡片或围栏标记。                                         | `spec.call().content()` 直接返回文本。                                             | `spec.stream().content()` 直接透传 Token 流，首字延迟（TTFT）最低。                                                                                  | 纯文本问答、知识库检索（RAG）、长文创作。                      |
+| **`JSON`**（围栏交互卡片） | Prompt 注入限制：Markdown 正文 + 末尾唯一一个 ` ```json-render ` 围栏。                                 | `spec.call().content()` 返回图文混合文本。                                         | `AiUtils.processStream` 状态机滑动窗口解析：正文实时流式打字机推送，尾部卡片完整积攒后一次性推入 `json-render` 块，并带 `START`/`END`/`ERROR` 包装。 | 渐进式流式图文交互、答疑推荐商品/课程卡片。                    |
+| **`STRICT`**（严格结构化） | 强约束：基于 `UiComponentRegistry` 动态合成 `UiResponseSchema` 的 JSON Schema，禁止输出非 blocks 内容。 | `spec.call().entity(converter, validateSchema)` 进行强制 Schema 校验，序列化返回。 | 先执行整包校验反序列化，再按 `UiBlock` 块切分并包装为 `SimpleChatContent(type="block")` 事件流下发。                                                 | 动态表单、微前端组件驱动（Blocks UI）、高可靠 Agent 调度决策。 |
 
 ## 构建与依赖
 
@@ -192,6 +200,6 @@ one (Gradle root)
 1. 在 `system-api` 中定义 `XxxApi`（`@HttpExchange`）与 DTO/Form/Request/VO
 2. 在 `system-impl` 中实现 `XxxApiImpl`（`@Service`）与 `XxxService` / `XxxServiceImpl`，实体继承 `BaseEntity`/`BaseTenantEntity`，转换用 MapStruct
 3. 若涉及持久化，新增 `XxxRepository`（MyBatis-Plus）并同步补充 SQL 脚本与 XML（如需）
-4. 新增 `XxxSysController` / `XxxWebController`，**每个端点必须加 `@PreAuthorize` 或 `@Authenticated`**
+4. 新增 `XxxSysController` / `XxxWebController`， **每个端点必须加 `@PreAuthorize` 或 `@Authenticated`**
 5. 涉及用户可见操作时加 `@OperationLog`；列表接口分页并返回 `R<Page<...>>`
 6. 在 `commons-webapp` 补充测试（优先不依赖外部中间件）
