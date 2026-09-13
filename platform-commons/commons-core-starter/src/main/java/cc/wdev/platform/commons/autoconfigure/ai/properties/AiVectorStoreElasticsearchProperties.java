@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = AiVectorStoreElasticsearchProperties.PREFIX)
 public class AiVectorStoreElasticsearchProperties extends ElasticsearchVectorStoreConfig {
 
-    public static final String PREFIX = "platform.ai.vectorstore.elasticsearch";
+    public static final String PREFIX = "platform.ai.rag.store.elasticsearch";
 
     private boolean enabled = false;
 

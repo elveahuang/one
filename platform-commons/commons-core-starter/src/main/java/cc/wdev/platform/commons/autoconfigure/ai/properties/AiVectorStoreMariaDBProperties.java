@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = AiVectorStoreMariaDBProperties.PREFIX)
 public class AiVectorStoreMariaDBProperties extends MariaDBVectorStoreConfig {
 
-    public static final String PREFIX = "platform.ai.vectorstore.mariadb";
+    public static final String PREFIX = "platform.ai.rag.store.mariadb";
 
     private boolean enabled = false;
 

@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = AiVectorStorePgVectorProperties.PREFIX)
 public class AiVectorStorePgVectorProperties extends PgVectorStoreConfig {
 
-    public static final String PREFIX = "platform.ai.vectorstore.pgvector";
+    public static final String PREFIX = "platform.ai.rag.store.pgvector";
 
     private boolean enabled = false;
 

@@ -125,7 +125,7 @@ public class AiServiceAutoConfiguration {
     @ConditionalOnClass(TextReRank.class)
     public DashScopeRerankModelService dashScopeRerankModelService(AiConfig config) {
         ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getService().getImageModelProvider(), AiModelProvider.ALIYUN.name()
+            config.getService().getRerankModelProvider(), AiModelProvider.ALIYUN.name()
         ).toLowerCase());
         return new DashScopeRerankModelService(providerConfig.getCommons(), providerConfig.getRerank());
     }

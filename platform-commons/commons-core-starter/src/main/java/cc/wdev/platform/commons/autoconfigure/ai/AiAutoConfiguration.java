@@ -282,6 +282,7 @@ public class AiAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(ElasticsearchVectorStore.class)
+    @ConditionalOnProperty(prefix = AiVectorStoreElasticsearchProperties.PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
     public ElasticsearchVectorStoreFactory elasticsearchVectorStoreFactory(
         ObjectProvider<Rest5Client> restClientProvider,
         ObjectProvider<ObservationRegistry> observationRegistry,

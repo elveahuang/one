@@ -19,24 +19,6 @@ public class AiProperties {
 
     public static final String PREFIX = "platform.ai";
 
-    public static final String PROVIDER_PREFIX = PREFIX + ".providers";
-
-    public static final String PROVIDER_DEEPSEEK = PROVIDER_PREFIX + ".deepseek";
-
-    public static final String PROVIDER_OPENAI = PROVIDER_PREFIX + ".openai";
-
-    public static final String PROVIDER_ANTHROPIC = PROVIDER_PREFIX + ".anthropic";
-
-    public static final String PROVIDER_TENCENT = PROVIDER_PREFIX + ".tencent";
-
-    public static final String PROVIDER_ALIYUN = PROVIDER_PREFIX + ".aliyun";
-
-    public static final String PROVIDER_ORCA_ROUTER = PROVIDER_PREFIX + ".orcarouter";
-
-    public static final String RAG_PREFIX = PREFIX + ".rag";
-
-    public static final String VECTOR_STORE_PREFIX = PREFIX + ".vectorstore";
-
     private boolean enabled = false;
 
     /**
@@ -51,13 +33,10 @@ public class AiProperties {
     private Map<String, ModelProviderConfig> providers = Maps.newHashMap();
 
     @NestedConfigurationProperty
-    private ServiceProviderConfig service = new ServiceProviderConfig();
+    private ServiceProviderConfig service = ServiceProviderConfig.builder().build();
 
     @NestedConfigurationProperty
-    private ServiceProviderConfig factory = new ServiceProviderConfig();
-
-    @NestedConfigurationProperty
-    private VectorStoreConfig vectorstore = VectorStoreConfig.builder().build();
+    private ServiceProviderConfig factory = ServiceProviderConfig.builder().build();
 
     @NestedConfigurationProperty
     private RagConfig rag = RagConfig.builder().build();

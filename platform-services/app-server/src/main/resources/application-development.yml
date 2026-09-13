@@ -111,35 +111,7 @@ platform:
         enabled: true
     ai:
         enabled: true
-        factory:
-            chat-model-provider: deepseek
-            chat-service-provider: deepseek
-            transcription-model-provider: aliyun
-            transcription-service-provider: aliyun-dashscope-sdk
-            embedding-model-provider: aliyun
-            embedding-service-provider: spring-ai-openai
-            image-model-provider: aliyun
-            image-service-provider: aliyun-dashscope-sdk
-            rerank-model-provider: aliyun
-            rerank-service-provider: aliyun-dashscope-sdk
-        service:
-            chat-model-provider: deepseek
-            chat-service-provider: deepseek
-            transcription-model-provider: aliyun
-            transcription-service-provider: aliyun-dashscope-sdk
-            embedding-model-provider: aliyun
-            embedding-service-provider: spring-ai-openai
-            image-model-provider: aliyun
-            image-service-provider: aliyun-dashscope-sdk
-            rerank-model-provider: aliyun
-            rerank-service-provider: aliyun-dashscope-sdk
         providers:
-            anthropic:
-                enabled: true
-                commons:
-                    api-key: ${ANTHROPIC_API_KEY}
-                chat:
-                    name: claude-3-7-sonnet
             deepseek:
                 enabled: true
                 commons:
@@ -155,20 +127,27 @@ platform:
                     name: deepseek-v4-flash
                 embedding:
                     name: text-embedding-v4
+            anthropic:
+                enabled: true
+                commons:
+                    api-key: ${ANTHROPIC_API_KEY}
+                chat:
+                    name: claude-3-7-sonnet
             aliyun:
                 enabled: true
                 commons:
                     api-key: ${DASHSCOPE_API_KEY}
+                    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
                 chat:
                     name: deepseek-v4-flash
                 embedding:
                     name: text-embedding-v4
-                rerank:
-                    name: gte-rerank-v3
                 image:
                     name: qwen-image-plus
                 transcription:
                     name: fun-asr
+                rerank:
+                    name: qwen3-rerank
             tencent:
                 enabled: true
                 commons:
@@ -181,13 +160,14 @@ platform:
                     api-key: ${ORCAROUTER_API_KEY}
                     base-url: https://api.orcarouter.ai/v1
                 chat:
-                    name: deepseek-v4-flash
-        vectorstore:
-            type: elasticsearch
-            elasticsearch:
-                enabled: true
-            pgvector:
-                enabled: true
+                    name: deepseek/deepseek-v4.1-flash
+        rag:
+            store:
+                type: elasticsearch
+                elasticsearch:
+                    enabled: true
+                pgvector:
+                    enabled: true
         agent:
             enabled: true
             agents:
