@@ -14,7 +14,7 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.retry.RetryTemplate;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildChatModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveChatModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -32,7 +32,7 @@ public class DashScopeChatModelFactory extends AbstractChatModelFactory {
                                      ObjectProvider<ObservationRegistry> observationRegistry,
                                      ObjectProvider<ChatModelObservationConvention> observationConvention
     ) {
-        super(buildChatModelConfig(commonsConfig, modelConfig));
+        super(resolveChatModelConfig(commonsConfig, modelConfig));
 
         this.retryTemplate = retryTemplate;
         this.observationRegistry = observationRegistry;

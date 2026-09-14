@@ -12,7 +12,7 @@ import com.alibaba.dashscope.embeddings.TextEmbeddingResult;
 import com.alibaba.dashscope.exception.ApiException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildEmbeddingModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveEmbeddingModelConfig;
 
 /**
  * @author elvea
@@ -20,7 +20,7 @@ import static cc.wdev.platform.commons.ai.utils.AiUtils.buildEmbeddingModelConfi
 public class DashScopeEmbeddingModelService extends AbstractEmbeddingModelService {
 
     public DashScopeEmbeddingModelService(ModelCommonsConfig commonsConfig, ModelEmbeddingConfig modelConfig) {
-        super(buildEmbeddingModelConfig(commonsConfig, modelConfig));
+        super(resolveEmbeddingModelConfig(commonsConfig, modelConfig));
     }
 
     /**

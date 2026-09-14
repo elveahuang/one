@@ -9,7 +9,7 @@ import cc.wdev.platform.commons.ai.model.ModelConfig;
 import cc.wdev.platform.commons.ai.model.SimpleModelConfig;
 import cc.wdev.platform.commons.ai.service.ModelService;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildImageModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveImageModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -18,7 +18,7 @@ import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 public class HunYuanImageModelService extends AbstractImageModelService {
 
     public HunYuanImageModelService(ModelCommonsConfig commonsConfig, ModelImageConfig modelConfig) {
-        super(buildImageModelConfig(commonsConfig, modelConfig));
+        super(resolveImageModelConfig(commonsConfig, modelConfig));
     }
 
     /**

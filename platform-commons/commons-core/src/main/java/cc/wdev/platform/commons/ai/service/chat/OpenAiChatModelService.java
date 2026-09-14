@@ -10,7 +10,7 @@ import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildChatModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveChatModelConfig;
 
 /**
  * @author elvea
@@ -18,7 +18,7 @@ import static cc.wdev.platform.commons.ai.utils.AiUtils.buildChatModelConfig;
 public class OpenAiChatModelService extends AbstractChatModelService {
 
     public OpenAiChatModelService(ModelCommonsConfig commonsConfig, ModelChatConfig modelConfig) {
-        super(buildChatModelConfig(commonsConfig, modelConfig));
+        super(resolveChatModelConfig(commonsConfig, modelConfig));
     }
 
     /**

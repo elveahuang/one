@@ -19,7 +19,7 @@ import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildChatModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveChatModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -39,7 +39,7 @@ public class DeepSeekChatModelFactory extends AbstractChatModelFactory {
                                     ObjectProvider<ObservationRegistry> observationRegistry,
                                     ObjectProvider<ChatModelObservationConvention> observationConvention
     ) {
-        super(buildChatModelConfig(commonsConfig, modelConfig));
+        super(resolveChatModelConfig(commonsConfig, modelConfig));
 
         this.retryTemplate = retryTemplate;
         this.responseErrorHandler = responseErrorHandler;

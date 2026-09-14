@@ -7,7 +7,7 @@ import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
 import com.alibaba.dashscope.exception.NoApiKeyException;
 import com.alibaba.dashscope.exception.UploadFileException;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildSpeechModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveSpeechModelConfig;
 
 /**
  * @author elvea
@@ -15,7 +15,7 @@ import static cc.wdev.platform.commons.ai.utils.AiUtils.buildSpeechModelConfig;
 public class HunYuanSpeechModelService extends AbstractSpeechModelService {
 
     public HunYuanSpeechModelService(ModelCommonsConfig commonsConfig, ModelSpeechConfig modelConfig) {
-        super(buildSpeechModelConfig(commonsConfig, modelConfig));
+        super(resolveSpeechModelConfig(commonsConfig, modelConfig));
     }
 
     /**

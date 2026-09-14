@@ -17,11 +17,9 @@ import cc.wdev.platform.commons.ai.ui.UiBlock;
 import cc.wdev.platform.commons.ai.ui.UiComponentManager;
 import cc.wdev.platform.commons.ai.ui.UiOutputConverter;
 import cc.wdev.platform.commons.ai.ui.UiResponse;
-import cc.wdev.platform.commons.utils.CollectionUtils;
-import cc.wdev.platform.commons.utils.GsonUtils;
-import cc.wdev.platform.commons.utils.SecurityUtils;
-import cc.wdev.platform.commons.utils.StringUtils;
+import cc.wdev.platform.commons.utils.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -53,7 +51,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static cc.wdev.platform.commons.ai.AiConstants.*;
-import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
  * @author elvea
@@ -323,7 +320,7 @@ public abstract class AiUtils {
     }
 
     // ------------------------------------------------------------------------------
-    // Utils
+    // Tools & Advisors
     // ------------------------------------------------------------------------------
 
     public static CustomContextAdvisor getCustomContextAdvisor() {
@@ -394,85 +391,74 @@ public abstract class AiUtils {
     // Config
     // ------------------------------------------------------------------------------
 
-    public static ModelProviderConfig resolveModelProviderConfig(AiConfig config, String modelProvider) {
-        if (config == null || config.getProviders() == null) {
-            return ModelProviderConfig.builder().build();
-        }
-        ModelProviderConfig providerConfig = null;
-        if (StringUtils.isNotEmpty(modelProvider)) {
-            providerConfig = config.getProviders().get(modelProvider.toLowerCase());
-        }
-        return providerConfig != null ? providerConfig : ModelProviderConfig.builder().build();
+    /**
+     * 获取模型供应商配置
+     */
+    public static ModelProviderConfig resolveModelProviderConfig(@NonNull AiConfig config, @NonNull String modelProvider) {
+        return MapUtils.getObject(config.getProviders(), StringUtils.nvl(modelProvider).toLowerCase(), ModelProviderConfig.builder().build());
     }
 
-    public static ModelConfig buildChatModelConfig(ModelCommonsConfig parentConfig, ModelChatConfig modelConfig) {
-        String baseUrl = nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());
-        String apiKey = nvl(modelConfig.getApiKey(), parentConfig.getApiKey());
-        String name = nvl(modelConfig.getName(), "");
+    public static ModelConfig resolveModelConfig(ModelCommonsConfig parentConfig, ModelBaseConfig modelConfig) {
+        String baseUrl = StringUtils.nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());
+        String apiKey = StringUtils.nvl(modelConfig.getApiKey(), parentConfig.getApiKey());
+        String name = StringUtils.nvl(modelConfig.getName());
         return SimpleModelConfig.builder().baseUrl(baseUrl).apiKey(apiKey).name(name).build();
     }
 
-    public static ModelConfig buildTranscriptionModelConfig(ModelCommonsConfig parentConfig, ModelTranscriptionConfig modelConfig) {
-        String baseUrl = nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());
-        String apiKey = nvl(modelConfig.getApiKey(), parentConfig.getApiKey());
-        String name = nvl(modelConfig.getName(), "");
-        return SimpleModelConfig.builder().baseUrl(baseUrl).apiKey(apiKey).name(name).build();
+    public static ModelConfig resolveChatModelConfig(ModelCommonsConfig parentConfig, ModelChatConfig modelConfig) {
+        return resolveModelConfig(parentConfig, modelConfig);
     }
 
-    public static ModelConfig buildSpeechModelConfig(ModelCommonsConfig parentConfig, ModelSpeechConfig modelConfig) {
-        String baseUrl = nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());
-        String apiKey = nvl(modelConfig.getApiKey(), parentConfig.getApiKey());
-        String name = nvl(modelConfig.getName(), "");
-        return SimpleModelConfig.builder().baseUrl(baseUrl).apiKey(apiKey).name(name).build();
+    public static ModelConfig resolveTranscriptionModelConfig(ModelCommonsConfig parentConfig, ModelTranscriptionConfig modelConfig) {
+        return resolveModelConfig(parentConfig, modelConfig);
     }
 
-    public static ModelConfig buildEmbeddingModelConfig(ModelCommonsConfig parentConfig, ModelEmbeddingConfig modelConfig) {
-        String baseUrl = nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());
-        String apiKey = nvl(modelConfig.getApiKey(), parentConfig.getApiKey());
-        String name = nvl(modelConfig.getName(), "");
-        return SimpleModelConfig.builder().baseUrl(baseUrl).apiKey(apiKey).name(name).build();
+    public static ModelConfig resolveSpeechModelConfig(ModelCommonsConfig parentConfig, ModelSpeechConfig modelConfig) {
+        return resolveModelConfig(parentConfig, modelConfig);
     }
 
-    public static ModelConfig buildRerankModelConfig(ModelCommonsConfig parentConfig, ModelRerankConfig modelConfig) {
-        String baseUrl = nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());
-        String apiKey = nvl(modelConfig.getApiKey(), parentConfig.getApiKey());
-        String name = nvl(modelConfig.getName(), "");
-        return SimpleModelConfig.builder().baseUrl(baseUrl).apiKey(apiKey).name(name).build();
+    public static ModelConfig resolveEmbeddingModelConfig(ModelCommonsConfig parentConfig, ModelEmbeddingConfig modelConfig) {
+        return resolveModelConfig(parentConfig, modelConfig);
     }
 
-    public static ModelConfig buildImageModelConfig(ModelCommonsConfig parentConfig, ModelImageConfig modelConfig) {
-        String baseUrl = nvl(modelConfig.getBaseUrl(), parentConfig.getBaseUrl());
-        String apiKey = nvl(modelConfig.getApiKey(), parentConfig.getApiKey());
-        String name = nvl(modelConfig.getName(), "");
-        return SimpleModelConfig.builder().baseUrl(baseUrl).apiKey(apiKey).name(name).build();
+    public static ModelConfig resolveRerankModelConfig(ModelCommonsConfig parentConfig, ModelRerankConfig modelConfig) {
+        return resolveModelConfig(parentConfig, modelConfig);
     }
+
+    public static ModelConfig resolveImageModelConfig(ModelCommonsConfig parentConfig, ModelImageConfig modelConfig) {
+        return resolveModelConfig(parentConfig, modelConfig);
+    }
+
+    // ------------------------------------------------------------------------------
+    // RAG
+    // ------------------------------------------------------------------------------
 
     public static SplittingConfig resolveSplittingConfig(@NonNull SplittingConfig defaultConfig, @NonNull SplittingConfig config) {
         SplittingConfig.SplittingConfigBuilder builder = SplittingConfig.builder();
-        builder.strategy(nvl(config.getStrategy(), defaultConfig.getStrategy()));
-        builder.chunkSize(nvl(config.getChunkSize(), defaultConfig.getChunkSize()));
-        builder.chunkOverlap(nvl(config.getChunkOverlap(), defaultConfig.getChunkOverlap()));
+        builder.strategy(StringUtils.nvl(config.getStrategy(), defaultConfig.getStrategy()));
+        builder.chunkSize(ObjectUtils.nvl(config.getChunkSize(), defaultConfig.getChunkSize()));
+        builder.chunkOverlap(ObjectUtils.nvl(config.getChunkOverlap(), defaultConfig.getChunkOverlap()));
         return builder.build();
     }
 
     public static RetrievalConfig resolveRetrievalConfig(@NonNull RetrievalConfig defaultConfig, @NonNull RetrievalConfig config) {
         RetrievalConfig.RetrievalConfigBuilder builder = RetrievalConfig.builder();
-        builder.topK(nvl(config.getTopK(), defaultConfig.getTopK()));
-        builder.similarityThreshold(nvl(config.getSimilarityThreshold(), defaultConfig.getSimilarityThreshold()));
+        builder.topK(ObjectUtils.nvl(config.getTopK(), defaultConfig.getTopK()));
+        builder.similarityThreshold(ObjectUtils.nvl(config.getSimilarityThreshold(), defaultConfig.getSimilarityThreshold()));
         return builder.build();
     }
 
     public static VectorStoreConfig resolveVectorStoreConfig(@NonNull VectorStoreConfig defaultConfig, @NonNull VectorStoreConfig config) {
         VectorStoreConfig.VectorStoreConfigBuilder builder = VectorStoreConfig.builder();
-        builder.type(nvl(config.getType(), defaultConfig.getType()));
-        builder.embeddingProvider(nvl(config.getEmbeddingProvider(), defaultConfig.getEmbeddingProvider()));
-        builder.indexPrefix(nvl(config.getIndexPrefix(), defaultConfig.getIndexPrefix()));
+        builder.type(ObjectUtils.nvl(config.getType(), defaultConfig.getType()));
+        builder.embeddingProvider(ObjectUtils.nvl(config.getEmbeddingProvider(), defaultConfig.getEmbeddingProvider()));
+        builder.indexPrefix(ObjectUtils.nvl(config.getIndexPrefix(), defaultConfig.getIndexPrefix()));
         return builder.build();
     }
 
     public static VectorizationConfig resolveVectorizationConfig(@NonNull VectorizationConfig defaultConfig, @NonNull VectorizationConfig config) {
         VectorizationConfig.VectorizationConfigBuilder builder = VectorizationConfig.builder();
-        builder.batchSize(nvl(config.getBatchSize(), defaultConfig.getBatchSize()));
+        builder.batchSize(ObjectUtils.nvl(config.getBatchSize(), defaultConfig.getBatchSize()));
         return builder.build();
     }
 

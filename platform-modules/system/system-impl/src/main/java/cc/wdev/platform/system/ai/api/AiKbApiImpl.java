@@ -543,7 +543,11 @@ public class AiKbApiImpl implements AiKbApi {
         // 知识条目元数据
         Map<String, Object> kbItemMetadata = Maps.newHashMap();
         if (StringUtils.isNotEmpty(kbItem.getMetadata())) {
-            kbItemMetadata.putAll(GsonUtils.toObjectMap(kbItem.getMetadata()));
+            try {
+                kbItemMetadata.putAll(GsonUtils.toObjectMap(kbItem.getMetadata()));
+            } catch (Exception e) {
+                log.info("KB [{}] Item [{}] create chunks. parse metadata error", kbId, kbItemId);
+            }
         }
 
         // 开始切片

@@ -2,6 +2,7 @@ package cc.wdev.platform.commons.utils;
 
 import cc.wdev.platform.commons.constants.SecurityConstants;
 import cc.wdev.platform.commons.core.tenant.TenantContext;
+import cc.wdev.platform.commons.security.domain.CustomUserDetails;
 import cc.wdev.platform.commons.security.domain.User;
 import cc.wdev.platform.commons.utils.jwt.JwtService;
 import com.google.common.collect.Sets;
@@ -66,8 +67,8 @@ public abstract class SecurityUtils {
             try {
                 JwtService jwtService = SpringUtils.getBean(JwtService.class);
                 Jwt jwt = jwtService.parseJwtToken(token.getAccessToken().getTokenValue());
-                Long uid = jwt.getClaim(SecurityConstants.JWT_KEY_UID);
                 Long tid = jwt.getClaim(SecurityConstants.JWT_KEY_TID);
+                Long uid = jwt.getClaim(SecurityConstants.JWT_KEY_UID);
                 String username = jwt.getClaimAsString(SecurityConstants.JWT_KEY_USERNAME);
                 Set<GrantedAuthority> authorities = Sets.newHashSet(token.getAuthorities());
                 return new User(tid, uid, username, null, authorities);
@@ -113,10 +114,14 @@ public abstract class SecurityUtils {
      * 获取用户ID
      */
     public static Long getUid(Authentication authentication) {
-        if (!ObjectUtils.isEmpty(authentication) && authentication.getPrincipal() instanceof User user) {
-            return user.getId();
-        } else if (!ObjectUtils.isEmpty(authentication) && authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getClaim(SecurityConstants.JWT_KEY_UID);
+        if (isAuthenticated()) {
+            if (authentication.getPrincipal() instanceof CustomUserDetails user) {
+                return user.getUid();
+            } else if (authentication.getPrincipal() instanceof User user) {
+                return user.getId();
+            } else if (authentication.getPrincipal() instanceof Jwt jwt) {
+                return jwt.getClaim(SecurityConstants.JWT_KEY_UID);
+            }
         }
         return 0L;
     }
@@ -194,10 +199,14 @@ public abstract class SecurityUtils {
      * 获取租户ID
      */
     public static Long getTid(Authentication authentication) {
-        if (!ObjectUtils.isEmpty(authentication) && authentication.getPrincipal() instanceof User user) {
-            return user.getTenantId();
-        } else if (!ObjectUtils.isEmpty(authentication) && authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getClaim(SecurityConstants.JWT_KEY_TID);
+        if (isAuthenticated()) {
+            if (authentication.getPrincipal() instanceof CustomUserDetails user) {
+                return user.getTid();
+            } else if (authentication.getPrincipal() instanceof User user) {
+                return user.getTenantId();
+            } else if (authentication.getPrincipal() instanceof Jwt jwt) {
+                return jwt.getClaim(SecurityConstants.JWT_KEY_TID);
+            }
         }
         return TenantContext.getTenantId();
     }

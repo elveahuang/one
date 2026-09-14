@@ -7,7 +7,7 @@ import cc.wdev.platform.commons.ai.domain.response.SimpleChatResponse;
 import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
 import cc.wdev.platform.commons.ai.service.image.ImageModelService;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildChatModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveChatModelConfig;
 
 /**
  * @author elvea
@@ -15,7 +15,7 @@ import static cc.wdev.platform.commons.ai.utils.AiUtils.buildChatModelConfig;
 public class DashScopeChatModelService extends AbstractChatModelService {
 
     public DashScopeChatModelService(ModelCommonsConfig commonsConfig, ModelChatConfig modelConfig) {
-        super(buildChatModelConfig(commonsConfig, modelConfig));
+        super(resolveChatModelConfig(commonsConfig, modelConfig));
     }
 
     /**

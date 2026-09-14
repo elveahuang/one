@@ -12,7 +12,7 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.retry.RetryTemplate;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildSpeechModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveSpeechModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -26,7 +26,7 @@ public class DashScopeSpeechModelFactory extends AbstractSpeechModelFactory {
                                        ModelSpeechConfig modelConfig,
                                        ObjectProvider<RetryTemplate> retryTemplate
     ) {
-        super(buildSpeechModelConfig(commonsConfig, modelConfig));
+        super(resolveSpeechModelConfig(commonsConfig, modelConfig));
 
         this.retryTemplate = retryTemplate;
     }

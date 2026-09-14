@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildTranscriptionModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveTranscriptionModelConfig;
 
 /**
  * @author elvea
@@ -24,7 +24,7 @@ import static cc.wdev.platform.commons.ai.utils.AiUtils.buildTranscriptionModelC
 public class DashScopeTranscriptionModelService extends AbstractTranscriptionModelService {
 
     public DashScopeTranscriptionModelService(ModelCommonsConfig commonsConfig, ModelTranscriptionConfig modelConfig) {
-        super(buildTranscriptionModelConfig(commonsConfig, modelConfig));
+        super(resolveTranscriptionModelConfig(commonsConfig, modelConfig));
     }
 
     /**

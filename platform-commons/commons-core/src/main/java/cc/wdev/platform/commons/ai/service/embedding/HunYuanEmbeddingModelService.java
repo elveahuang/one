@@ -8,7 +8,7 @@ import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
 import cc.wdev.platform.commons.ai.service.ModelService;
 import com.alibaba.dashscope.embeddings.TextEmbeddingResult;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildEmbeddingModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveEmbeddingModelConfig;
 
 /**
  * @author elvea
@@ -16,7 +16,7 @@ import static cc.wdev.platform.commons.ai.utils.AiUtils.buildEmbeddingModelConfi
 public class HunYuanEmbeddingModelService extends AbstractEmbeddingModelService {
 
     public HunYuanEmbeddingModelService(ModelCommonsConfig commonsConfig, ModelEmbeddingConfig modelConfig) {
-        super(buildEmbeddingModelConfig(commonsConfig, modelConfig));
+        super(resolveEmbeddingModelConfig(commonsConfig, modelConfig));
     }
 
     /**

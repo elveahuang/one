@@ -13,7 +13,7 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.retry.RetryTemplate;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildEmbeddingModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveEmbeddingModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -33,7 +33,7 @@ public class DashScopeEmbeddingModelFactory extends AbstractEmbeddingModelFactor
         ObjectProvider<ObservationRegistry> observationRegistry,
         ObjectProvider<EmbeddingModelObservationConvention> observationConvention
     ) {
-        super(buildEmbeddingModelConfig(commonsConfig, modelConfig));
+        super(resolveEmbeddingModelConfig(commonsConfig, modelConfig));
 
         this.retryTemplate = retryTemplate;
         this.observationRegistry = observationRegistry;

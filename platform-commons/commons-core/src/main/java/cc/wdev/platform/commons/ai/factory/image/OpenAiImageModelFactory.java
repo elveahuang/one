@@ -17,7 +17,7 @@ import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomiz
 import org.springframework.ai.openai.setup.OpenAiSetup;
 import org.springframework.beans.factory.ObjectProvider;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildImageModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveImageModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -39,7 +39,7 @@ public class OpenAiImageModelFactory extends AbstractImageModelFactory {
         ObjectProvider<ImageModelObservationConvention> observationConvention,
         ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers
     ) {
-        super(buildImageModelConfig(commonsConfig, modelConfig));
+        super(resolveImageModelConfig(commonsConfig, modelConfig));
 
         this.observationRegistry = observationRegistry;
         this.meterRegistry = meterRegistry;

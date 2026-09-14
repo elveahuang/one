@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static cc.wdev.platform.commons.ai.AiConstants.DEFAULT_IMAGE_SIZE;
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildImageModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveImageModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -25,7 +25,7 @@ import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 public class DashScopeImageModelService extends AbstractImageModelService {
 
     public DashScopeImageModelService(ModelCommonsConfig commonsConfig, ModelImageConfig modelConfig) {
-        super(buildImageModelConfig(commonsConfig, modelConfig));
+        super(resolveImageModelConfig(commonsConfig, modelConfig));
     }
 
     /**

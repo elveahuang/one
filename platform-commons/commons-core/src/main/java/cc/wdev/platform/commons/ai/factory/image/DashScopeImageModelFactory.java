@@ -14,7 +14,7 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.retry.RetryTemplate;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildImageModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveImageModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -34,7 +34,7 @@ public class DashScopeImageModelFactory extends AbstractImageModelFactory {
         ObjectProvider<ObservationRegistry> observationRegistry,
         ObjectProvider<ImageModelObservationConvention> observationConvention
     ) {
-        super(buildImageModelConfig(commonsConfig, modelConfig));
+        super(resolveImageModelConfig(commonsConfig, modelConfig));
 
         this.retryTemplate = retryTemplate;
         this.observationRegistry = observationRegistry;

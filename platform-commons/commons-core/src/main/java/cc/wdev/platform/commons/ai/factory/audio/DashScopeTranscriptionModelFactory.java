@@ -12,7 +12,7 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.retry.RetryTemplate;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildTranscriptionModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveTranscriptionModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -27,7 +27,7 @@ public class DashScopeTranscriptionModelFactory extends AbstractTranscriptionMod
                                               ModelTranscriptionConfig modelConfig,
                                               ObjectProvider<RetryTemplate> retryTemplate
     ) {
-        super(buildTranscriptionModelConfig(commonsConfig, modelConfig));
+        super(resolveTranscriptionModelConfig(commonsConfig, modelConfig));
 
         this.retryTemplate = retryTemplate;
     }

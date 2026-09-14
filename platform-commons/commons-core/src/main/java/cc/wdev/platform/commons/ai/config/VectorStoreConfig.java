@@ -25,6 +25,6 @@ public class VectorStoreConfig implements Serializable {
     private String embeddingProvider = AiServiceProvider.SPRING_AI_OPENAI.getValue();
 
     @Builder.Default
-    private String indexPrefix = "vertor_store_index";
+    private String indexPrefix = "vector_store_index";
 
 }

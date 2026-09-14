@@ -18,7 +18,7 @@ import org.springframework.ai.anthropic.http.okhttp.AnthropicHttpClientBuilderCu
 import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.beans.factory.ObjectProvider;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildChatModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveChatModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -37,7 +37,7 @@ public class AnthropicChatModelFactory extends AbstractChatModelFactory {
                                      ObjectProvider<MeterRegistry> meterRegistry,
                                      ObjectProvider<ChatModelObservationConvention> observationConvention,
                                      ObjectProvider<AnthropicHttpClientBuilderCustomizer> httpClientBuilderCustomizers) {
-        super(buildChatModelConfig(commonsConfig, modelConfig));
+        super(resolveChatModelConfig(commonsConfig, modelConfig));
 
         this.observationRegistry = observationRegistry;
         this.meterRegistry = meterRegistry;

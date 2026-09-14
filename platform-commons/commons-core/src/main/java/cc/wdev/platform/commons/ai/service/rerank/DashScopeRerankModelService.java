@@ -13,7 +13,7 @@ import com.alibaba.dashscope.rerank.TextReRank;
 import com.alibaba.dashscope.rerank.TextReRankParam;
 import com.alibaba.dashscope.rerank.TextReRankResult;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildRerankModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveRerankModelConfig;
 
 /**
  * 阿里云 DashScope 文档重排服务
@@ -23,7 +23,7 @@ import static cc.wdev.platform.commons.ai.utils.AiUtils.buildRerankModelConfig;
 public class DashScopeRerankModelService extends AbstractRerankModelService {
 
     public DashScopeRerankModelService(ModelCommonsConfig commonsConfig, ModelRerankConfig modelConfig) {
-        super(buildRerankModelConfig(commonsConfig, modelConfig));
+        super(resolveRerankModelConfig(commonsConfig, modelConfig));
     }
 
     /**

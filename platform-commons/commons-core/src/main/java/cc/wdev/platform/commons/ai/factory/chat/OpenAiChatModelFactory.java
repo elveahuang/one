@@ -18,7 +18,7 @@ import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomiz
 import org.springframework.ai.openai.setup.OpenAiSetup;
 import org.springframework.beans.factory.ObjectProvider;
 
-import static cc.wdev.platform.commons.ai.utils.AiUtils.buildChatModelConfig;
+import static cc.wdev.platform.commons.ai.utils.AiUtils.resolveChatModelConfig;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
@@ -37,7 +37,7 @@ public class OpenAiChatModelFactory extends AbstractChatModelFactory {
                                   ObjectProvider<MeterRegistry> meterRegistry,
                                   ObjectProvider<ChatModelObservationConvention> observationConvention,
                                   ObjectProvider<OpenAiHttpClientBuilderCustomizer> httpClientBuilderCustomizers) {
-        super(buildChatModelConfig(commonsConfig, modelConfig));
+        super(resolveChatModelConfig(commonsConfig, modelConfig));
 
         this.observationRegistry = observationRegistry;
         this.meterRegistry = meterRegistry;

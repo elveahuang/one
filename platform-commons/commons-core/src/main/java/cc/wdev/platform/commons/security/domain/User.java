@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  */
 @Getter
 @Setter
-public class User implements UserDetails, OAuth2AuthenticatedPrincipal, Serializable {
+public class User implements CustomUserDetails, UserDetails, OAuth2AuthenticatedPrincipal, Serializable {
 
     private final Long id;
 
@@ -61,7 +61,7 @@ public class User implements UserDetails, OAuth2AuthenticatedPrincipal, Serializ
     }
 
     @Override
-    public Map<String, Object> getAttributes() {
+    public @NonNull Map<String, Object> getAttributes() {
         return Maps.newHashMap();
     }
 
@@ -82,6 +82,16 @@ public class User implements UserDetails, OAuth2AuthenticatedPrincipal, Serializ
             sortedAuthorities.add(grantedAuthority);
         }
         return sortedAuthorities;
+    }
+
+    @Override
+    public Long getUid() {
+        return getId();
+    }
+
+    @Override
+    public Long getTid() {
+        return getTenantId();
     }
 
     private static class AuthorityComparator implements Comparator<GrantedAuthority>, Serializable {
