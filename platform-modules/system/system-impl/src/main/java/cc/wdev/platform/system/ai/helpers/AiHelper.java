@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
@@ -44,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static cc.wdev.platform.commons.enums.ResponseCodeEnum.AI_INVALID_KB_MODEL;
 import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
@@ -176,7 +178,16 @@ public class AiHelper {
         RetrievalAugmentationAdvisor advisor = RetrievalAugmentationAdvisor.builder()
             .documentRetriever(retriever)
             .queryAugmenter(ContextualQueryAugmenter.builder()
-                .allowEmptyContext(true)
+                .allowEmptyContext(Boolean.FALSE)
+                .emptyContextPromptTemplate(PromptTemplate.builder().template("找不到相关的内容。").build())
+                .documentFormatter(documents -> documents.stream()
+                    .map(document -> {
+                        String metadata = document.getMetadata().entrySet().stream()
+                            .map(entry -> entry.getKey() + ": " + entry.getValue())
+                            .collect(Collectors.joining(", "));
+                        return metadata + "\n" + document.getText();
+                    })
+                    .collect(Collectors.joining(System.lineSeparator())))
                 .build()
             ).build();
 

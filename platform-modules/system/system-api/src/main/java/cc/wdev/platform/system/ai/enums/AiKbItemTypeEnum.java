@@ -13,7 +13,6 @@ public enum AiKbItemTypeEnum implements BaseEnum<String> {
     QA("QA", "问答", "问答"),
     TEXT("TEXT", "文本", "文本"),
     DOCUMENT("DOCUMENT", "文档", "文档"),
-    RESOURCE("RESOURCE", "资源", "资源"),
     NONE("NONE", "未知类型", "未知类型");
 
     private final String value;

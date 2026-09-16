@@ -62,6 +62,8 @@ public class OpenAiEmbeddingModelFactory extends AbstractEmbeddingModelFactory {
     public OpenAiEmbeddingModel getModel(ModelConfig config) {
         OpenAiEmbeddingOptions options = OpenAiEmbeddingOptions.builder()
             .model(nvl(config.getName(), OpenAiEmbeddingOptions.DEFAULT_EMBEDDING_MODEL))
+            .apiKey(config.getApiKey())
+            .baseUrl(config.getBaseUrl())
             .build();
 
         log.info("Get OpenAiEmbeddingModel with model {}.", options.getModel());

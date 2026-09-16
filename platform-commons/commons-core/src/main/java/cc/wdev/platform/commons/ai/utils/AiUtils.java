@@ -29,6 +29,7 @@ import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
@@ -49,6 +50,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static cc.wdev.platform.commons.ai.AiConstants.*;
 
@@ -358,16 +360,36 @@ public abstract class AiUtils {
     }
 
     public static RetrievalAugmentationAdvisor getRetrievalAugmentationAdvisor(VectorStore vectorStore, RetrievalConfig config) {
-        return RetrievalAugmentationAdvisor.builder()
-            .documentRetriever(VectorStoreDocumentRetriever.builder()
-                .vectorStore(vectorStore)
-                .similarityThreshold(config.getSimilarityThreshold())
-                .topK(config.getTopK())
-                .build()
-            ).queryAugmenter(ContextualQueryAugmenter.builder()
-                .allowEmptyContext(true)
-                .build()
-            ).build();
+        PromptTemplate promptTemplate = new PromptTemplate("""
+            以下是检索到的参考资料（供参考）：
+            ---------------------
+            {context}
+            ---------------------
+            回答规则：
+            1. 如果上述参考资料中包含直接答案，请优先依据资料准确回答；
+            2. 如果参考资料中未提供答案或不完整，或者用户提出的是操作、查询、调用工具等任务型指令，
+               请结合你的通用能力、上下文，并**主动检查并调用可用的工具**来完成用户的请求；
+            3. 不要生硬回复“我不知道”，请尽最大努力协助用户。
+            用户问题：{query}
+            """);
+
+        return RetrievalAugmentationAdvisor.builder().documentRetriever(VectorStoreDocumentRetriever.builder()
+            .vectorStore(vectorStore)
+            .similarityThreshold(config.getSimilarityThreshold())
+            .topK(config.getTopK())
+            .build()
+        ).queryAugmenter(ContextualQueryAugmenter.builder()
+            .promptTemplate(promptTemplate)
+            .allowEmptyContext(Boolean.FALSE)
+            .emptyContextPromptTemplate(PromptTemplate.builder().template("找不到相关的内容。").build())
+            .documentFormatter(documents -> documents.stream().map(document -> {
+                    String metadata = document.getMetadata().entrySet().stream()
+                        .map(entry -> entry.getKey() + ": " + entry.getValue())
+                        .collect(Collectors.joining(", "));
+                    return metadata + "\n" + document.getText();
+                }).collect(Collectors.joining(System.lineSeparator()))
+            ).build()
+        ).build();
     }
 
     public static TextSplitter getDocumentTransformer(SplittingConfig config) {
