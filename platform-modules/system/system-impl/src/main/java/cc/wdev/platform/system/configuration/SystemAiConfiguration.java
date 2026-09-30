@@ -13,6 +13,7 @@ import org.springframework.ai.session.SessionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.Duration;
 
@@ -43,9 +44,10 @@ public class SystemAiConfiguration {
 
     @Bean
     public SessionService sessionService(AiSessionService aiSessionService,
-                                         AiSessionEventService aiSessionEventService) {
+                                         AiSessionEventService aiSessionEventService,
+                                         PlatformTransactionManager transactionManager) {
         return DefaultSessionService.builder()
-            .sessionRepository(new CustomSessionRepository(aiSessionService, aiSessionEventService))
+            .sessionRepository(new CustomSessionRepository(aiSessionService, aiSessionEventService, transactionManager))
             .defaultTimeToLive(Duration.ofDays(60))
             .build();
     }

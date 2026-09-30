@@ -71,12 +71,6 @@ public class AiSessionEventVo extends SimpleTenantEntity {
     private Integer synthetic;
 
     /**
-     * branch
-     */
-    @Schema(description = "branch")
-    private String branch;
-
-    /**
      * 压缩归档
      */
     @Schema(description = "archived")

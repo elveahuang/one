@@ -13,19 +13,27 @@ import java.util.List;
  */
 public interface AiSessionService extends CachingEntityService<AiSessionEntity, Long> {
 
-    AiSessionEntity findBySessionId(String sessionId);
-
     /**
-     * 根据会话ID + 用户 + 租户查询（归属校验）
+     * 根据会话ID查询会话
      */
-    AiSessionEntity findBySessionIdAndUser(String sessionId, Long userId, Long tenantId);
-
-    void deleteBySessionId(String sessionId);
+    AiSessionEntity findBySessionId(String sessionId);
 
     /**
      * 根据用户ID查询会话
      */
     List<AiSessionEntity> findByUserId(String userId);
+
+    AiSessionEntity findBySessionIdAndUser(String sessionId, Long userId, Long tenantId);
+
+    /**
+     * 删除指定的会话
+     */
+    int deleteBySessionId(String sessionId);
+
+    /**
+     * 原子删除已过期会话，事件由外键级联删除。
+     */
+    int deleteExpiredSessions(LocalDateTime before);
 
     /**
      * 根据用户ID + 租户查询
@@ -35,16 +43,12 @@ public interface AiSessionService extends CachingEntityService<AiSessionEntity, 
     /**
      * 分页查询用户会话（租户隔离）
      */
-    Page<AiSessionEntity> findByUserIdPage(String userId, Long tenantId, Pageable pageable);
+    Page<AiSessionEntity> findPageByUserId(String userId, Long tenantId, Pageable pageable);
 
-    /**
-     * 查询已过期的会话
-     */
-    List<AiSessionEntity> findExpiredSessions(LocalDateTime now);
+    int incrementEventVersion(String sessionId);
 
-    /**
-     *
-     */
-    int incrementEventVersionIfMatch(Long id, long expectedVersion);
+    int decrementEventVersion(String sessionId);
+
+    int casIncrementEventVersion(String sessionId, long expectedVersion);
 
 }

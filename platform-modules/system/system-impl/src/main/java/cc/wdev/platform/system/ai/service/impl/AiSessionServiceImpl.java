@@ -35,6 +35,23 @@ public class AiSessionServiceImpl
     }
 
     /**
+     * @see AiSessionService#findByUserId(String)
+     */
+    @Override
+    public List<AiSessionEntity> findByUserId(String userId) {
+        if (ObjectUtils.isEmpty(userId)) {
+            return List.of();
+        }
+
+        // 按创建日期和对话标识倒序排序
+        return this.lambdaQueryWrapper()
+            .eq(AiSessionEntity::getUserId, userId)
+            .eq(AiSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .orderByDesc(List.of(AiSessionEntity::getCreatedAt, AiSessionEntity::getSessionId))
+            .list();
+    }
+
+    /**
      * @see AiSessionService#findBySessionIdAndUser(String, Long, Long)
      */
     @Override
@@ -53,19 +70,20 @@ public class AiSessionServiceImpl
      * @see AiSessionService#deleteBySessionId(String)
      */
     @Override
-    public void deleteBySessionId(String sessionId) {
-        this.lambdaUpdateWrapper().eq(AiSessionEntity::getSessionId, sessionId).remove();
+    public int deleteBySessionId(String sessionId) {
+        return this.getMapper().delete(this.lambdaUpdateWrapper()
+            .eq(AiSessionEntity::getSessionId, sessionId)
+        );
     }
 
+    /**
+     * @see AiSessionService#deleteExpiredSessions(LocalDateTime)
+     */
     @Override
-    public List<AiSessionEntity> findByUserId(String userId) {
-        if (ObjectUtils.isEmpty(userId)) {
-            return List.of();
-        }
-        return this.lambdaQueryWrapper()
-            .eq(AiSessionEntity::getUserId, userId)
-            .eq(AiSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
-            .list();
+    public int deleteExpiredSessions(LocalDateTime before) {
+        return this.getMapper().delete(this.lambdaUpdateWrapper()
+            .lt(AiSessionEntity::getExpiresAt, before)
+        );
     }
 
     /**
@@ -76,6 +94,7 @@ public class AiSessionServiceImpl
         if (ObjectUtils.isEmpty(userId)) {
             return List.of();
         }
+
         return this.lambdaQueryWrapper()
             .eq(AiSessionEntity::getUserId, userId)
             .eq(ObjectUtils.isValidId(tenantId), AiSessionEntity::getTenantId, tenantId)
@@ -85,10 +104,10 @@ public class AiSessionServiceImpl
     }
 
     /**
-     * @see AiSessionService#findByUserIdPage(String, Long, Pageable)
+     * @see AiSessionService#findPageByUserId(String, Long, Pageable)
      */
     @Override
-    public Page<AiSessionEntity> findByUserIdPage(String userId, Long tenantId, Pageable pageable) {
+    public Page<AiSessionEntity> findPageByUserId(String userId, Long tenantId, Pageable pageable) {
         IPage<AiSessionEntity> page = this.lambdaQueryWrapper()
             .eq(StringUtils.isNotEmpty(userId), AiSessionEntity::getUserId, userId)
             .eq(ObjectUtils.isValidId(tenantId), AiSessionEntity::getTenantId, tenantId)
@@ -98,27 +117,50 @@ public class AiSessionServiceImpl
         return MyBatisPlusUtils.toSpringDataPage(page);
     }
 
+    /**
+     * @see AiSessionService#incrementEventVersion(String)
+     */
     @Override
-    public List<AiSessionEntity> findExpiredSessions(LocalDateTime now) {
-        if (ObjectUtils.isEmpty(now)) {
-            return List.of();
-        }
-        return this.lambdaQueryWrapper()
-            .isNotNull(AiSessionEntity::getExpiresAt)
-            .le(AiSessionEntity::getExpiresAt, now)
-            .eq(AiSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
-            .list();
-    }
-
-    @Override
-    public int incrementEventVersionIfMatch(Long id, long expectedVersion) {
-        if (id == null) {
+    public int incrementEventVersion(String sessionId) {
+        if (StringUtils.isEmpty(sessionId)) {
             return 0;
         }
-        return this.lambdaUpdateWrapper()
-            .eq(AiSessionEntity::getId, id)
-            .eq(AiSessionEntity::getEventVersion, expectedVersion)
+
+        return this.getMapper().update(this.lambdaUpdateWrapper()
+            .eq(AiSessionEntity::getSessionId, sessionId)
             .setSql("event_version = event_version + 1")
-            .update() ? 1 : 0;
+        );
     }
+
+    /**
+     * @see AiSessionService#decrementEventVersion(String)
+     */
+    @Override
+    public int decrementEventVersion(String sessionId) {
+        if (StringUtils.isEmpty(sessionId)) {
+            return 0;
+        }
+
+        return this.getMapper().update(this.lambdaUpdateWrapper()
+            .eq(AiSessionEntity::getSessionId, sessionId)
+            .setSql("event_version = event_version - 1")
+        );
+    }
+
+    /**
+     * @see AiSessionService#casIncrementEventVersion(String, long)
+     */
+    @Override
+    public int casIncrementEventVersion(String sessionId, long expectedVersion) {
+        if (StringUtils.isEmpty(sessionId)) {
+            return 0;
+        }
+
+        return this.getMapper().update(this.lambdaUpdateWrapper()
+            .eq(AiSessionEntity::getSessionId, sessionId)
+            .eq(AiSessionEntity::getEventVersion, expectedVersion)
+            .set(AiSessionEntity::getEventVersion, expectedVersion + 1)
+        );
+    }
+
 }

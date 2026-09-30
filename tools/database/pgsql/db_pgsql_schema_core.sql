@@ -3772,6 +3772,7 @@ COMMENT ON COLUMN sys_ai_api_key.deleted_at IS '删除时间';
 -- AI Session
 --
 
+DROP TABLE IF EXISTS sys_ai_session_event;
 DROP TABLE IF EXISTS sys_ai_session;
 
 CREATE TABLE sys_ai_session
@@ -3792,6 +3793,7 @@ CREATE TABLE sys_ai_session
 CREATE INDEX ix_sys_ai_session__tenant_id ON sys_ai_session (tenant_id);
 CREATE INDEX ix_sys_ai_session__user_id ON sys_ai_session (user_id);
 CREATE INDEX ix_sys_ai_session__expires_at ON sys_ai_session (expires_at);
+CREATE UNIQUE INDEX ux_sys_ai_session__session_id ON sys_ai_session (session_id);
 
 COMMENT ON TABLE sys_ai_session IS 'AI Session';
 COMMENT ON COLUMN sys_ai_session.id IS 'ID';
@@ -3814,31 +3816,36 @@ DROP TABLE IF EXISTS sys_ai_session_event;
 
 CREATE TABLE sys_ai_session_event
 (
-    id              BIGSERIAL    NOT NULL PRIMARY KEY,
-    tenant_id       BIGINT       NOT NULL DEFAULT 0,
-    session_id      VARCHAR(150) NOT NULL DEFAULT '',
-    timestamp       TIMESTAMP    NOT NULL,
-    message_type    varchar(20)  NOT NULL,
-    message_content TEXT         NULL,
-    message_data    TEXT         NULL,
-    synthetic       SMALLINT     NOT NULL DEFAULT 0,
-    branch          VARCHAR(500) NULL,
-    archived        SMALLINT     NOT NULL DEFAULT 0,
-    metadata        TEXT         NULL,
-    version         BIGINT       NOT NULL DEFAULT 0,
-    active          SMALLINT     NOT NULL DEFAULT 1,
-    created_by      BIGINT       NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP    NOT NULL DEFAULT NOW()
+    id               BIGSERIAL    NOT NULL PRIMARY KEY,
+    tenant_id        BIGINT       NOT NULL DEFAULT 0,
+    session_id       VARCHAR(150) NOT NULL,
+    session_event_id VARCHAR(150) NOT NULL,
+    timestamp        TIMESTAMP    NOT NULL,
+    message_type     varchar(20)  NOT NULL,
+    message_content  TEXT         NULL,
+    message_data     TEXT         NULL,
+    synthetic        SMALLINT     NOT NULL DEFAULT 0,
+    archived         SMALLINT     NOT NULL DEFAULT 0,
+    metadata         TEXT         NULL,
+    version          BIGINT       NOT NULL DEFAULT 0,
+    active           SMALLINT     NOT NULL DEFAULT 1,
+    created_by       BIGINT       NOT NULL DEFAULT 0,
+    created_at       TIMESTAMP    NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_sys_ai_session_event__session_id
+        FOREIGN KEY (session_id) REFERENCES sys_ai_session (session_id) ON DELETE CASCADE
 );
 
 CREATE INDEX ix_sys_ai_session_event__tenant_id ON sys_ai_session_event (tenant_id);
-CREATE INDEX ix_sys_ai_session_event__session ON sys_ai_session_event (session_id, timestamp);
+CREATE INDEX ix_sys_ai_session_event__session ON sys_ai_session_event (session_id, id);
 CREATE INDEX ix_sys_ai_session_event__archived ON sys_ai_session_event (session_id, archived);
+CREATE UNIQUE INDEX ux_sys_ai_session_event__session_event_id
+    ON sys_ai_session_event (session_event_id);
 
 COMMENT ON TABLE sys_ai_session_event IS 'AI Session Event';
 COMMENT ON COLUMN sys_ai_session_event.id IS 'ID';
 COMMENT ON COLUMN sys_ai_session_event.tenant_id IS '租户ID';
-COMMENT ON COLUMN sys_ai_session_event.session_id IS '对话ID';
+COMMENT ON COLUMN sys_ai_session_event.session_id IS '会话ID';
+COMMENT ON COLUMN sys_ai_session_event.session_event_id IS '会话事件ID';
 COMMENT ON COLUMN sys_ai_session_event.timestamp IS 'Timestamp';
 COMMENT ON COLUMN sys_ai_session_event.message_type IS '消息类型';
 COMMENT ON COLUMN sys_ai_session_event.message_content IS '消息内容';
@@ -3846,7 +3853,6 @@ COMMENT ON COLUMN sys_ai_session_event.message_data IS '消息数据';
 COMMENT ON COLUMN sys_ai_session_event.synthetic IS 'synthetic';
 COMMENT ON COLUMN sys_ai_session_event.archived IS '是否归档';
 COMMENT ON COLUMN sys_ai_session_event.metadata IS 'metadata';
-COMMENT ON COLUMN sys_ai_session_event.branch IS 'branch';
 COMMENT ON COLUMN sys_ai_session_event.version IS '版本号';
 COMMENT ON COLUMN sys_ai_session_event.active IS '启用状态';
 COMMENT ON COLUMN sys_ai_session_event.created_by IS '创建人';

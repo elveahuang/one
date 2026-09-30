@@ -134,7 +134,7 @@ public class AiChatApiImpl implements AiChatApi {
     public Page<AiChatVo> findMyChats(AiChatSearchRequest request) {
         String userId = String.valueOf(SecurityUtils.getUid());
         Long tenantId = SecurityUtils.getTid();
-        return this.aiSessionService.findByUserIdPage(userId, tenantId, request.getPageable())
+        return this.aiSessionService.findPageByUserId(userId, tenantId, request.getPageable())
             .map(session -> this.toChatVo(session, request.getChatType(),
                 this.sessionService.getMessages(session.getSessionId())));
     }

@@ -41,7 +41,13 @@ public class AiSessionEventEntity extends SimpleTenantEntity {
     private String sessionId;
 
     /**
-     * Timestamp（PostgreSQL 保留字，使用双引号转义）
+     * Session Event ID
+     */
+    @Schema(description = "Session Event ID")
+    private String sessionEventId;
+
+    /**
+     * Timestamp
      */
     @Schema(description = "Timestamp")
     @JsonFormat(pattern = DateTimeConstants.DEFAULT_DATE_TIME_PATTERN)
@@ -73,12 +79,6 @@ public class AiSessionEventEntity extends SimpleTenantEntity {
     private Integer synthetic;
 
     /**
-     * branch
-     */
-    @Schema(description = "branch")
-    private String branch;
-
-    /**
      * 压缩归档
      */
     @Schema(description = "archived")
@@ -89,4 +89,5 @@ public class AiSessionEventEntity extends SimpleTenantEntity {
      */
     @Schema(description = "metadata")
     private String metadata;
+
 }

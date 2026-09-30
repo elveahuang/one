@@ -10,12 +10,13 @@ import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
 import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import org.springframework.ai.chat.client.advisor.api.MemoryAdvisor;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.session.CreateSessionRequest;
 import org.springframework.ai.session.Session;
 import org.springframework.ai.session.SessionService;
 import org.springframework.core.Ordered;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.springframework.ai.session.advisor.SessionMemoryAdvisor.SESSION_ID_CONTEXT_KEY;
 import static org.springframework.ai.session.advisor.SessionMemoryAdvisor.USER_ID_CONTEXT_KEY;
@@ -43,12 +44,12 @@ public class SessionMetadataAdvisor implements BaseAdvisor, MemoryAdvisor {
 
         Session session = this.sessionService.findById(sessionId);
         if (session == null) {
-            Prompt prompt = request.prompt();
-            UserMessage userMessage = prompt.getUserMessage();
+            Map<String, Object> metadata = new HashMap<>(request.context());
+
             this.sessionService.create(CreateSessionRequest.builder()
                 .id(sessionId)
                 .userId(StringUtils.nvl(userId, DEFAULT_USER_ID))
-                .metadata(userMessage.getMetadata())
+                .metadata(metadata)
                 .build());
         }
         return request;
@@ -59,12 +60,9 @@ public class SessionMetadataAdvisor implements BaseAdvisor, MemoryAdvisor {
         return response;
     }
 
-    /**
-     * 获取优先级
-     */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 900;
+        return Ordered.HIGHEST_PRECEDENCE + 999;
     }
 
 }

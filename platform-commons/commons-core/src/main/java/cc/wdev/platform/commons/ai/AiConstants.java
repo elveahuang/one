@@ -9,11 +9,13 @@ import java.time.Duration;
  */
 public interface AiConstants {
 
-    String CAHT_CONTEXT_SESSION_ID_KEY = SessionMemoryAdvisor.SESSION_ID_CONTEXT_KEY;
+    String CHAT_CONTEXT_SESSION_ID = SessionMemoryAdvisor.SESSION_ID_CONTEXT_KEY;
 
-    String CAHT_CONTEXT_USER_ID_KEY = SessionMemoryAdvisor.USER_ID_CONTEXT_KEY;
+    String CHAT_CONTEXT_USER_ID = SessionMemoryAdvisor.USER_ID_CONTEXT_KEY;
 
-    String CAHT_CONTEXT_TENANT_ID_KEY = "chat_memory_tenant_id";
+    String CHAT_CONTEXT_TENANT_ID = "chat_memory_tenant_id";
+
+    String CHAT_CONTEXT_CHAT_TYPE = "chat_memory_chat_type";
 
     /**
      * 默认对话标识，只能用于单元测试，禁止在业务流程中使用

@@ -119,9 +119,10 @@ public abstract class AiUtils {
      */
     public static ChatClient.ChatClientRequestSpec processChatSpec(ChatClient chatClient, SimpleChatRequest request) {
         ChatClient.ChatClientRequestSpec spec = chatClient.prompt().advisors(a -> {
-            a.param(CAHT_CONTEXT_SESSION_ID_KEY, request.getConversationId());
-            a.param(CAHT_CONTEXT_USER_ID_KEY, String.valueOf(request.getUserId()));
-            a.param(CAHT_CONTEXT_TENANT_ID_KEY, request.getTenantId());
+            a.param(CHAT_CONTEXT_SESSION_ID, request.getConversationId());
+            a.param(CHAT_CONTEXT_USER_ID, String.valueOf(request.getUserId()));
+            a.param(CHAT_CONTEXT_TENANT_ID, request.getTenantId());
+            a.param(CHAT_CONTEXT_CHAT_TYPE, request.getChatType());
         }).user(u -> {
             u.metadata(METADATA_SESSION_ID, request.getConversationId());
             u.metadata(METADATA_TENANT_ID, request.getTenantId());

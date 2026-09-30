@@ -15,27 +15,28 @@ import java.util.List;
  */
 public interface AiSessionEventService extends CachingEntityService<AiSessionEventEntity, Long> {
 
+    /**
+     * 删除会话事件
+     */
     void deleteBySessionId(String sessionId);
 
     /**
-     * 根据会话ID查询事件
+     * 查询会话的未归档事件
      */
     List<AiSessionEventEntity> findBySessionId(String sessionId);
 
     /**
-     * 查询会话的 active(未归档)事件
+     * 将指定事件标记为归档
      */
-    List<AiSessionEventEntity> findActiveBySessionId(String sessionId);
+    void archiveByIds(String sessionId, List<String> eventIds);
 
-    /**
-     * 将指定事件标记为归档（压缩后保留全量 Recall Storage）
-     */
-    void archiveByIds(List<Long> ids);
+    AiSessionEventEntity findBySessionEventId(String sessionEventId);
 
-    /**
-     * 替换 active 窗口：删除该会话全部 active 事件并以 retainedEvents 重建。用于 compaction。
-     */
-    void replaceActiveWindow(String sessionId, List<AiSessionEventEntity> retainedEvents);
+    List<AiSessionEventEntity> findFromSequence(String sessionId, Long fromSequence);
+
+    boolean deleteFromSequence(String sessionId, Long fromSequence);
+
+    List<AiSessionEventEntity> findTurnHead(String sessionId, String firstEventId, EventFilter filter);
 
     List<AiSessionEventEntity> findEvents(@NonNull String sessionId, @NonNull EventFilter filter);
 
