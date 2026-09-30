@@ -1,0 +1,13 @@
+{
+    "resources": [
+        {
+            "pattern": "cc.wdev/logging/logback/console-appender.xml"
+        },
+        {
+            "pattern": "cc.wdev/logging/logback/file-appender.xml"
+        },
+        {
+            "pattern": "cc.wdev/logging/logback/loki-appender.xml"
+        }
+    ]
+}

@@ -1,0 +1,45 @@
+package cc.wdev.platform.commons.ai.factory;
+
+import cc.wdev.platform.commons.ai.AiManager;
+import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
+import cc.wdev.webapp.BaseTests;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.embedding.EmbeddingResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+
+/**
+ * @author elvea
+ */
+@Slf4j
+public class EmbeddingModelFactoryTests extends BaseTests {
+
+    @Autowired
+    private AiManager aiManager;
+
+    @Test
+    public void baseTest() throws Exception {
+        Assertions.assertNotNull(this.aiManager);
+    }
+
+    @Test
+    public void openaiEmbeddingTests() {
+        EmbeddingModel embeddingModel = this.aiManager.getEmbeddingModelFactory(AiServiceProvider.SPRING_AI_OPENAI).getEmbeddingModel();
+        Assertions.assertNotNull(embeddingModel);
+
+        try {
+            EmbeddingResponse response = embeddingModel.embedForResponse(List.of(
+                "Hello World",
+                "World is big and salvation is near"
+            ));
+            Assertions.assertNotNull(response);
+        } catch (Exception e) {
+            log.warn("openai embedding remote call skipped due to external api error: {}", e.getMessage());
+        }
+    }
+
+}

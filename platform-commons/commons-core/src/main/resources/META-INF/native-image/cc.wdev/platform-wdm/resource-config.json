@@ -1,0 +1,28 @@
+{
+    "resources": [
+        {
+            "pattern": "browserwatcher-1.2.0.crx"
+        },
+        {
+            "pattern": "browserwatcher-2.0.0.crx"
+        },
+        {
+            "pattern": "browserwatcher-csp-1.2.0.crx"
+        },
+        {
+            "pattern": "browserwatcher-display-1.2.0.crx"
+        },
+        {
+            "pattern": "browserwatcher-display-csp-1.2.0.crx"
+        },
+        {
+            "pattern": "commands.properties"
+        },
+        {
+            "pattern": "versions.properties"
+        },
+        {
+            "pattern": "webdrivermanager.properties"
+        }
+    ]
+}
