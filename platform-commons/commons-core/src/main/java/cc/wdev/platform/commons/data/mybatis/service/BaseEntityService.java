@@ -16,7 +16,9 @@ import cc.wdev.platform.commons.service.EntityService;
 import cc.wdev.platform.commons.utils.*;
 import cc.wdev.platform.commons.web.request.PageRequest;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
@@ -606,6 +608,13 @@ public abstract class BaseEntityService<T extends IdEntity, K extends Serializab
     }
 
     /**
+     * @return LambdaQueryWrapper
+     */
+    protected LambdaQueryWrapper<T> lambdaQuery() {
+        return Wrappers.lambdaQuery(this.getEntityClass());
+    }
+
+    /**
      * @return UpdateChainWrapper
      */
     protected UpdateChainWrapper<T> updateWrapper() {
@@ -617,6 +626,13 @@ public abstract class BaseEntityService<T extends IdEntity, K extends Serializab
      */
     protected LambdaUpdateChainWrapper<T> lambdaUpdateWrapper() {
         return ChainWrappers.lambdaUpdateChain(getMapper());
+    }
+
+    /**
+     * @return LambdaUpdateWrapper
+     */
+    protected LambdaUpdateWrapper<T> lambdaUpdate() {
+        return Wrappers.lambdaUpdate(this.getEntityClass());
     }
 
 }

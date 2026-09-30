@@ -9,6 +9,7 @@ import cc.wdev.platform.system.ai.domain.entity.AiSessionEntity;
 import cc.wdev.platform.system.ai.repository.AiSessionRepository;
 import cc.wdev.platform.system.ai.service.AiSessionService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -71,7 +72,7 @@ public class AiSessionServiceImpl
      */
     @Override
     public int deleteBySessionId(String sessionId) {
-        return this.getMapper().delete(this.lambdaUpdateWrapper()
+        return this.getMapper().delete(Wrappers.<AiSessionEntity>lambdaQuery()
             .eq(AiSessionEntity::getSessionId, sessionId)
         );
     }
@@ -81,7 +82,7 @@ public class AiSessionServiceImpl
      */
     @Override
     public int deleteExpiredSessions(LocalDateTime before) {
-        return this.getMapper().delete(this.lambdaUpdateWrapper()
+        return this.getMapper().delete(Wrappers.<AiSessionEntity>lambdaQuery()
             .lt(AiSessionEntity::getExpiresAt, before)
         );
     }
@@ -126,7 +127,7 @@ public class AiSessionServiceImpl
             return 0;
         }
 
-        return this.getMapper().update(this.lambdaUpdateWrapper()
+        return this.getMapper().update(this.lambdaUpdate()
             .eq(AiSessionEntity::getSessionId, sessionId)
             .setSql("event_version = event_version + 1")
         );
@@ -141,7 +142,7 @@ public class AiSessionServiceImpl
             return 0;
         }
 
-        return this.getMapper().update(this.lambdaUpdateWrapper()
+        return this.getMapper().update(this.lambdaUpdate()
             .eq(AiSessionEntity::getSessionId, sessionId)
             .setSql("event_version = event_version - 1")
         );
@@ -156,7 +157,7 @@ public class AiSessionServiceImpl
             return 0;
         }
 
-        return this.getMapper().update(this.lambdaUpdateWrapper()
+        return this.getMapper().update(this.lambdaUpdate()
             .eq(AiSessionEntity::getSessionId, sessionId)
             .eq(AiSessionEntity::getEventVersion, expectedVersion)
             .set(AiSessionEntity::getEventVersion, expectedVersion + 1)

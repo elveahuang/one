@@ -83,7 +83,7 @@ public class AiSessionEventServiceImpl
             .eq(AiSessionEventEntity::getSessionId, sessionId)
             .in(AiSessionEventEntity::getSessionEventId, ids)
             .count();
-        if (actual == null || actual.longValue() != expected) {
+        if (actual == null || actual != expected) {
             throw new IllegalArgumentException(
                 "archiveIds contains an event that is not in the log of session " + sessionId);
         }

@@ -54,7 +54,7 @@ spring:
                     enabled: true
                 default-requeue-rejected: true
     elasticsearch:
-        uris: https://es.elvea.cn
+        uris: http://127.0.0.1:9200
         username: elastic
         password: elastic
     quartz:
@@ -131,28 +131,37 @@ platform:
                 enabled: true
                 commons:
                     api-key: ${DASHSCOPE_API_KEY}
+                    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
                 chat:
                     name: deepseek-v4-flash
                 embedding:
                     name: text-embedding-v4
-                rerank:
-                    name: gte-rerank-v3
                 image:
                     name: qwen-image-plus
                 transcription:
                     name: fun-asr
+                rerank:
+                    name: qwen3-rerank
             tencent:
                 enabled: true
                 commons:
                     api-key: ${HUNYUAN_API_KEY}
                 chat:
                     name: deepseek-v4-flash
-        vectorstore:
-            type: elasticsearch
-            elasticsearch:
+            orcarouter:
                 enabled: true
-            pgvector:
-                enabled: true
+                commons:
+                    api-key: ${ORCAROUTER_API_KEY}
+                    base-url: https://api.orcarouter.ai/v1
+                chat:
+                    name: deepseek/deepseek-v4.1-flash
+        rag:
+            store:
+                type: elasticsearch
+                elasticsearch:
+                    enabled: true
+                pgvector:
+                    enabled: true
         agent:
             enabled: true
             agents:
@@ -161,7 +170,7 @@ platform:
                 - file:${user.dir}/tools/agent/skills
         memory:
             enabled: true
-            path: ${user.dir}/tools/agent/memory
+            path: file:../../tools/ai/memory
     data:
         core:
             enabled: true
