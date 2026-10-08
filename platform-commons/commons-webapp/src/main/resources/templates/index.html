@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!-- @thymesVar id="applicationName" type="java.lang.String" -->
+<!-- @thymesVar id="applicationVersion" type="java.lang.String" -->
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <th:block th:insert="~{includes/commons :: meta}"/>
+    <title th:text="${applicationName}"></title>
+</head>
+<body>
+<div class="container">
+    <div class="text-center">
+        <h1 th:text="${applicationName}"></h1>
+        <h1 th:text="${applicationVersion}"></h1>
+    </div>
+    <th:block th:insert="~{includes/commons :: js}"/>
+</div>
+</body>
+</html>

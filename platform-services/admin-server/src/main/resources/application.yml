@@ -1,0 +1,12 @@
+server:
+    port: 8282
+    forward-headers-strategy: native
+spring:
+    main:
+        allow-bean-definition-overriding: true
+        allow-circular-references: true
+        web-application-type: servlet
+    application:
+        name: admin-server
+    profiles:
+        active: local

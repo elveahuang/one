@@ -1,0 +1,68 @@
+package cc.wdev.platform.system.open.domain.entity;
+
+import cc.wdev.platform.commons.data.mybatis.domain.BaseTenantEntity;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.*;
+
+/**
+ * 微信小程序应用
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@TableName(value = "sys_open_wxma_app")
+public class WxMaAppEntity extends BaseTenantEntity {
+
+    /**
+     * 公众号名称
+     */
+    private String title;
+
+    /**
+     * AppID
+     */
+    private String appId;
+
+    /**
+     * AppSecret
+     */
+    private String appSecret;
+
+    /**
+     * Token
+     */
+    private String appToken;
+
+    /**
+     * EncodingAESKey
+     */
+    private String appAesKey;
+
+    /**
+     * WXID
+     */
+    private String appWxId;
+
+    /**
+     * 备注
+     */
+    private String description;
+
+    /**
+     * 状态
+     */
+    private Integer status;
+
+    /**
+     * 来源
+     */
+    private Integer source;
+
+    /**
+     * 启用状态
+     */
+    private Integer active;
+
+}

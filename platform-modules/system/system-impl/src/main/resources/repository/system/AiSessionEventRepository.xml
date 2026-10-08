@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.wdev.platform.system.ai.repository.AiSessionEventRepository">
+
+    <resultMap id="AiSessionEventResultMap" type="cc.wdev.platform.system.ai.domain.entity.AiSessionEventEntity">
+        <id property="id" column="id"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="sessionEventId" column="session_event_id"/>
+        <result property="timestamp" column="timestamp"/>
+        <result property="messageType" column="message_type"/>
+        <result property="messageContent" column="message_content"/>
+        <result property="messageData" column="message_data"/>
+        <result property="synthetic" column="synthetic"/>
+        <result property="archived" column="archived"/>
+        <result property="metadata" column="metadata"/>
+        <result property="version" column="version"/>
+        <result property="active" column="active"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findTurnHead" resultMap="AiSessionEventResultMap">
+        SELECT
+        id, tenant_id, session_id, session_event_id, timestamp, message_type, message_content,
+        message_data, synthetic, archived, metadata, version, active, created_by, created_at
+        FROM sys_ai_session_event e
+        WHERE e.session_id = #{sessionId}
+        AND e.active = 1
+        AND e.id &lt; (
+        SELECT w.id
+        FROM sys_ai_session_event w
+        WHERE w.session_id = #{sessionId}
+        AND w.session_event_id = #{firstEventId}
+        )
+        AND e.id &gt;= (
+        SELECT MAX(u.id)
+        FROM sys_ai_session_event u
+        WHERE u.session_id = #{sessionId}
+        AND u.active = 1
+        AND u.message_type = 'USER'
+        AND u.id &lt; (
+        SELECT w.id
+        FROM sys_ai_session_event w
+        WHERE w.session_id = #{sessionId}
+        AND w.session_event_id = #{firstEventId}
+        )
+        <if test="from != null">
+            AND u.timestamp &gt;= #{from}
+        </if>
+        <if test="to != null">
+            AND u.timestamp &lt;= #{to}
+        </if>
+        <if test="messageTypes != null">
+            AND u.message_type IN
+            <foreach collection="messageTypes" item="messageType" open="(" separator="," close=")">
+                #{messageType}
+            </foreach>
+        </if>
+        <if test="excludeSynthetic">
+            AND u.synthetic = 0
+        </if>
+        <if test="excludeArchived">
+            AND u.archived = 0
+        </if>
+        )
+        <if test="from != null">
+            AND e.timestamp &gt;= #{from}
+        </if>
+        <if test="to != null">
+            AND e.timestamp &lt;= #{to}
+        </if>
+        <if test="messageTypes != null">
+            AND e.message_type IN
+            <foreach collection="messageTypes" item="messageType" open="(" separator="," close=")">
+                #{messageType}
+            </foreach>
+        </if>
+        <if test="excludeSynthetic">
+            AND e.synthetic = 0
+        </if>
+        <if test="excludeArchived">
+            AND e.archived = 0
+        </if>
+        ORDER BY e.id
+    </select>
+
+</mapper>

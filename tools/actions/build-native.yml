@@ -1,0 +1,23 @@
+name: Native Build
+on: [ push, pull_request ]
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v4
+            -   name: Setup Graalvm
+                uses: graalvm/setup-graalvm@v1
+                with:
+                    java-version: '25'
+                    distribution: 'graalvm'
+            -   name: Show Env
+                run: |
+                    echo "GRAALVM_HOME: $GRAALVM_HOME"
+                    echo "JAVA_HOME: $JAVA_HOME"
+                    java --version
+                    native-image --version
+                    gradle -v
+            -   name: Build
+                run: |
+                    ./gradlew platform-boot-server:app-server:nativeCompile
