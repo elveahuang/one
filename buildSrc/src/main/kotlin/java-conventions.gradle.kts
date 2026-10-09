@@ -37,8 +37,6 @@ dependencyManagement {
         mavenBom(libs.spring.boot.dependencies.get().toString())
         mavenBom(libs.spring.ai.bom.get().toString())
         mavenBom(libs.spring.ai.session.bom.get().toString())
-        mavenBom(libs.agentic.spring.ai.extensions.bom.get().toString())
-        mavenBom(libs.agentic.spring.ai.bom.get().toString())
         mavenBom(libs.spring.cloud.dependencies.get().toString())
         mavenBom(libs.spring.grpc.dependencies.get().toString())
         mavenBom(libs.spring.shell.dependencies.get().toString())

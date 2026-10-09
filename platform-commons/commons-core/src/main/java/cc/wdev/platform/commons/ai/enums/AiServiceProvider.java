@@ -15,7 +15,6 @@ import lombok.Getter;
 public enum AiServiceProvider implements BaseEnum<String> {
     SPRING_AI_DEEPSEEK("SPRING_AI_DEEPSEEK", "Spring AI DeepSeek", true),
     SPRING_AI_OPENAI("SPRING_AI_OPENAI", "Spring AI OpenAI", true),
-    AGENTIC_SPRING_AI_DASHSCOPE("AGENTIC_SPRING_AI_DASHSCOPE", "Agentic Spring AI DashScope", true),
     ALIYUN_DASHSCOPE_SDK("ALIYUN_DASHSCOPE_SDK", "Aliyun DashScope SDK", true),
     TENCENT_HUNYUAN_SDK("TENCENT_HUNYUAN_SDK", "Tencent HunYuan SDK", true),
     OPENAI_SDK("OPENAI_SDK", "OpenAI SDK", true),
@@ -70,11 +69,11 @@ public enum AiServiceProvider implements BaseEnum<String> {
     }
 
     public static AiServiceProvider getSpeechFactoryProvider(String provider) {
-        return BaseEnum.getEnumByValue(provider, AiServiceProvider.class, AiServiceProvider.AGENTIC_SPRING_AI_DASHSCOPE);
+        return BaseEnum.getEnumByValue(provider, AiServiceProvider.class, AiServiceProvider.SPRING_AI_OPENAI);
     }
 
     public static AiServiceProvider getTranscriptionFactoryProvider(String provider) {
-        return BaseEnum.getEnumByValue(provider, AiServiceProvider.class, AiServiceProvider.AGENTIC_SPRING_AI_DASHSCOPE);
+        return BaseEnum.getEnumByValue(provider, AiServiceProvider.class, AiServiceProvider.SPRING_AI_OPENAI);
     }
 
 }

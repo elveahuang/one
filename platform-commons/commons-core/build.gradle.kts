@@ -20,7 +20,6 @@ dependencies {
     compileOnly(libs.bundles.springAiCore)
     compileOnly(libs.bundles.springAiReader)
     compileOnly(libs.bundles.springAiRagCore)
-    compileOnly(libs.bundles.springAiAgenticCore)
     compileOnly(libs.bundles.springCloudCore)
     compileOnly(libs.bundles.springSecurityCore)
     compileOnly(libs.bundles.mybatis)

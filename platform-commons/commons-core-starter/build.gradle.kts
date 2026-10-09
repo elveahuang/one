@@ -13,7 +13,6 @@ dependencies {
     compileOnly(libs.bundles.springAiCoreStarter)
     compileOnly(libs.bundles.springAiRagCore)
     compileOnly(libs.bundles.springAiRagStarter)
-    compileOnly(libs.bundles.springAiAgenticCore)
     compileOnly(libs.bundles.springCloudCore)
     compileOnly(libs.bundles.springSecurityCore)
     compileOnly(libs.bundles.springSecurityCoreStarter)

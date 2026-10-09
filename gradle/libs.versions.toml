@@ -11,8 +11,7 @@ springAiVersion = "2.0.1"
 springAiSessionVersion = "0.10.0"
 springAiAgentUtilsVersion = "0.13.0"
 springAiMcpSecurityVersion = "0.1.14"
-springAiAgenticVersion = "2.0.0.0"
-embabelAgentVersion = "1.5.2"
+embabelAgentVersion = "1.5.3"
 grpcVersion = "1.83.1"
 nettyVersion = "4.2.17.Final"
 cosidVersion = "3.2.0"
@@ -85,8 +84,6 @@ spotbugs-gradle-plugin = { module = "com.github.spotbugs:com.github.spotbugs.gra
 
 spring-ai-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref = "springAiVersion" }
 spring-ai-session-bom = { module = "org.springaicommunity:spring-ai-session-bom", version.ref = "springAiSessionVersion" }
-agentic-spring-ai-extensions-bom = { module = "io.github.agentic-spring-ai:agentic-spring-ai-extensions-bom", version.ref = "springAiAgenticVersion" }
-agentic-spring-ai-bom = { module = "io.github.agentic-spring-ai:agentic-spring-ai-bom", version.ref = "springAiAgenticVersion" }
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "springBootVersion" }
 spring-cloud-dependencies = { module = "org.springframework.cloud:spring-cloud-dependencies", version.ref = "springCloudVersion" }
 spring-grpc-dependencies = { module = "org.springframework.grpc:spring-grpc-dependencies", version.ref = "springGrpcVersion" }
@@ -198,11 +195,6 @@ mcp-client-security = { module = "org.springaicommunity:mcp-client-security", ve
 mcp-server-security = { module = "org.springaicommunity:mcp-server-security", version.ref = "springAiMcpSecurityVersion" }
 mcp-server-security-spring-boot = { module = "org.springaicommunity:mcp-server-security-spring-boot", version.ref = "springAiMcpSecurityVersion" }
 spring-ai-agent-utils = { module = "org.springaicommunity:spring-ai-agent-utils", version.ref = "springAiAgentUtilsVersion" }
-
-# Spring AI Agentic
-agentic-spring-ai-agent-framework = { module = "io.github.agentic-spring-ai:agentic-spring-ai-agent-framework" }
-agentic-spring-ai-dashscope-sdk = { module = "io.github.agentic-spring-ai:agentic-spring-ai-dashscope-sdk" }
-agentic-spring-ai-starter-dashscope-sdk = { module = "io.github.agentic-spring-ai:agentic-spring-ai-starter-dashscope-sdk" }
 
 # Spring AI Session
 spring-ai-session = { module = "org.springaicommunity:spring-ai-session" }
@@ -491,10 +483,6 @@ springAiRagCore = ["spring-ai-elasticsearch-store", "spring-ai-pgvector-store", 
 springAiRagStarter = ["spring-ai-starter-vector-store-elasticsearch", "spring-ai-starter-vector-store-pgvector", "spring-ai-starter-vector-store-mariadb"]
 springAiMcpCore = ["spring-ai-mcp", "spring-ai-mcp-annotations", "mcp-client-security", "mcp-server-security"]
 springAiMcpStarter = ["spring-ai-starter-mcp-client", "spring-ai-starter-mcp-server-webmvc", "mcp-server-security-spring-boot"]
-
-# Spring AI Agentic
-springAiAgenticCore = ["agentic-spring-ai-dashscope-sdk", "agentic-spring-ai-agent-framework"]
-springAiAgenticStarter = ["agentic-spring-ai-starter-dashscope-sdk"]
 
 # EmbabelAgent
 embabelAgentCore = ["embabel-agent-openai"]

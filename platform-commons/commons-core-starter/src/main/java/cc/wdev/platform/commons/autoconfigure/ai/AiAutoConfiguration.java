@@ -7,9 +7,7 @@ import cc.wdev.platform.commons.ai.config.ModelProviderConfig;
 import cc.wdev.platform.commons.ai.config.ServiceProviderConfig;
 import cc.wdev.platform.commons.ai.enums.AiModelProvider;
 import cc.wdev.platform.commons.ai.factory.ModelFactory;
-import cc.wdev.platform.commons.ai.factory.audio.DashScopeTranscriptionModelFactory;
 import cc.wdev.platform.commons.ai.factory.audio.OpenAiTranscriptionModelFactory;
-import cc.wdev.platform.commons.ai.factory.chat.DashScopeChatModelFactory;
 import cc.wdev.platform.commons.ai.factory.chat.DeepSeekChatModelFactory;
 import cc.wdev.platform.commons.ai.factory.chat.OpenAiChatModelFactory;
 import cc.wdev.platform.commons.ai.factory.embedding.OpenAiEmbeddingModelFactory;
@@ -33,8 +31,6 @@ import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
 import com.google.common.collect.Maps;
-import io.github.agentic.spring.ai.dashscope.sdk.audio.transcription.DashScopeSdkAudioTranscriptionModel;
-import io.github.agentic.spring.ai.dashscope.sdk.chat.DashScopeSdkChatModel;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -158,22 +154,6 @@ public class AiAutoConfiguration {
             observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(DashScopeSdkChatModel.class)
-    public DashScopeChatModelFactory dashScopeChatModelFactory(
-        AiConfig config,
-        ObjectProvider<RetryTemplate> retryTemplate,
-        ObjectProvider<ObservationRegistry> observationRegistry,
-        ObjectProvider<ChatModelObservationConvention> observationConvention
-    ) {
-        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getFactory().getChatModelProvider(), AiModelProvider.ALIYUN.name()
-        ).toLowerCase());
-        return new DashScopeChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
-            retryTemplate, observationRegistry, observationConvention);
-    }
-
     // ------------------------------------------------------------------------------
     // Audio Model
     // ------------------------------------------------------------------------------
@@ -192,19 +172,6 @@ public class AiAutoConfiguration {
         ).toLowerCase());
         return new OpenAiTranscriptionModelFactory(providerConfig.getCommons(), providerConfig.getTranscription(),
             observationRegistry, meterRegistry, httpClientBuilderCustomizers);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(DashScopeSdkAudioTranscriptionModel.class)
-    public DashScopeTranscriptionModelFactory dashScopeTranscriptionModelFactory(
-        AiConfig config,
-        ObjectProvider<RetryTemplate> retryTemplate
-    ) {
-        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
-            config.getFactory().getTranscriptionModelProvider(), AiModelProvider.ALIYUN.name()
-        ).toLowerCase());
-        return new DashScopeTranscriptionModelFactory(providerConfig.getCommons(), providerConfig.getTranscription(), retryTemplate);
     }
 
     // ------------------------------------------------------------------------------
