@@ -57,8 +57,6 @@ dependencyManagement {
         mavenBom(libs.jackson.bom.get().toString())
         mavenBom(libs.bouncycastle.bom.get().toString())
         mavenBom(libs.embabel.agent.dependencies.get().toString())
-        mavenBom(libs.opentelemetry.bom.get().toString())
-        mavenBom(libs.opentelemetry.instrumentation.bom.get().toString())
     }
 }
 
@@ -103,11 +101,11 @@ configurations.configureEach {
         if (requested.group == "io.swagger.core.v3") {
             useVersion(libs.versions.swaggerVersion.get())
         }
-        if (requested.group == "org.bouncycastle") {
-            useVersion(libs.versions.bouncycastleVersion.get())
-        }
         if (requested.group == "org.apache.poi") {
             useVersion(libs.versions.poiVersion.get())
+        }
+        if (requested.group == "org.apache.tika") {
+            useVersion(libs.versions.tikaVersion.get())
         }
         if (requested.group == "net.java.dev.jna") {
             useVersion(libs.versions.jnaVersion.get())
@@ -165,6 +163,9 @@ configurations.configureEach {
             }
         }
         // commons
+        if (requested.module.toString() == "commons-logging:commons-logging") {
+            useVersion(libs.versions.commonsLoggingVersion.get())
+        }
         if (requested.module.toString() == "commons-codec:commons-codec") {
             useVersion(libs.versions.commonsCodecVersion.get())
         }
@@ -181,7 +182,7 @@ configurations.configureEach {
         if (requested.module.toString() == "net.bytebuddy:byte-buddy-agent") {
             useVersion(libs.versions.byteBuddyVersion.get())
         }
-        // httpcomponents
+        // hc
         if (requested.module.toString() == "org.apache.httpcomponents:httpcore") {
             useVersion("4.4.16")
         }
@@ -231,8 +232,8 @@ configurations.configureEach {
     exclude(module = "bcutil-jdk15on")
     exclude(module = "telegrambots-webhook")
     exclude(module = "shardingsphere-database-connector-h2")
-    exclude(module = "selenium-devtools-v149")
-    exclude(module = "selenium-devtools-v150")
+    exclude(module = "selenium-devtools-v153")
+    exclude(module = "selenium-devtools-v154")
     exclude(module = "selenium-firefox-driver")
     exclude(module = "selenium-safari-driver")
     exclude(module = "selenium-ie-driver")
