@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 
 /**
+ * 岗位实体
+ *
  * @author elvea
  */
 @Data
@@ -14,6 +16,10 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_position")
 public class PositionEntity extends BaseTenantEntity {
+    /**
+     * 父级岗位ID
+     */
+    private Long parentId;
     /**
      * 编号
      */
@@ -38,4 +44,8 @@ public class PositionEntity extends BaseTenantEntity {
      * 是否默认岗位
      */
     private Integer defaultInd;
+    /**
+     * 状态
+     */
+    private Integer status;
 }

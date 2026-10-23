@@ -71,6 +71,16 @@ public enum ResponseCodeEnum implements BaseEnum<Integer>, BaseResponseCodeEnum 
 
     CHAT__SESSION_NOT_PRESENT(1008001, "The session is not present", "该会话不存在"),
 
+    ORGANIZATION__NOT_PRESENT(1010001, "The organization is not present", "部门不存在"),
+    ORGANIZATION__EXISTS_CHILDREN(1010002, "The organization has children, not allowed to delete", "存在下级部门，不允许删除"),
+    ORGANIZATION__ROOT_NOT_ALLOWED(1010003, "The root organization is not allowed to delete", "顶层部门不允许删除"),
+    ORGANIZATION__CODE_NOT_AVAILABLE(1010004, "The organization code is not available", "部门编号不可用"),
+
+    POSITION__NOT_PRESENT(1011001, "The position is not present", "岗位不存在"),
+    POSITION__EXISTS_CHILDREN(1011002, "The position has children, not allowed to delete", "存在下级岗位，不允许删除"),
+    POSITION__ROOT_NOT_ALLOWED(1011003, "The root position is not allowed to delete", "顶层岗位不允许删除"),
+    POSITION__CODE_NOT_AVAILABLE(1011004, "The position code is not available", "岗位编号不可用"),
+
     // 文件解析
     PARSE_UNSUPPORTED_TYPE(1009001, "Unsupported File Type", "不支持的文件类型"),
     PARSE_FAILED(1009002, "Parse Failed", "文件解析失败"),

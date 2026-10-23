@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 
 /**
+ * 部门实体
+ *
  * @author elvea
  */
 @Data
@@ -14,6 +16,10 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_organization")
 public class OrganizationEntity extends BaseTenantEntity {
+    /**
+     * 父级部门ID
+     */
+    private Long parentId;
     /**
      * 编号
      */
@@ -31,11 +37,15 @@ public class OrganizationEntity extends BaseTenantEntity {
      */
     private String description;
     /**
-     * 是否顶层组织
+     * 是否顶层部门
      */
     private Integer rootInd;
     /**
-     * 是否默认组织
+     * 是否默认部门
      */
     private Integer defaultInd;
+    /**
+     * 状态
+     */
+    private Integer status;
 }

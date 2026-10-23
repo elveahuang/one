@@ -130,7 +130,7 @@ one (Gradle root, group cc.wdev)
 - `WebSecurityConfiguration` 全仓 3 个（system-security 生效的那个、admin-server、commons-webapp）。改安全配置先看 import。
 - `BaseEntityRepository`（3 个同名，别混用 mybatis/jpa/elasticsearch）、控制器基类 `AbstractController`、死类 `AbstractEntityController` → 详见 7.1。
 
-**业务域**：`system-impl` 下 18 个业务域——`ai`、`catalog`、`commons`（验证码/首页）、`config`、`core`（用户/角色/权限/租户/登录会话）、`dev`、`dict`、`i18n`、`im`、`job`（Quartz）、`log`、`message`、`open`（微信/钉钉/飞书）、`region`、`security`（OAuth2 客户端/授权/AppKey）、`site`（公告/横幅/友链）、`storage`（附件）、`tag`；另有 `configuration` 包（各域 `@Configuration` 基础设施的汇总，不是业务域）。
+**业务域**：`system-impl` 下 18 个业务域——`ai`、`catalog`、`commons`（验证码/首页）、`config`、`core`（用户/角色/部门/岗位/权限/租户/登录会话）、`dev`、`dict`、`i18n`、`im`、`job`（Quartz）、`log`、`message`、`open`（微信/钉钉/飞书）、`region`、`security`（OAuth2 客户端/授权/AppKey）、`site`（公告/横幅/友链）、`storage`（附件）、`tag`；另有 `configuration` 包（各域 `@Configuration` 基础设施的汇总，不是业务域）。
 
 ## 5. 控制器与 URL 约定
 
@@ -168,6 +168,8 @@ one (Gradle root, group cc.wdev)
 | 验证码 | `POST /api/v1/captcha/code` 返回 `{key,image}`；另有 `/captcha/mail`、`/captcha/sms` 及各 `/check`（`CaptchaController`） | 两端 captcha 组件与 `captcha.ts` |
 | 应用初始化 | `POST /api/v1/initialize`（匿名）返回 `R<InitializeVo>`（登录验证码开关、访问限制、app.title/webSocketServer 等） | `base.ts` → `AppStore.initialize` |
 | 工作台/仪表盘 | `GET /api/v1/sys/get-system-info`（`registerCount` 走租户过滤的 `UserApi#getCount`，`onlineCount` = 未结束且 1 小时内有访问的会话去重用户数——该窗口宽于 60 分钟的访问令牌 TTL，是会话式活跃近似，见 `LoginSessionServiceImpl.ONLINE_WINDOW`）、`GET /api/v1/sys/login-platform-line-chart?type=1\|3\|4&date=&goHeavy=`（均 `system:workbench`，`DashboardSysController`） | webapp `modules/core/views/workbench.vue`（着陆页 `/home`），`api/platform.ts` 的 `platformCountsApi`/`loginPlatformLineChartApi` |
+| 部门管理 | `POST /api/v1/sys/organization/{tree,list,details,delete}`（表单）与 `/save`（JSON 体 `OrganizationSaveDto`：id/parentId/code/title/label/description/status）+ `GET /organization/check`；层级存 `sys_organization.parent_id`（每租户内置 `ROOT_ORG` 顶层，`rootInd=1` 顶层不可删、父级固定 0）；code 空则自动生成 `ORG*`；存在下级不可删（1010002/1010003）；权限码 `system:organization`；`OrganizationApi`/`OrganizationApiImpl`（core 域，无 exchange controller） | webapp `modules/organization/views/system/index.vue`（左树右表）+ `routes/system.ts` + 菜单 `system:organization:organization`；API/类型在 `commons/src/modules/organization/` |
+| 岗位管理 | 同构：`POST /api/v1/sys/position/{tree,list,details,save,delete}` + `GET /position/check`；层级存 `sys_position.parent_id`（每租户内置 `ROOT_PST` 顶层）；code 自动生成 `POS*`；错误码 1011002/1011003；权限码 `system:position`；`PositionApi`/`PositionApiImpl` | webapp `modules/position/**` + 菜单 `system:organization:position`；API/类型在 `commons/src/modules/position/` |
 | 权限码来源 | 方法级 `hasAnyAuthority('x:y')` 的字符串必须存在于 `sys_authority.code`，否则非 admin 用户一律 403（JWT 权限由 `CustomJwtGrantedAuthoritiesConverter` 查库拼装，不做前缀推导）。admin 经 `*:*:*` 根权限短路放行。**仓库没有任何 `sys_authority` 种子数据**，见「已知问题」 | 前端菜单/路由的 `authorities` 同样按字符串精确匹配 `sys_authority.code`（组级菜单用 `group:xxx`，模块级用 `module:xxx`），缺失即菜单不可见 |
 | AI 流式 | `POST /api/v1/ai/chat/stream`，`text/event-stream`，`Flux<String>`；请求体自定义 `SimpleChatRequest`（prompt/conversationId/modelCode/agentCode/kbId/chatType/withRag），非 OpenAI 格式；同前缀还有 `/text`、`/list`、`/details`、`/start`、`/delete` | `utils/ai.ts` `TextStreamChatTransport` 直连 `/api/v1/ai/chat/stream`，不走 axios（需自带 `Authorization` 与 `x-tenant-id`） |
 | WebSocket | 两条通道：主服务（8181）servlet 注册 `/ws/message`（`WebSocketHandlerConfiguration` + `SystemWebSocketHandler`，握手走 Spring Security；`DefaultBearerTokenResolver.setAllowUriQueryParameter(true)` 使 query `access_token` 可用）——前端实际使用这条；另有 Netty 独立端口 8686 路径 `/ws`（query 参数名为 `authorization`，`NettyUtils.getAuthorization`） | `store/socket.ts` 连 `${server}/ws/message?access_token=...`，server 优先 initialize 返回的 `app.webSocketServer` |
@@ -212,7 +214,7 @@ one (Gradle root, group cc.wdev)
 
 **API 接口与 HTTP 暴露**（非铁律，新写前先看邻近域）：
 
-- `XxxApi` 用 Spring `@HttpExchange`，前缀 `MappingConstants.EXCHANGE_PREFIX`（`/exchange`）。当前 10 个：`User`、`Client`、`Captcha`、`Social`、`LoginSession`、`Tenant`、`Message`、`Config`、`Authorization`、`AuthorizationConsent`。
+- `XxxApi` 用 Spring `@HttpExchange`，前缀 `MappingConstants.EXCHANGE_PREFIX`（`/exchange`）。当前 12 个：`User`、`Client`、`Captcha`、`Social`、`LoginSession`、`Tenant`、`Message`、`Config`、`Authorization`、`AuthorizationConsent`、`Organization`、`Position`。
 - `XxxApiImpl` 一律 `@Service`，被同进程 controller 与安全模块直接注入。多数在 `api` 包下，`security`/`message` 在 `api/impl` 子包。
 - `XxxExchangeController` 数量与 `XxxApi` **不对应**：`DictApi` 无 `@HttpExchange`/无 exchange controller；`TenantExchangeController`、`ClientExchangeController`、`AuthorizationExchangeController` 绕过 `XxxApi` 直接注入 `XxxService`；`AuthorizationConsentExchangeController` 是空壳桩；`DataVGeoApi` 是**出站** HTTP 客户端，与内部 exchange 无关。
 
