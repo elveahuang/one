@@ -91,4 +91,12 @@ public class OrganizationSysController extends AbstractController {
         return R.success(!organizationService.existsByCode(code, id));
     }
 
+    @PreAuthorize("hasAnyAuthority('system:organization')")
+    @Operation(summary = "获取所有可选部门")
+    @ApiResponse(description = "获取所有可选部门")
+    @GetMapping(API_V1_SYS_PREFIX + "/organizations")
+    public R<List<OrganizationVo>> organizations() {
+        return R.success(organizationApi.findOrganizationOptions());
+    }
+
 }

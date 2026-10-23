@@ -23,4 +23,7 @@ public class OrganizationSearchRequest extends PageRequest {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long parentId;
 
+    @Schema(description = "状态")
+    private Integer status;
+
 }

@@ -4,6 +4,7 @@ import cc.wdev.platform.commons.service.CachingEntityService;
 import cc.wdev.platform.system.core.domain.dto.EntityRelationSaveDto;
 import cc.wdev.platform.system.core.domain.entity.EntityRelationEntity;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -42,6 +43,15 @@ public interface EntityRelationService extends CachingEntityService<EntityRelati
      * @return List
      */
     List<EntityRelationEntity> getChildren(String relationType, Long ancestorId);
+
+    /**
+     * 获取所有下级
+     *
+     * @param relationType 关联类型
+     * @param ancestorIds  实体ID集合
+     * @return List
+     */
+    List<EntityRelationEntity> getChildren(String relationType, Collection<Long> ancestorIds);
 
     /**
      * 获取所有直属下级

@@ -40,6 +40,14 @@ public class OrganizationApiImpl implements OrganizationApi {
     }
 
     /**
+     * @see OrganizationApi#findOrganizationOptions()
+     */
+    @Override
+    public List<OrganizationVo> findOrganizationOptions() {
+        return this.organizationService.findOrganizationOptions();
+    }
+
+    /**
      * @see OrganizationApi#findOrganizationDetails(Long)
      */
     @Override

@@ -26,6 +26,11 @@ public interface OrganizationService extends CachingEntityService<OrganizationEn
     Page<OrganizationVo> findOrganizationPage(OrganizationSearchRequest request);
 
     /**
+     * 获取所有可选部门（不含顶层部门）
+     */
+    List<OrganizationVo> findOrganizationOptions();
+
+    /**
      * 获取部门详情
      */
     OrganizationVo findOrganizationDetails(Long id);

@@ -40,6 +40,14 @@ public class PositionApiImpl implements PositionApi {
     }
 
     /**
+     * @see PositionApi#findPositionOptions()
+     */
+    @Override
+    public List<PositionVo> findPositionOptions() {
+        return this.positionService.findPositionOptions();
+    }
+
+    /**
      * @see PositionApi#findPositionDetails(Long)
      */
     @Override

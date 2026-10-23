@@ -262,6 +262,21 @@ public class RoleServiceImpl extends BaseCachingEntityService<RoleEntity, Long, 
     }
 
     /**
+     * @see EntityService#existsByCode(String, Object)
+     */
+    @Override
+    public boolean existsByCode(String code, Long id) {
+        if (StringUtils.isEmpty(code)) {
+            return false;
+        }
+        return this.lambdaQueryWrapper()
+            .eq(RoleEntity::getCode, code)
+            .eq(RoleEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .ne(ObjectUtils.isValidId(id), RoleEntity::getId, id)
+            .exists();
+    }
+
+    /**
      * 删除角色相关缓存
      */
     private void deleteCacheById(Long roleId) {

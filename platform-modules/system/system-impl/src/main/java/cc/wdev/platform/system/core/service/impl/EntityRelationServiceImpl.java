@@ -16,6 +16,8 @@ import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -66,7 +68,7 @@ public class EntityRelationServiceImpl extends BaseCachingEntityService<EntityRe
                             .entityId(saveDto.getEntityId())
                             .parentInd(BooleanTypeEnum.FALSE.getValue())
                             .relationType(saveDto.getRelationType())
-                            .relationIndex(index.getAndIncrement())
+                            .relationIndex(String.valueOf(index.getAndIncrement()))
                             .build();
                     }).toList());
                 }
@@ -77,7 +79,7 @@ public class EntityRelationServiceImpl extends BaseCachingEntityService<EntityRe
                     .entityId(saveDto.getEntityId())
                     .parentInd(BooleanTypeEnum.TRUE.getValue())
                     .relationType(saveDto.getRelationType())
-                    .relationIndex(index.getAndIncrement())
+                    .relationIndex(String.valueOf(index.getAndIncrement()))
                     .build()
                 );
 
@@ -128,6 +130,20 @@ public class EntityRelationServiceImpl extends BaseCachingEntityService<EntityRe
         return lambdaQueryWrapper()
             .eq(EntityRelationEntity::getRelationType, relationType)
             .eq(EntityRelationEntity::getAncestorId, ancestorId)
+            .list();
+    }
+
+    /**
+     * @see EntityRelationService#getChildren(String, Collection)
+     */
+    @Override
+    public List<EntityRelationEntity> getChildren(String relationType, Collection<Long> ancestorIds) {
+        if (CollectionUtils.isEmpty(ancestorIds)) {
+            return Collections.emptyList();
+        }
+        return lambdaQueryWrapper()
+            .eq(EntityRelationEntity::getRelationType, relationType)
+            .in(EntityRelationEntity::getAncestorId, ancestorIds)
             .list();
     }
 

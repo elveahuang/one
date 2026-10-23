@@ -91,4 +91,12 @@ public class PositionSysController extends AbstractController {
         return R.success(!positionService.existsByCode(code, id));
     }
 
+    @PreAuthorize("hasAnyAuthority('system:position')")
+    @Operation(summary = "获取所有可选岗位")
+    @ApiResponse(description = "获取所有可选岗位")
+    @GetMapping(API_V1_SYS_PREFIX + "/positions")
+    public R<List<PositionVo>> positions() {
+        return R.success(positionApi.findPositionOptions());
+    }
+
 }

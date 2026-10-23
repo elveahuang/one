@@ -1,6 +1,7 @@
 package cc.wdev.platform.system.core.domain.entity;
 
 import cc.wdev.platform.commons.data.mybatis.domain.SimpleTenantEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 
@@ -29,6 +30,7 @@ public class EntityRelationEntity extends SimpleTenantEntity {
     /**
      * 关联类型
      */
+    @TableField("biz_type")
     private String relationType;
     /**
      * 关联路径
@@ -37,5 +39,5 @@ public class EntityRelationEntity extends SimpleTenantEntity {
     /**
      * 关联层级
      */
-    private Integer relationIndex;
+    private String relationIndex;
 }

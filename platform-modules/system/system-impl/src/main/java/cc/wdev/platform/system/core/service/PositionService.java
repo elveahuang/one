@@ -26,6 +26,11 @@ public interface PositionService extends CachingEntityService<PositionEntity, Lo
     Page<PositionVo> findPositionPage(PositionSearchRequest request);
 
     /**
+     * 获取所有可选岗位（不含顶层岗位）
+     */
+    List<PositionVo> findPositionOptions();
+
+    /**
      * 获取岗位详情
      */
     PositionVo findPositionDetails(Long id);
