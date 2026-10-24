@@ -126,20 +126,12 @@ public class UserRoleServiceImpl
      */
     @Override
     public void deleteByUserIds(List<Long> userIds) {
-        if (CollectionUtils.isNotEmpty(userIds)) {
-            this.lambdaUpdateWrapper()
-                .in(UserRoleEntity::getUserId, userIds)
-                .remove();
-        }
-        List<UserRoleEntity> userRoleEntityList = this.lambdaQueryWrapper()
-            .select(UserRoleEntity::getId, UserRoleEntity::getUserId)
-            .in(UserRoleEntity::getUserId, userIds)
-            .list();
-        if (CollectionUtils.isEmpty(userRoleEntityList)) {
-            log.error("deleteUserRole Invalid userRoleEntityList.");
+        if (CollectionUtils.isEmpty(userIds)) {
             return;
         }
-        this.deleteBatch(userRoleEntityList);
+        this.lambdaUpdateWrapper()
+            .in(UserRoleEntity::getUserId, userIds)
+            .remove();
     }
 
     /**

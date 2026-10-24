@@ -36,7 +36,10 @@
     <select id="searchWithRoles" resultType="cc.wdev.platform.system.core.domain.entity.UserEntity">
         select su.*
         from sys_user su
-        where su.active = 1
+        where 1 = 1
+        <if test="request.includeInActive == null or !request.includeInActive">
+            and su.active = 1
+        </if>
         <if test="request.q != null and request.q != ''">
             and (su.username like concat('%', #{request.q}, '%') or su.display_name like concat('%', #{request.q}, '%'))
         </if>

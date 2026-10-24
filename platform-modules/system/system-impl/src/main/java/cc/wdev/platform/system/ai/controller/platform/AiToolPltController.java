@@ -36,7 +36,7 @@ public class AiToolPltController extends AbstractController {
     @Operation(summary = "初始工具")
     @ApiResponse(description = "初始工具")
     @PostMapping(API_V1_SYS_PREFIX + "/ai/tool/initialize")
-    public R<Void> save() {
+    public R<Void> initialize() {
         aiToolApi.initialize();
         return R.success();
     }

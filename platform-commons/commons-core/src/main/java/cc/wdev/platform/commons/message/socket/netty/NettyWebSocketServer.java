@@ -50,7 +50,7 @@ public class NettyWebSocketServer {
                 .childHandler(initializer);
 
             this.channel = bootstrap.bind(WEB_SOCKET_PORT).sync().channel();
-            System.out.println("Netty WebSocket server started on port " + WEB_SOCKET_PORT);
+            log.info("Netty WebSocket server started on port {}", WEB_SOCKET_PORT);
             this.ready = true;
         } catch (Exception e) {
             log.error("Netty WebSocket server start failed", e);
@@ -63,14 +63,15 @@ public class NettyWebSocketServer {
         if (this.channel != null) {
             this.channel.close();
         }
-        if (this.parentGroup != null && this.parentGroup.isShutdown() && this.childGroup.isShuttingDown()) {
-            parentGroup.shutdownGracefully();
+        // isShutdown() 仅在关闭完成后为 true，此处应直接发起优雅关闭
+        if (this.parentGroup != null) {
+            this.parentGroup.shutdownGracefully();
         }
-        if (this.childGroup != null && this.childGroup.isShutdown() && this.childGroup.isShuttingDown()) {
-            childGroup.shutdownGracefully();
+        if (this.childGroup != null) {
+            this.childGroup.shutdownGracefully();
         }
         this.ready = false;
-        System.out.println("Netty WebSocket server stopped");
+        log.info("Netty WebSocket server stopped");
     }
 
 }

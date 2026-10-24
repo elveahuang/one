@@ -47,7 +47,7 @@ public class AiModelPltController extends AbstractController {
     @Operation(summary = "初始模型")
     @ApiResponse(description = "初始模型")
     @PostMapping(API_V1_SYS_PREFIX + "/ai/model/initialize")
-    public R<Void> save() {
+    public R<Void> initialize() {
         aiModelApi.initialize();
         return R.success();
     }

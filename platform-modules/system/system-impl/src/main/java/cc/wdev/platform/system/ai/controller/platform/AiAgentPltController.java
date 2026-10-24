@@ -46,7 +46,7 @@ public class AiAgentPltController extends AbstractController {
     @Operation(summary = "初始智能体")
     @ApiResponse(description = "初始智能体")
     @PostMapping(API_V1_SYS_PREFIX + "/ai/agent/initialize")
-    public R<Void> save() {
+    public R<Void> initialize() {
         aiAgentApi.initialize();
         return R.success();
     }

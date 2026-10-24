@@ -13,6 +13,7 @@ import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.SecurityUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
+import cc.wdev.platform.system.commons.enums.EntityRelationBizTypeEnum;
 import cc.wdev.platform.system.core.annotation.TargetUser;
 import cc.wdev.platform.system.core.api.UserApi;
 import cc.wdev.platform.system.core.cache.UserCacheKeyGenerator;
@@ -28,6 +29,7 @@ import cc.wdev.platform.system.core.domain.request.UserCountRequest;
 import cc.wdev.platform.system.core.domain.request.UserRegisterCountRequest;
 import cc.wdev.platform.system.core.domain.request.UserSearchRequest;
 import cc.wdev.platform.system.core.repository.UserRepository;
+import cc.wdev.platform.system.core.service.EntityRelationService;
 import cc.wdev.platform.system.core.service.UserRoleService;
 import cc.wdev.platform.system.core.service.UserService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -67,6 +69,8 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
     private final PasswordEncoder passwordEncoder;
 
     private final UserRoleService userRoleService;
+
+    private final EntityRelationService entityRelationService;
 
     @Override
     public CacheKeyGenerator getCacheKeyGenerator() {
@@ -231,11 +235,21 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteUser(Collection<Long> ids) {
         if (CollectionUtils.isEmpty(ids)) {
             return;
         }
-        this.softDeleteBatchById(ids);
+        List<Long> userIds = List.copyOf(ids);
+        // 清理用户角色关联并失效权限缓存
+        this.userRoleService.deleteByUserIds(userIds);
+        this.userRoleService.deleteCacheByUserIds(userIds);
+        // 清理用户与组织/岗位的关联
+        userIds.forEach(userId -> {
+            this.entityRelationService.deleteAsChild(EntityRelationBizTypeEnum.USR_CURRENT_ORG.getValue(), userId);
+            this.entityRelationService.deleteAsChild(EntityRelationBizTypeEnum.USR_CURRENT_POS.getValue(), userId);
+        });
+        this.softDeleteBatchById(userIds);
     }
 
     /**

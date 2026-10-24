@@ -216,10 +216,20 @@ public abstract class WebServletUtils {
             String headerName = headerNames.nextElement();
             Enumeration<String> headerValues = request.getHeaders(headerName);
             List<String> headerValuesList = Collections.list(headerValues);
-            map.put(headerName, headerValuesList);
+            // 凭据类请求头不落日志，避免令牌泄漏到 sys_operation_log 等存储
+            if (SENSITIVE_HEADERS.contains(headerName.toLowerCase())) {
+                map.put(headerName, List.of("******"));
+            } else {
+                map.put(headerName, headerValuesList);
+            }
         }
         return map;
     }
+
+    /**
+     * 需要脱敏的请求头
+     */
+    private static final Set<String> SENSITIVE_HEADERS = Set.of(HttpHeaders.AUTHORIZATION.toLowerCase(), HttpHeaders.COOKIE.toLowerCase(), "set-cookie");
 
     /**
      * 获取当前请求头

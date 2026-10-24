@@ -67,14 +67,16 @@ public class PageRequest extends Request {
      */
     public boolean check(List<String> columns) {
         if (CollectionUtils.isEmpty(columns)) {
-            if (columns.stream().noneMatch((column -> StringUtils.equals(column, this.sort)))) {
-                this.setSort(null);
-                this.setOrder(null);
-                return false;
-            }
-            return true;
+            this.setSort(null);
+            this.setOrder(null);
+            return false;
         }
-        return false;
+        if (this.sort == null || columns.stream().noneMatch((column -> StringUtils.equals(column, this.sort)))) {
+            this.setSort(null);
+            this.setOrder(null);
+            return false;
+        }
+        return true;
     }
 
 }

@@ -46,7 +46,7 @@ public class AiMcpPltController extends AbstractController {
     @Operation(summary = "查询MCP详情")
     @ApiResponse(description = "查询MCP详情")
     @GetMapping(API_V1_SYS_PREFIX + "/ai/mcp/details")
-    public R<AiMcpServerVo> AiAgentDetail(@Parameter(description = "MCPID") @RequestParam("id") Long id) {
+    public R<AiMcpServerVo> details(@Parameter(description = "MCPID") @RequestParam("id") Long id) {
         return R.success(aiMcpServerService.getAiMcpServer(id));
     }
 
@@ -54,7 +54,7 @@ public class AiMcpPltController extends AbstractController {
     @Operation(summary = "获取MCP列表")
     @ApiResponse(description = "获取MCP列表")
     @GetMapping(API_V1_SYS_PREFIX + "/ai/mcp/list")
-    public R<Page<AiMcpServerVo>> AiAgentList(AiMcpServerSearchRequest request) {
+    public R<Page<AiMcpServerVo>> list(AiMcpServerSearchRequest request) {
         return R.success(aiMcpServerService.findByPage(request));
     }
 

@@ -122,7 +122,8 @@ public abstract class GlobalExceptionHandler {
         if (message.contains("value too long")) {
             return R.fail(ResponseCodeEnum.PARAM_ERROR);
         }
-        return R.error(e.getLocalizedMessage());
+        // 数据库异常细节不回传客户端，完整堆栈仅记录服务端日志
+        return R.fail(ResponseCodeEnum.ERROR);
     }
 
     /**
@@ -132,7 +133,8 @@ public abstract class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<?> handleException(Exception e) {
         log.error("handleException exception : {}", e.getMessage(), e);
-        return R.error(e.getLocalizedMessage());
+        // 未预期异常的内部消息（SQL、类名等）不回传客户端
+        return R.fail(ResponseCodeEnum.ERROR);
     }
 
 }
