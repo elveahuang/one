@@ -232,6 +232,11 @@ public abstract class WebServletUtils {
     private static final Set<String> SENSITIVE_HEADERS = Set.of(HttpHeaders.AUTHORIZATION.toLowerCase(), HttpHeaders.COOKIE.toLowerCase(), "set-cookie");
 
     /**
+     * 需要脱敏的请求参数（凭据类）
+     */
+    private static final Set<String> SENSITIVE_PARAMETERS = Set.of("password", "newpassword", "oldpassword", "confirmpassword", "clientsecret", "secret", "captcha");
+
+    /**
      * 获取当前请求头
      */
     public static Map<String, String> getHeaders(HttpServletRequest request) {
@@ -259,9 +264,18 @@ public abstract class WebServletUtils {
      */
     public static String getParameterAsJson(@NonNull HttpServletRequest request) {
         try {
-            return JacksonUtils.toJson(request.getParameterMap());
+            Map<String, String[]> parameterMap = new LinkedHashMap<>(8);
+            request.getParameterMap().forEach((key, values) -> {
+                // 凭据类参数不落日志，避免明文密码写入 sys_operation_log.request_params
+                if (SENSITIVE_PARAMETERS.contains(key.toLowerCase())) {
+                    parameterMap.put(key, new String[]{"******"});
+                } else {
+                    parameterMap.put(key, values);
+                }
+            });
+            return JacksonUtils.toJson(parameterMap);
         } catch (Exception e) {
-            log.error("Failed to get header map as json.", e);
+            log.error("Failed to get parameter map as json.", e);
         }
         return "{}";
     }

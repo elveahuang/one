@@ -56,7 +56,7 @@ public class LinkSysController extends AbstractController {
     @PostMapping(API_V1_SYS_PREFIX + "/link/save")
     @OperationLog("保存友情链接")
     @PreAuthorize("hasAnyAuthority('system:link')")
-    public R<?> save(@RequestBody @Parameter(description = "友情链接保存表单") LinkForm linkForm) {
+    public R<?> save(@RequestBody @Parameter(description = "友情链接保存表单") @Valid LinkForm linkForm) {
         linkApi.saveLink(linkForm);
         return R.success();
     }

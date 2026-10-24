@@ -46,7 +46,7 @@ public abstract class GlobalExceptionHandler {
 
     @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public R<Map<String, String>> handleHttpRequestMethodNotSupportedException(MethodArgumentNotValidException e) {
+    public R<Map<String, String>> handleValidationException(MethodArgumentNotValidException e) {
         log.error("handleMethodArgumentNotValidException exception", e);
 
         Map<String, String> errors = new HashMap<>();
@@ -55,7 +55,10 @@ public abstract class GlobalExceptionHandler {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
-            messageBuilder.append(", ").append(errorMessage);
+            if (messageBuilder.length() > 0) {
+                messageBuilder.append("、");
+            }
+            messageBuilder.append(errorMessage);
         });
 
         try {
@@ -65,7 +68,7 @@ public abstract class GlobalExceptionHandler {
         }
 
         R<Map<String, String>> resp = R.fail(ResponseCodeEnum.PARAM_ERROR);
-        resp.setMessage(resp.getMessage() + messageBuilder);
+        resp.setMessage(messageBuilder.length() > 0 ? messageBuilder.toString() : resp.getMessage());
         resp.setData(errors);
         return resp;
     }

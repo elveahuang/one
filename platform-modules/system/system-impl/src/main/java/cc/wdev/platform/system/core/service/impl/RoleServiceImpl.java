@@ -9,6 +9,7 @@ import cc.wdev.platform.commons.enums.ActiveTypeEnum;
 import cc.wdev.platform.commons.enums.BooleanTypeEnum;
 import cc.wdev.platform.commons.enums.ResponseCodeEnum;
 import cc.wdev.platform.commons.enums.StatusTypeEnum;
+import cc.wdev.platform.commons.exception.ServiceException;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
@@ -137,9 +138,11 @@ public class RoleServiceImpl extends BaseCachingEntityService<RoleEntity, Long, 
             form.setId(null);
         }
         RoleConverter.INSTANCE.formToEntity(form, entity);
-        // 如果编号为空，自动生成唯一编号
+        // 如果编号为空，自动生成唯一编号；指定了编号则必须可用
         if (StringUtils.isEmpty(form.getCode())) {
             entity.setCode(generateCode("ROLE"));
+        } else if (this.existsByCode(form.getCode(), entity.getId())) {
+            throw new ServiceException(ResponseCodeEnum.ROLE__CODE_NOT_AVAILABLE);
         }
         // 把当前租户其他角色设置为非默认角色
         if (BooleanTypeEnum.isTrueValue(form.getDefaultInd())) {
@@ -176,7 +179,7 @@ public class RoleServiceImpl extends BaseCachingEntityService<RoleEntity, Long, 
         // 删除角色权限
         this.entityAuthorityService.deleteAuthority(ROLE, roleId);
 
-        this.delete(entity);
+        this.softDelete(entity);
     }
 
     /**
@@ -205,8 +208,8 @@ public class RoleServiceImpl extends BaseCachingEntityService<RoleEntity, Long, 
         this.entityAuthorityService.deleteAuthority(ROLE, roleIds);
         getCacheService().delete(EntityAuthorityCacheKeyGenerator.keysByBizIds(EntityAuthorityBizTypeEnum.ROLE.getValue(), roleIds));
 
-        // 批量删除角色
-        this.deleteBatchById(roleIds);
+        // 批量软删除角色
+        this.softDeleteBatchById(roleIds);
     }
 
     /**

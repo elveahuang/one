@@ -32,13 +32,13 @@ public class AnnouncementForm implements Serializable {
     /**
      * 标题
      */
-    @NotEmpty
+    @NotEmpty(message = "公告标题不能为空")
     @Schema(description = "公告资讯标题")
     private String title;
     /**
      * 内容
      */
-    @NotEmpty
+    @NotEmpty(message = "公告内容不能为空")
     @Schema(description = "公告资讯内容")
     private String content;
     /**

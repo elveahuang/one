@@ -71,6 +71,11 @@ public class UserForm implements Serializable {
     @Schema(description = "权限角色")
     private List<Long> roleIds;
     /**
+     * 是否清空全部角色（表单编码无法表达空数组，移除最后一个角色时置 true）
+     */
+    @Schema(description = "是否清空全部角色")
+    private Boolean clearRoles;
+    /**
      * 性别
      */
     @Schema(description = "性别")

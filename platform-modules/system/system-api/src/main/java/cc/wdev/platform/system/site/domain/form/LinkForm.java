@@ -30,13 +30,13 @@ public class LinkForm implements Serializable {
     /**
      * 标题
      */
-    @NotEmpty
+    @NotEmpty(message = "友情链接标题不能为空")
     @Schema(title = "标题", description = "标题")
     private String title;
     /**
      * 副标题
      */
-    @NotEmpty
+    @NotEmpty(message = "友情链接副标题不能为空")
     @Schema(title = "副标题", description = "副标题")
     private String subTitle;
     /**

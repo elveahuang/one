@@ -52,6 +52,7 @@ public enum ResponseCodeEnum implements BaseEnum<Integer>, BaseResponseCodeEnum 
     TENANT__USER_FULL_ERROR(1003005, "Tenant is full", "租户已满员"),
 
     ROLE__NOT_PRESENT(1004001, "Role is not present", "角色不存在"),
+    ROLE__CODE_NOT_AVAILABLE(1004002, "The role code is not available", "角色编号不可用"),
 
     USER__NOT_PRESENT(1005001, "The user is not present", "用户不存在"),
     USER__PASSWORD_NOT_MATCH(1005002, "The original password does not match", "原密码不匹配"),

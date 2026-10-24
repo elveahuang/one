@@ -42,8 +42,8 @@ public class KeywordSysController {
     @ApiResponse(description = "保存关键字")
     @OperationLog("保存关键字")
     @PostMapping(API_V1_SYS_PREFIX + "/keyword/save")
-    public R<?> save(@Parameter(description = "关键字保存表单") @RequestBody KeywordForm coinInvestorForm) {
-        keywordApi.saveKeyword(coinInvestorForm);
+    public R<?> save(@Parameter(description = "关键字保存表单") @RequestBody @Valid KeywordForm keywordForm) {
+        keywordApi.saveKeyword(keywordForm);
         return R.success();
     }
 

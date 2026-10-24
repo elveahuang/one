@@ -218,18 +218,25 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
     @Transactional(rollbackFor = Exception.class)
     public UserEntity saveUser(UserForm form) {
         UserEntity entity = this.checkExistsOrReturn(form.getId(), new UserEntity(), USER__NOT_PRESENT);
-        //编辑操作时，若用户名不等于旧用户名，且新用户名存在于数据库中，则返回错误
-        if (form.getId() != null && form.getId() > 0 && StringUtils.isNotEmpty(form.getUsername()) && !form.getUsername().equals(entity.getUsername())
-            && this.checkUsername(UserCheckUsernameDto.builder().username(form.getUsername()).build())) {
-            throw new ServiceException(ResponseCodeEnum.USER__USERNAME_NOT_AVAILABLE);
+        // sys_user.username 无唯一索引，创建与改名都必须显式查重，否则重名用户会破坏登录查询
+        if (StringUtils.isNotEmpty(form.getUsername())) {
+            boolean isEdit = ObjectUtils.isValidId(form.getId());
+            boolean duplicated = isEdit
+                ? !form.getUsername().equals(entity.getUsername()) && this.checkUsername(UserCheckUsernameDto.builder().username(form.getUsername()).build())
+                : this.checkUsername(UserCheckUsernameDto.builder().username(form.getUsername()).build());
+            if (duplicated) {
+                throw new ServiceException(ResponseCodeEnum.USER__USERNAME_NOT_AVAILABLE);
+            }
         }
         UserConverter.INSTANCE.formToEntity(form, entity);
         entity.setActive(ActiveTypeEnum.ENABLED.getValue());
         this.save(entity);
 
-        // 指定了角色则全量重写用户角色关联（空集合表示清空所有角色，未指定则保持不变）
+        // 指定了角色则全量重写用户角色关联（未指定时，clearRoles=true 表示清空全部角色，否则保持不变）
         if (form.getRoleIds() != null) {
             this.userRoleService.saveUserRole(entity.getId(), form.getRoleIds());
+        } else if (Boolean.TRUE.equals(form.getClearRoles())) {
+            this.userRoleService.saveUserRole(entity.getId(), Collections.emptyList());
         }
         return entity;
     }

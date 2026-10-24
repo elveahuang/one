@@ -81,7 +81,7 @@ public class ClientPltController extends AbstractController {
         return R.success(clientService.deleteClient(request));
     }
 
-    @PreAuthorize("hasAnyAuthority('system:client:chcek')")
+    @PreAuthorize("hasAnyAuthority('system:client:check')")
     @Operation(summary = "检查客户端是否重复")
     @ApiResponse(description = "检查客户端是否重复")
     @GetMapping(API_V1_SYS_PREFIX + "/client/check")
