@@ -44,6 +44,15 @@ public class DictSysController {
     }
 
     @PreAuthorize("hasAnyAuthority('system:dict')")
+    @Operation(summary = "检查字典编号是否可用")
+    @ApiResponse(description = "检查字典编号是否可用")
+    @GetMapping(API_V1_SYS_PREFIX + "/dict/check")
+    public R<Boolean> checkCode(@Parameter(description = "字典编号") @RequestParam("code") String code,
+                                @Parameter(description = "字典ID") @RequestParam(value = "id", required = false, defaultValue = "0") Long id) {
+        return R.success(!dictService.existsByCode(code, id));
+    }
+
+    @PreAuthorize("hasAnyAuthority('system:dict')")
     @Operation(summary = "获取字典子项列表")
     @ApiResponse(description = "获取字典子项列表")
     @PostMapping(API_V1_SYS_PREFIX + "/dict/item/list")

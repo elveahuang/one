@@ -34,4 +34,10 @@ public class UserSearchRequest extends PageRequest {
      */
     @Builder.Default
     private Boolean includeInActive = Boolean.FALSE;
+
+    /**
+     * 是否排除指定角色的用户（用于角色成员选择器）
+     */
+    @Builder.Default
+    private Boolean excludeRole = Boolean.FALSE;
 }

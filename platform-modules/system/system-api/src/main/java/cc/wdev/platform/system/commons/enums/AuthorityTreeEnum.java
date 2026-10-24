@@ -30,7 +30,7 @@ public enum AuthorityTreeEnum implements BaseAuthorityNodeEnum {
             // 系统管理 -> 站点管理
             createSystemGroup("group:system:site", "站点管理", createNodes(
                 createSystemResource("system:announcement", "公告管理", ONLY_SYSTEM_ADMIN_ROLE_TYPE, 111, 1),
-                createSystemResource("system:banner", "公告管理", ONLY_SYSTEM_ADMIN_ROLE_TYPE, 222, 1),
+                createSystemResource("system:banner", "宣传栏管理", ONLY_SYSTEM_ADMIN_ROLE_TYPE, 222, 1),
                 createSystemResource("system:link", "友情链接", ONLY_SYSTEM_ADMIN_ROLE_TYPE, 333, 1),
                 createSystemResource("system:keyword", "关键字管理", ONLY_SYSTEM_ADMIN_ROLE_TYPE, 444, 1)
             ), ONLY_SYSTEM_ADMIN_ROLE_TYPE, 222, 1),
@@ -56,7 +56,8 @@ public enum AuthorityTreeEnum implements BaseAuthorityNodeEnum {
                     createSystemPermission("system:message:template", "消息模版", ONLY_SYSTEM_ADMIN_ROLE_TYPE, 111, 1),
                     createSystemPermission("system:message:list", "消息列表", ONLY_SYSTEM_ADMIN_ROLE_TYPE, 222, 1),
                     createSystemPermission("system:message:log", "消息日志", ONLY_SYSTEM_ADMIN_ROLE_TYPE, 333, 1)
-                ), ONLY_SYSTEM_ADMIN_ROLE_TYPE, 777, 1)
+                ), ONLY_SYSTEM_ADMIN_ROLE_TYPE, 777, 1),
+                createSystemResource("system:attachment", "附件管理", ONLY_SYSTEM_ADMIN_ROLE_TYPE, 888, 1)
             ), ONLY_SYSTEM_ADMIN_ROLE_TYPE, 444, 1),
 
             // 系统管理 -> 系统监控

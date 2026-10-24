@@ -10,8 +10,11 @@ import cc.wdev.platform.system.commons.enums.RoleDataScopeTypeEnum;
 import cc.wdev.platform.system.commons.enums.RoleGroupTypeEnum;
 import cc.wdev.platform.system.config.api.BizTypeApi;
 import cc.wdev.platform.system.config.domain.request.BizTypeSearchRequest;
+import cc.wdev.platform.system.core.api.UserApi;
+import cc.wdev.platform.system.core.domain.dto.UserInfoDto;
 import cc.wdev.platform.system.core.domain.form.RoleForm;
 import cc.wdev.platform.system.core.domain.request.RoleSearchRequest;
+import cc.wdev.platform.system.core.domain.request.UserSearchRequest;
 import cc.wdev.platform.system.core.domain.vo.RoleOptionsVo;
 import cc.wdev.platform.system.core.domain.vo.RoleVo;
 import cc.wdev.platform.system.core.service.RoleService;
@@ -41,6 +44,8 @@ import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.A
 public class RoleSysController extends AbstractController {
 
     private final BizTypeApi bizTypeApi;
+
+    private final UserApi userApi;
 
     private final RoleService roleService;
 
@@ -123,6 +128,14 @@ public class RoleSysController extends AbstractController {
             .roleBizTypes(roleTypes)
             .build()
         );
+    }
+
+    @PreAuthorize("hasAnyAuthority('system:role')")
+    @Operation(summary = "获取角色用户列表")
+    @ApiResponse(description = "获取角色用户列表")
+    @PostMapping(API_V1_SYS_PREFIX + "/role/users")
+    public R<Page<UserInfoDto>> users(@Parameter(description = "用户查询请求") @Valid UserSearchRequest request) {
+        return R.success(this.userApi.findUserPage(request));
     }
 
 }

@@ -28,6 +28,7 @@ import cc.wdev.platform.system.core.domain.request.UserCountRequest;
 import cc.wdev.platform.system.core.domain.request.UserRegisterCountRequest;
 import cc.wdev.platform.system.core.domain.request.UserSearchRequest;
 import cc.wdev.platform.system.core.repository.UserRepository;
+import cc.wdev.platform.system.core.service.UserRoleService;
 import cc.wdev.platform.system.core.service.UserService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
@@ -37,6 +38,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -63,6 +65,8 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
     private final UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final UserRoleService userRoleService;
 
     @Override
     public CacheKeyGenerator getCacheKeyGenerator() {
@@ -207,6 +211,7 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
      */
     @Override
     @TargetUser
+    @Transactional(rollbackFor = Exception.class)
     public UserEntity saveUser(UserForm form) {
         UserEntity entity = this.checkExistsOrReturn(form.getId(), new UserEntity(), USER__NOT_PRESENT);
         //编辑操作时，若用户名不等于旧用户名，且新用户名存在于数据库中，则返回错误
@@ -217,6 +222,11 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
         UserConverter.INSTANCE.formToEntity(form, entity);
         entity.setActive(ActiveTypeEnum.ENABLED.getValue());
         this.save(entity);
+
+        // 指定了角色则全量重写用户角色关联（空集合表示清空所有角色，未指定则保持不变）
+        if (form.getRoleIds() != null) {
+            this.userRoleService.saveUserRole(entity.getId(), form.getRoleIds());
+        }
         return entity;
     }
 

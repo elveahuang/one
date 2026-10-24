@@ -40,19 +40,42 @@
         <if test="request.q != null and request.q != ''">
             and (su.username like concat('%', #{request.q}, '%') or su.display_name like concat('%', #{request.q}, '%'))
         </if>
-        and exists
-        (select 1
-        from sys_user_role sur
-        inner join sys_role sr on sr.id = sur.role_id
-        where sur.user_id = su.id
-        and sr.group_type in ('PLATFORM', 'SYSTEM')
-        <if test="request.roleIds != null and request.roleIds.size() > 0">
-            and sr.id in
-            <foreach collection="request.roleIds" item="rid" open="(" separator="," close=")">
-                #{rid}
-            </foreach>
-        </if>
-        )
+        <choose>
+            <when test="request.roleIds != null and request.roleIds.size() > 0 and request.excludeRole != null and request.excludeRole">
+                <!-- 排除已绑定指定角色的用户（角色成员选择器） -->
+                and not exists
+                (select 1
+                from sys_user_role sur
+                where sur.user_id = su.id
+                and sur.role_id in
+                <foreach collection="request.roleIds" item="rid" open="(" separator="," close=")">
+                    #{rid}
+                </foreach>
+                )
+                and exists
+                (select 1
+                from sys_user_role sur2
+                inner join sys_role sr2 on sr2.id = sur2.role_id
+                where sur2.user_id = su.id
+                and sr2.group_type in ('PLATFORM', 'SYSTEM')
+                )
+            </when>
+            <otherwise>
+                and exists
+                (select 1
+                from sys_user_role sur
+                inner join sys_role sr on sr.id = sur.role_id
+                where sur.user_id = su.id
+                and sr.group_type in ('PLATFORM', 'SYSTEM')
+                <if test="request.roleIds != null and request.roleIds.size() > 0">
+                    and sr.id in
+                    <foreach collection="request.roleIds" item="rid" open="(" separator="," close=")">
+                        #{rid}
+                    </foreach>
+                </if>
+                )
+            </otherwise>
+        </choose>
     </select>
 
     <select id="getRegisterCountByTenantId" resultType="java.lang.Long">

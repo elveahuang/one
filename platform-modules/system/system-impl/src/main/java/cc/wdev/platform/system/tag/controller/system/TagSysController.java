@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -69,6 +70,15 @@ public class TagSysController extends AbstractController {
     @PostMapping(API_V1_SYS_PREFIX + "/tag/check-title")
     public R<Boolean> checkTitle(@Parameter(description = "标签ID") @RequestParam(value = "id", required = false) Long id,
                                  @Parameter(description = "标签标题") @RequestParam("title") String title) {
+        return R.success(tagService.checkTitle(id, title));
+    }
+
+    @PreAuthorize("hasAnyAuthority('system:tag')")
+    @Operation(summary = "检查标签标题是否可用")
+    @ApiResponse(description = "检查标签标题是否可用")
+    @GetMapping(API_V1_SYS_PREFIX + "/tag/check")
+    public R<Boolean> checkTitleAvailable(@Parameter(description = "标签ID") @RequestParam(value = "id", required = false, defaultValue = "0") Long id,
+                                          @Parameter(description = "标签标题") @RequestParam("title") String title) {
         return R.success(tagService.checkTitle(id, title));
     }
 
