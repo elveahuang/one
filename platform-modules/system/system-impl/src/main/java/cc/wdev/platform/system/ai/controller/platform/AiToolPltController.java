@@ -1,6 +1,7 @@
 package cc.wdev.platform.system.ai.controller.platform;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
@@ -64,6 +65,16 @@ public class AiToolPltController extends AbstractController {
     @GetMapping(API_V1_SYS_PREFIX + "/ai/tool/list")
     public R<Page<AiToolVo>> list(AiToolSearchRequest request) {
         return R.success(aiToolApi.findAiToolsPage(request));
+    }
+
+    @PreAuthorize("hasAnyAuthority('dev:ai:config:tool')")
+    @OperationLog("删除Tool")
+    @Operation(summary = "删除Tool")
+    @ApiResponse(description = "删除Tool")
+    @PostMapping(API_V1_SYS_PREFIX + "/ai/tool/delete")
+    public R<?> delete(@RequestBody @Valid DeleteRequest request) {
+        aiToolApi.deleteAiTool(request);
+        return R.success();
     }
 
 }

@@ -1,5 +1,6 @@
 package cc.wdev.platform.system.ai.api;
 
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiToolSearchRequest;
@@ -33,6 +34,11 @@ public interface AiToolApi {
      * 保存工具
      */
     void saveAiTool(AiToolSaveRequest request);
+
+    /**
+     * 删除工具
+     */
+    void deleteAiTool(DeleteRequest request);
 
     /**
      * 获取所有工具

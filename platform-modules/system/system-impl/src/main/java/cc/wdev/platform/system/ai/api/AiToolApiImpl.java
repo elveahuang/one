@@ -1,5 +1,6 @@
 package cc.wdev.platform.system.ai.api;
 
+import cc.wdev.platform.commons.domain.DeleteRequest;
 import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.utils.ClassUtils;
 import cc.wdev.platform.commons.utils.CollectionUtils;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static cc.wdev.platform.system.commons.constants.SystemConstants.GLOABL_BASE_PACKAGE;
@@ -83,6 +85,16 @@ public class AiToolApiImpl implements AiToolApi {
     @Override
     public void saveAiTool(AiToolSaveRequest request) {
         aiToolService.saveAiTool(request);
+    }
+
+    /**
+     * @see AiToolApi#deleteAiTool(DeleteRequest)
+     */
+    @Override
+    public void deleteAiTool(DeleteRequest request) {
+        if (request != null && request.getIds() != null && request.getIds().length > 0) {
+            this.aiToolService.softDeleteBatchById(Arrays.asList(request.getIds()));
+        }
     }
 
     /**
