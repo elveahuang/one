@@ -4,6 +4,7 @@ import cc.wdev.platform.commons.annotations.DateTimeFormat;
 import cc.wdev.platform.commons.annotations.JsonFormat;
 import cc.wdev.platform.commons.constants.DateTimeConstants;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +18,7 @@ public class ClientForm implements Serializable {
     @Schema(description = "ID")
     private Long id;
     @Schema(description = "客户端ID")
+    @NotBlank(message = "客户端ID不能为空")
     private String clientId;
 
     @Schema(description = "客户端ID签发时间")
@@ -25,6 +27,7 @@ public class ClientForm implements Serializable {
     private LocalDateTime clientIdIssuedAt;
 
     @Schema(description = "客户端密钥")
+    @NotBlank(message = "客户端密钥不能为空")
     private String clientSecret;
 
     @Schema(description = "客户端密钥过期时间")

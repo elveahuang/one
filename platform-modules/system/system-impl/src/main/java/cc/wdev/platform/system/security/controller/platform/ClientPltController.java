@@ -60,7 +60,7 @@ public class ClientPltController extends AbstractController {
     @ApiResponse(description = "保存客户端")
     @OperationLog("保存客户端")
     @PostMapping(API_V1_SYS_PREFIX + "/client/save")
-    public R<?> save(@RequestBody @Parameter(description = "客户端表单参数") ClientForm from) {
+    public R<?> save(@RequestBody @Valid @Parameter(description = "客户端表单参数") ClientForm from) {
         return R.success(clientService.saveClient(from));
     }
 

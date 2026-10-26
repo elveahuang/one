@@ -12,7 +12,7 @@ jobs:
                 uses: actions/setup-java@v4
                 with:
                     distribution: "liberica"
-                    java-version: "21"
+                    java-version: "25"
             -   name: Setup Gradle
                 uses: gradle/actions/setup-gradle@v4
             -   name: Check Java and Gradle
@@ -22,7 +22,7 @@ jobs:
             -   name: Build with Gradle
                 run: |
                     ./gradlew clean bootJar
-                    cd ./platform-boot-server/app-server/build/libs
+                    cd ./platform-services/app-server/build/libs
                     zip -qr app.zip libs-external libs-internal app.jar
             -   name: Deploy
                 uses: wlixcc/SFTP-Deploy-Action@v1.2.4
@@ -30,7 +30,7 @@ jobs:
                     server: ${{ secrets.SERVER_HOST }}
                     username: ${{ secrets.SERVER_USER }}
                     ssh_private_key: ${{ secrets.SERVER_KEY }}
-                    local_path: "platform-boot-server/app-server/build/libs/app.zip"
+                    local_path: "platform-services/app-server/build/libs/app.zip"
                     remote_path: "/data/app/deploy"
                     sftpArgs: "-o ConnectTimeout=5"
             -   name: Executing Remote SSH Commands

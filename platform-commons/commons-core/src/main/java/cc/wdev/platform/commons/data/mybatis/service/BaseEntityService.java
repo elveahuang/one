@@ -430,6 +430,9 @@ public abstract class BaseEntityService<T extends IdEntity, K extends Serializab
                     entity.setDeletedBy(SecurityUtils.getUid());
                 } else if (e instanceof SimpleEntity entity) {
                     entity.setActive(ActiveTypeEnum.DISABLED.getValue());
+                } else {
+                    // 裸 AbstractEntity 无可更新字段，本次调用实际不会删除任何数据
+                    log.warn("softDeleteBatch skipped: entity [{}] has no soft-delete fields (extends neither BaseEntity nor SimpleEntity).", e.getClass().getName());
                 }
             }).toList(), batchSize);
         }

@@ -20,4 +20,4 @@ jobs:
                     gradle -v
             -   name: Build
                 run: |
-                    ./gradlew platform-boot-server:app-server:nativeCompile
+                    ./gradlew platform-services:app-server:nativeCompile

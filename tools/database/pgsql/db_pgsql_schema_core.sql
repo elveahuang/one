@@ -1380,7 +1380,7 @@ CREATE TABLE sys_catalog_relation
     entity_id     BIGINT        NOT NULL DEFAULT 0,
     parent_ind    SMALLINT      NOT NULL DEFAULT 0,
     relation_path VARCHAR(2000) NOT NULL DEFAULT '',
-    idx           VARCHAR(2000) NOT NULL DEFAULT '',
+    idx           INT           NOT NULL DEFAULT 999,
     version       BIGINT        NOT NULL DEFAULT 0,
     active        SMALLINT      NOT NULL DEFAULT 1,
     created_by    BIGINT        NOT NULL DEFAULT 0,
