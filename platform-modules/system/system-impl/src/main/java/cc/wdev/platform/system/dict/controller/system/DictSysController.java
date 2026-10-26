@@ -82,6 +82,7 @@ public class DictSysController {
     }
 
     @PreAuthorize("hasAnyAuthority('system:dict')")
+    @OperationLog("保存字典子项")
     @Operation(summary = "保存字典子项")
     @ApiResponse(description = "保存字典子项")
     @PostMapping(API_V1_SYS_PREFIX + "/dict/item/save")

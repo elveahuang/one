@@ -25,10 +25,6 @@ public class TenantContext {
 
     private final static String TENANT_ROOT_IND = "tenantRootInd";
 
-    private static final ThreadLocal<Long> tenantId = new ThreadLocal<>();
-
-    private static final ThreadLocal<Integer> tenantRootInd = new ThreadLocal<>();
-
     public static void handleServletRequest(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response) {
         String tenantId = request.getHeader(TENANT_ID_KEY);
         String tenantRootInd = request.getHeader(TENANT_ROOT_IND_KEY);

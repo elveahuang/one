@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * @author elvea
@@ -56,13 +57,27 @@ public abstract class MyBatisPlusUtils {
     }
 
     /**
+     * 排序列名仅允许字母/数字/下划线/点号（标识符），防止前端可控排序字段拼接进 ORDER BY
+     */
+    private static final Pattern SORT_COLUMN_PATTERN = Pattern.compile("^[a-zA-Z0-9_.]+$");
+
+    private static String safeSortColumn(String column) {
+        if (Strings.isNullOrEmpty(column) || !SORT_COLUMN_PATTERN.matcher(column).matches()) {
+            return null;
+        }
+        return column;
+    }
+
+    /**
      * 把Spring-Data的分页请求对象转换成为MyBatis-Plus的分页对象
      */
     public static <E> Page<E> getMyBatisPlusPage(Pageable pageable) {
         Page<E> page = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-        List<OrderItem> orders = pageable.getSort().get().map((e) ->
-            Sort.Direction.ASC.equals(e.getDirection()) ? OrderItem.asc(e.getProperty()) : OrderItem.desc(e.getProperty())
-        ).toList();
+        List<OrderItem> orders = pageable.getSort().get()
+            .filter(e -> safeSortColumn(e.getProperty()) != null)
+            .map((e) ->
+                Sort.Direction.ASC.equals(e.getDirection()) ? OrderItem.asc(e.getProperty()) : OrderItem.desc(e.getProperty())
+            ).toList();
         page.setOrders(orders);
         return page;
     }
@@ -72,11 +87,12 @@ public abstract class MyBatisPlusUtils {
      */
     public static <E> Page<E> getMyBatisPlusPage(PageRequest pageRequest) {
         Page<E> page = new Page<>(pageRequest.getPage(), pageRequest.getSize());
-        if (!Strings.isNullOrEmpty(pageRequest.getSort())) {
+        String sort = safeSortColumn(pageRequest.getSort());
+        if (!Strings.isNullOrEmpty(sort)) {
             if ("desc".equalsIgnoreCase(pageRequest.getOrder())) {
-                page.setOrders(Collections.singletonList(OrderItem.desc(pageRequest.getSort())));
+                page.setOrders(Collections.singletonList(OrderItem.desc(sort)));
             } else {
-                page.setOrders(Collections.singletonList(OrderItem.asc(pageRequest.getSort())));
+                page.setOrders(Collections.singletonList(OrderItem.asc(sort)));
             }
         }
         return page;

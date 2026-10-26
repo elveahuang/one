@@ -29,6 +29,7 @@ import cc.wdev.platform.system.core.service.EntityAuthorityService;
 import cc.wdev.platform.system.core.service.RoleService;
 import cc.wdev.platform.system.core.service.UserRoleService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -217,10 +218,19 @@ public class RoleServiceImpl extends BaseCachingEntityService<RoleEntity, Long, 
      */
     @Override
     public Page<RoleVo> findRolePage(RoleSearchRequest req) {
-        IPage<RoleEntity> page = this.lambdaQueryWrapper().and(StringUtils.isNotEmpty(req.getQ()), wrapper ->
-                wrapper.like(RoleEntity::getCode, req.getQ()).or().like(RoleEntity::getTitle, req.getQ()))
-            .eq(RoleEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
-            .page(getMyBatisPlusPage(req.getPageable()));
+        LambdaQueryChainWrapper<RoleEntity> wrapper = this.lambdaQueryWrapper().and(StringUtils.isNotEmpty(req.getQ()), w ->
+                w.like(RoleEntity::getCode, req.getQ()).or().like(RoleEntity::getTitle, req.getQ()))
+            .eq(RoleEntity::getActive, ActiveTypeEnum.ENABLED.getValue());
+        // 排序字段仅允许白名单内的列
+        boolean asc = !"desc".equalsIgnoreCase(req.getOrder());
+        switch (StringUtils.isNotEmpty(req.getSort()) ? req.getSort() : "id") {
+            case "code" -> wrapper.orderBy(true, asc, RoleEntity::getCode);
+            case "title" -> wrapper.orderBy(true, asc, RoleEntity::getTitle);
+            case "created_at", "createdAt" -> wrapper.orderBy(true, asc, RoleEntity::getCreatedAt);
+            case "updated_at", "updatedAt" -> wrapper.orderBy(true, asc, RoleEntity::getUpdatedAt);
+            default -> wrapper.orderByAsc(RoleEntity::getId);
+        }
+        IPage<RoleEntity> page = wrapper.page(getMyBatisPlusPage(req.getPageable()));
 
         if (CollectionUtils.isNotEmpty(page.getRecords())) {
             List<RoleVo> list = page.getRecords().stream().map(RoleConverter.INSTANCE::entityToVo).toList();
