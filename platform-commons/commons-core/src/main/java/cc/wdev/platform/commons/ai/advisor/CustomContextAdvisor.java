@@ -1,6 +1,5 @@
 package cc.wdev.platform.commons.ai.advisor;
 
-import cc.wdev.platform.commons.ai.AiConstants;
 import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import com.google.common.collect.Maps;
@@ -20,6 +19,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 import reactor.core.publisher.Flux;
 
 import java.util.Map;
+
+import static cc.wdev.platform.commons.ai.AiConstants.*;
 
 /**
  * @author elvea
@@ -69,24 +70,24 @@ public class CustomContextAdvisor implements CallAdvisor, StreamAdvisor {
         Map<String, Object> map = Maps.newHashMap();
         for (Message message : request.prompt().getInstructions()) {
             if (message.getMessageType() == MessageType.USER) {
-                Long userId = MapUtils.getLong(message.getMetadata(), AiConstants.METADATA_USER_ID);
+                Long userId = MapUtils.getLong(message.getMetadata(), CHAT_CONTEXT_USER_ID);
                 if (ObjectUtils.isValidId(userId)) {
-                    map.put(AiConstants.METADATA_USER_ID, userId);
+                    map.put(CHAT_CONTEXT_USER_ID, userId);
                 }
 
-                Long tenantId = MapUtils.getLong(message.getMetadata(), AiConstants.METADATA_TENANT_ID);
+                Long tenantId = MapUtils.getLong(message.getMetadata(), CHAT_CONTEXT_TENANT_ID);
                 if (ObjectUtils.isValidId(tenantId)) {
-                    map.put(AiConstants.METADATA_TENANT_ID, tenantId);
+                    map.put(CHAT_CONTEXT_TENANT_ID, tenantId);
                 }
 
-                String chatType = MapUtils.getString(message.getMetadata(), AiConstants.METADATA_CHAT_TYPE);
+                String chatType = MapUtils.getString(message.getMetadata(), CHAT_CONTEXT_CHAT_TYPE);
                 if (StringUtils.isNotEmpty(chatType)) {
-                    map.put(AiConstants.METADATA_CHAT_TYPE, chatType);
+                    map.put(CHAT_CONTEXT_CHAT_TYPE, chatType);
                 }
 
-                String agentCode = MapUtils.getString(message.getMetadata(), AiConstants.METADATA_AGENT_CODE);
+                String agentCode = MapUtils.getString(message.getMetadata(), CHAT_CONTEXT_AGENT_CODE);
                 if (StringUtils.isNotEmpty(agentCode)) {
-                    map.put(AiConstants.METADATA_AGENT_CODE, agentCode);
+                    map.put(CHAT_CONTEXT_AGENT_CODE, agentCode);
                 }
             }
         }

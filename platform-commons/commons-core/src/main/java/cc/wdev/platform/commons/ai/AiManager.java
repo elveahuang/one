@@ -1,6 +1,5 @@
 package cc.wdev.platform.commons.ai;
 
-import cc.wdev.platform.commons.ai.advisor.SessionMetadataAdvisor;
 import cc.wdev.platform.commons.ai.config.AgentConfig;
 import cc.wdev.platform.commons.ai.config.MemoryConfig;
 import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
@@ -12,12 +11,12 @@ import cc.wdev.platform.commons.ai.factory.embedding.EmbeddingModelFactory;
 import cc.wdev.platform.commons.ai.factory.vectorstore.VectorStoreFactory;
 import cc.wdev.platform.commons.ai.model.ModelConfig;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.session.SessionService;
-import org.springframework.ai.session.advisor.SessionMemoryAdvisor;
 import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -47,12 +46,7 @@ public interface AiManager {
     /**
      * Spring AI Session - SessionMemoryAdvisor
      */
-    SessionMemoryAdvisor getSessionMemoryAdvisor();
-
-    /**
-     * Spring AI Session - CustomSessionMetadataAdvisor
-     */
-    SessionMetadataAdvisor getSessionMetadataAdvisor();
+    List<Advisor> getSessionAdvisor();
 
     /**
      * QuestionAnswerAdvisor

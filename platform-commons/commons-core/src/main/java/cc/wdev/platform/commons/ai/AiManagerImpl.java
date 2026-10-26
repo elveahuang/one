@@ -1,6 +1,5 @@
 package cc.wdev.platform.commons.ai;
 
-import cc.wdev.platform.commons.ai.advisor.SessionMetadataAdvisor;
 import cc.wdev.platform.commons.ai.config.AgentConfig;
 import cc.wdev.platform.commons.ai.config.MemoryConfig;
 import cc.wdev.platform.commons.ai.enums.AiServiceProvider;
@@ -30,12 +29,12 @@ import org.springaicommunity.agent.tools.task.TaskTool;
 import org.springaicommunity.agent.tools.task.claude.ClaudeSubagentReferences;
 import org.springaicommunity.agent.tools.task.claude.ClaudeSubagentType;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.session.SessionService;
-import org.springframework.ai.session.advisor.SessionMemoryAdvisor;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.ai.transformer.splitter.TextSplitter;
@@ -121,19 +120,11 @@ public class AiManagerImpl implements AiManager {
     }
 
     /**
-     * @see AiManager#getSessionMemoryAdvisor()
+     * @see AiManager#getSessionAdvisor()
      */
     @Override
-    public SessionMemoryAdvisor getSessionMemoryAdvisor() {
-        return AiUtils.getSessionMemoryAdvisor(this.getSessionService());
-    }
-
-    /**
-     * @see AiManager#getSessionMetadataAdvisor()
-     */
-    @Override
-    public SessionMetadataAdvisor getSessionMetadataAdvisor() {
-        return AiUtils.getSessionMetadataAdvisor(this.getSessionService());
+    public List<Advisor> getSessionAdvisor() {
+        return AiUtils.getSessionAdvisor(this.getSessionService());
     }
 
     /**
@@ -669,8 +660,7 @@ public class AiManagerImpl implements AiManager {
     public void applyBaseAdvisors(ChatClient.Builder builder) {
         builder.defaultAdvisors(AiUtils.getCustomLoggingAdvisor());
         builder.defaultAdvisors(AiUtils.getCustomContextAdvisor());
-        builder.defaultAdvisors(this.getSessionMetadataAdvisor());
-        builder.defaultAdvisors(this.getSessionMemoryAdvisor());
+        builder.defaultAdvisors(AiUtils.getSessionAdvisor(this.getSessionService()));
     }
 
     /**

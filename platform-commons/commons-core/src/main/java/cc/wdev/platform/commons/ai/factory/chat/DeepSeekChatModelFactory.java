@@ -15,6 +15,7 @@ import org.springframework.ai.deepseek.api.DeepSeekApi;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.retry.RetryTemplate;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -64,7 +65,9 @@ public class DeepSeekChatModelFactory extends AbstractChatModelFactory {
         if (StringUtils.isNotEmpty(config.getBaseUrl())) {
             apiBuilder.baseUrl(config.getBaseUrl());
         }
-        apiBuilder.restClientBuilder(RestClient.builder());
+        // 当前依赖组合下 RestClient 会自动选择 HttpComponents，读取 DeepSeek 分块响应时会截断为单字节。
+        apiBuilder.restClientBuilder(RestClient.builder()
+            .requestFactory(new JdkClientHttpRequestFactory()));
         apiBuilder.webClientBuilder(WebClient.builder());
         apiBuilder.responseErrorHandler(this.responseErrorHandler.getIfAvailable(() -> RetryUtils.DEFAULT_RESPONSE_ERROR_HANDLER));
 

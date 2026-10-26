@@ -3,6 +3,7 @@ package cc.wdev.platform.commons.extensions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
@@ -34,8 +35,10 @@ public class PdfParseTests {
         BodyContentHandler bodyContentHandler = new BodyContentHandler(-1);
         Metadata metadata = new Metadata();
         ParseContext context = new ParseContext();
-        FileInputStream inputStream = new FileInputStream(file);
-        parser.parse(inputStream, bodyContentHandler, metadata, context);
+        try (FileInputStream inputStream = new FileInputStream(file);
+             TikaInputStream tikaInputStream = TikaInputStream.get(inputStream, metadata)) {
+            parser.parse(tikaInputStream, bodyContentHandler, metadata, context);
+        }
         log.info("Content : {}", bodyContentHandler);
         String[] names = metadata.names();
         for (String name : names) {

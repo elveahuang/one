@@ -18,7 +18,7 @@ public class SyncMcaJob extends QuartzJob {
     protected void execute() throws Exception {
         log.info("SyncMcaJob start.");
         regionService.syncMcaData();
-        regionService.getRegionGeoJson();
+//        regionService.getRegionGeoJson();
         log.info("SyncMcaJob finish.");
     }
 

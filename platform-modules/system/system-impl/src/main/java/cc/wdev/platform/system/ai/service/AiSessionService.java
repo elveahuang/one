@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -17,6 +18,11 @@ public interface AiSessionService extends CachingEntityService<AiSessionEntity, 
      * 根据会话ID查询会话
      */
     AiSessionEntity findBySessionId(String sessionId);
+
+    /**
+     * 根据会话ID批量查询会话
+     */
+    List<AiSessionEntity> findBySessionIds(Collection<String> sessionIds);
 
     /**
      * 根据用户ID查询会话
@@ -31,9 +37,14 @@ public interface AiSessionService extends CachingEntityService<AiSessionEntity, 
     int deleteBySessionId(String sessionId);
 
     /**
-     * 原子删除已过期会话，事件由外键级联删除。
+     * 查询已过期会话。
      */
-    int deleteExpiredSessions(LocalDateTime before);
+    List<AiSessionEntity> findExpiredSessions(LocalDateTime before);
+
+    /**
+     * 按过期条件删除单个会话。
+     */
+    int deleteExpiredSession(String sessionId, LocalDateTime before);
 
     /**
      * 根据用户ID + 租户查询

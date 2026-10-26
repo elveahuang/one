@@ -31,7 +31,7 @@ public class ChatModelFactoryTests extends BaseTests {
     @Test
     public void deepseekChatTest() {
         ChatClient chatClient = ChatClient.builder(this.aiManager.getChatModel(SPRING_AI_DEEPSEEK))
-            .defaultAdvisors(this.aiManager.getSessionMemoryAdvisor())
+            .defaultAdvisors(this.aiManager.getSessionAdvisor())
             .build();
 
         ChatResponse response = chatClient.prompt()

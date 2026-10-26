@@ -39,6 +39,12 @@ public class AiSessionEventVo extends SimpleTenantEntity {
     private String sessionId;
 
     /**
+     * 事件类型
+     */
+    @Schema(description = "事件类型")
+    private String eventType;
+
+    /**
      * Timestamp（PostgreSQL 保留字，使用双引号转义）
      */
     @Schema(description = "Timestamp")
@@ -62,7 +68,7 @@ public class AiSessionEventVo extends SimpleTenantEntity {
      * 消息数据
      */
     @Schema(description = "消息数据")
-    private String messageData;
+    private String payload;
 
     /**
      * synthetic

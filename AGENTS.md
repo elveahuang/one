@@ -55,7 +55,7 @@
 
 - Java 25（`java-conventions` 同时设 `sourceCompatibility`/`targetCompatibility` 与 toolchain 为 25，编译参数 `-parameters`）
 - Gradle 9.8.0（wrapper；依赖版本集中在 `gradle/libs.versions.toml`；构建约定在 `buildSrc`）
-- Spring Boot 4.1.1、Spring Security 7.1（Authorization Server + Resource Server）、Spring AI 2.0.1、Spring Cloud（预留）
+- Spring Boot 4.1.1、Spring Security 7.1（Authorization Server + Resource Server）、Spring AI 2.1.0-RC1、Spring Cloud（预留）；Tika 4.1
 - 持久化：MyBatis-Plus 3.5.17（主）、JPA/Hibernate（遗留与示例）、PostgreSQL
 - 中间件：Redis（Redisson）、RabbitMQ、Elasticsearch、Quartz
 - JSON：**序列化走 Jackson 3**（`tools.jackson.databind.*`），注解仍用 `com.fasterxml.jackson.annotation.*`（Jackson 3 刻意保留该注解包，不是泄漏）。classpath 上**同时存在 Jackson 2.21.5**（elasticsearch-java、tika、openai-java、arrow、geoip2、swagger-core 等第三方传递依赖拉入），它不参与 HTTP 消息转换。
@@ -339,7 +339,7 @@ one (Gradle root, group cc.wdev)
 
 ### 8.3 AI 周边能力与扩展
 
-- **会话记忆**：`AiManagerImpl#applyBaseAdvisors` 挂 4 个 advisor；默认内存 `SessionService`，app 端被 `SystemAiConfiguration` 以 `CustomSessionRepository`（`sys_ai_session` + `sys_ai_session_event`，TTL 60 天）覆盖；续接校验「本人 + 本租户」，压缩参数见 `AiUtils.getSessionMemoryAdvisor`。
+- **会话记忆**：`AiManagerImpl#applyBaseAdvisors` 挂日志、上下文、会话元数据、`SessionTurnAdvisor`、`SessionMemoryAdvisor` 5 个 advisor；默认内存 `SessionService`，app 端被 `SystemAiConfiguration` 以 `CustomSessionRepository`（`sys_ai_session` + `sys_ai_session_index` + `sys_ai_session_event`，TTL 60 天）覆盖；续接校验「本人 + 本租户」。事件为追加式日志，`event_type` 区分 `MESSAGE`/`COMPACTION`，压缩边界通过 `appendEvents` CAS 落库，压缩参数见 `AiUtils.getSessionTurnAdvisor`；`sys_ai_session_index` 默认索引 `principalName`，保存会话时全量替换。
 - **长期记忆**：`AutoMemoryToolsAdvisor` + `AutoDreamAdvisor`，目录 `platform.ai.memory.path/{tid}/{uid}`，受 `memory.enabled` 与 path 非空双重门控。
 - **Agent 工具**：`agent.enabled` 下注册 `SkillsTool`；skills 与 agents 资源都能解析出 `Resource` 时才注册 `TaskTool`；`CommonTools` 走 Bean + AOT，示例工具在 `commons-webapp`。
 - **RAG**：全局 `RetrievalAugmentationAdvisor(allowEmptyContext(false))`；KB 级经 `AiHelper.applyRagAdvisors`（租户 `Filter` + 可选重排）。向量化 `AiVectorServiceImpl` 为提交后异步 + 分批；**重试退避在 `AiKbJob`/`AiKbApi`，不在该 Service**。VectorStore 支持 ES/MariaDB/PgVector（默认 ES）。

@@ -10,8 +10,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum AiAgentBizTypeEnum implements BaseAiAgentBizTypeEnum {
-    DEFAULT("DEFAULT", "智能助手", AiConstants.DEFDAULT_PROMPT, "智能助手"),
-    TEST("TEST", "测试助手", AiConstants.DEFDAULT_PROMPT, "测试助手");
+    DEFAULT("DEFAULT", "智能助手", AiConstants.DEFAULT_PROMPT, "智能助手"),
+    TEST("TEST", "测试助手", AiConstants.DEFAULT_PROMPT, "测试助手");
 
     private final String value;
     private final String name;

@@ -10,15 +10,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.Office;
-import org.apache.tika.metadata.PagedText;
-import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.*;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
@@ -118,17 +117,18 @@ public class TikaHelper {
             context.set(EmbeddedDocumentExtractor.class, new EmbeddedDocumentExtractor() {
 
                 @Override
-                public boolean shouldParseEmbedded(Metadata embeddedMetadata) {
+                public boolean shouldParseEmbedded(Metadata embeddedMetadata, ParseContext parseContext) {
                     return extractEmbedded;
                 }
 
                 @Override
-                public void parseEmbedded(InputStream stream,
+                public void parseEmbedded(TikaInputStream stream,
                                           ContentHandler contentHandler,
                                           Metadata embeddedMetadata,
-                                          boolean outputHtml) throws IOException {
+                                          ParseContext parseContext,
+                                          boolean outputHtml) throws IOException, SAXException {
                     String name = embeddedMetadata.get(TikaCoreProperties.RESOURCE_NAME_KEY);
-                    String contentType = embeddedMetadata.get(Metadata.CONTENT_TYPE);
+                    String contentType = embeddedMetadata.get(HttpHeaders.CONTENT_TYPE);
                     if (name == null || contentType == null || !contentType.startsWith("image/")) {
                         return;
                     }
@@ -137,7 +137,9 @@ public class TikaHelper {
                     embeddedImages.put("embedded:" + name, image);
                 }
             });
-            parser.parse(in, handler, metadata, context);
+            try (TikaInputStream tikaInputStream = TikaInputStream.get(in, metadata)) {
+                parser.parse(tikaInputStream, handler, metadata, context);
+            }
         }
 
         String text = handler.getText();
@@ -169,7 +171,7 @@ public class TikaHelper {
         putIfPresent(meta, "title", metadata.get(TikaCoreProperties.TITLE));
         putIfPresent(meta, "author", metadata.get(TikaCoreProperties.CREATOR));
         putIfPresent(meta, "language", metadata.get(TikaCoreProperties.LANGUAGE));
-        putIfPresent(meta, "contentType", metadata.get(Metadata.CONTENT_TYPE));
+        putIfPresent(meta, "contentType", metadata.get(HttpHeaders.CONTENT_TYPE));
         Integer pageCount = parsePageCount(
             metadata.get(PagedText.N_PAGES),
             metadata.get(Office.PAGE_COUNT)

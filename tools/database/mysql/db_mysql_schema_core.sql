@@ -522,7 +522,7 @@ DROP TABLE IF EXISTS sys_user_biz_relation;
 
 CREATE TABLE sys_user_biz_relation
 (
-    `id`            BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
+    `id`            BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '本地主键',
     `tenant_id`     BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
     `user_id`       BIGINT       NOT NULL DEFAULT 0 COMMENT '用户ID',
     `biz_type`      VARCHAR(100) NOT NULL DEFAULT '' COMMENT '业务类型',
@@ -2338,8 +2338,8 @@ CREATE TABLE sys_ai_session
     `id`            BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
     `tenant_id`     BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
     `user_id`       VARCHAR(150) NOT NULL DEFAULT '' COMMENT '用户ID',
-    `session_id`    VARCHAR(150) NOT NULL DEFAULT '' COMMENT '对话ID',
-    `metadata`      TEXT         NULL COMMENT 'Metadata',
+    `session_id`    VARCHAR(150) NOT NULL COMMENT '对话ID',
+    `metadata`      LONGTEXT     NOT NULL COMMENT 'Metadata',
     `event_version` BIGINT       NOT NULL DEFAULT 0 COMMENT 'Event Version',
     `expires_at`    DATETIME     NULL COMMENT '过期时间',
     `version`       BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
@@ -2348,9 +2348,25 @@ CREATE TABLE sys_ai_session
     `created_at`    DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间'
 ) COMMENT 'AI Session';
 
-CREATE INDEX ix_sys_ai_session__tenant_id ON sys_ai_session (tenant_id);
-CREATE INDEX ix_sys_ai_session__user_id ON sys_ai_session (user_id);
-CREATE INDEX ix_sys_ai_session__expires_at ON sys_ai_session (expires_at);
+CREATE UNIQUE INDEX ux_sys_ai_session__session_id ON sys_ai_session (session_id);
+
+--
+-- AI Session Index
+--
+
+DROP TABLE IF EXISTS sys_ai_session_index;
+
+CREATE TABLE sys_ai_session_index
+(
+    `id`         BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
+    `tenant_id`  BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
+    `session_id` VARCHAR(150) NOT NULL COMMENT '对话ID',
+    `attr_name`  VARCHAR(255) NOT NULL COMMENT '属性名',
+    `attr_value` VARCHAR(512) NOT NULL COMMENT '属性值'
+);
+
+CREATE UNIQUE INDEX ux_sys_ai_session_index__session_attr ON sys_ai_session_index (session_id, attr_name);
+CREATE INDEX ix_sys_ai_session_index__name_value ON sys_ai_session_index (attr_name, attr_value);
 
 --
 -- AI Session Event
@@ -2360,25 +2376,28 @@ DROP TABLE IF EXISTS sys_ai_session_event;
 
 CREATE TABLE sys_ai_session_event
 (
-    `id`              BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
-    `tenant_id`       BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
-    `session_id`      VARCHAR(150) NOT NULL DEFAULT '' COMMENT '对话ID',
-    `timestamp`       DATETIME     NOT NULL COMMENT 'Timestamp',
-    `message_type`    VARCHAR(20)  NOT NULL COMMENT '消息类型',
-    `message_content` TEXT         NULL COMMENT '消息内容',
-    `message_data`    TEXT         NULL COMMENT '消息数据',
-    `synthetic`       SMALLINT     NOT NULL DEFAULT 0 COMMENT 'synthetic',
-    `branch`          VARCHAR(500) NULL COMMENT 'branch',
-    `archived`        SMALLINT     NOT NULL DEFAULT 0 COMMENT '是否归档',
-    `metadata`        TEXT         NULL COMMENT 'metadata',
-    `version`         BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
-    `active`          SMALLINT     NOT NULL DEFAULT 1 COMMENT '启用状态',
-    `created_by`      BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
-    `created_at`      DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间'
+    `id`               BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '事件顺序ID（对应参考 seq）',
+    `tenant_id`        BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
+    `session_id`       VARCHAR(150) NOT NULL COMMENT '会话ID',
+    `session_event_id` VARCHAR(150) NOT NULL COMMENT '会话事件业务ID（对应参考 id）',
+    `timestamp`        DATETIME     NOT NULL DEFAULT NOW() COMMENT '时间戳',
+    `event_type`       VARCHAR(64)  NOT NULL DEFAULT 'MESSAGE' COMMENT '事件类型',
+    `message_type`     VARCHAR(20)  NULL COMMENT '消息类型',
+    `message_content`  LONGTEXT     NULL COMMENT '消息内容',
+    `payload`          LONGTEXT     NOT NULL COMMENT '消息数据',
+    `synthetic`        SMALLINT     NOT NULL DEFAULT 0 COMMENT 'synthetic',
+    `archived`         SMALLINT     NOT NULL DEFAULT 0 COMMENT '是否归档',
+    `metadata`         LONGTEXT     NOT NULL COMMENT 'metadata',
+    `version`          BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
+    `active`           SMALLINT     NOT NULL DEFAULT 1 COMMENT '启用状态',
+    `created_by`       BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
+    `created_at`       DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间'
 ) COMMENT 'AI Session Event';
 
+CREATE UNIQUE INDEX ux_sys_ai_session_event__session_event_id ON sys_ai_session_event (session_event_id);
 CREATE INDEX ix_sys_ai_session_event__tenant_id ON sys_ai_session_event (tenant_id);
-CREATE INDEX ix_sys_ai_session_event__session ON sys_ai_session_event (session_id, timestamp);
+CREATE INDEX ix_sys_ai_session_event__session ON sys_ai_session_event (session_id, id);
+CREATE INDEX ix_sys_ai_session_event__session_type_id ON sys_ai_session_event (session_id, event_type, id);
 CREATE INDEX ix_sys_ai_session_event__archived ON sys_ai_session_event (session_id, archived);
 
 --

@@ -1,10 +1,8 @@
 package cc.wdev.platform.commons.ai.utils;
 
 import cc.wdev.platform.commons.ai.AiConfig;
-import cc.wdev.platform.commons.ai.AiConstants;
 import cc.wdev.platform.commons.ai.advisor.CustomContextAdvisor;
 import cc.wdev.platform.commons.ai.advisor.CustomLoggingAdvisor;
-import cc.wdev.platform.commons.ai.advisor.SessionMetadataAdvisor;
 import cc.wdev.platform.commons.ai.config.*;
 import cc.wdev.platform.commons.ai.domain.chat.SimpleChatContent;
 import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
@@ -17,13 +15,17 @@ import cc.wdev.platform.commons.ai.ui.UiBlock;
 import cc.wdev.platform.commons.ai.ui.UiComponentManager;
 import cc.wdev.platform.commons.ai.ui.UiOutputConverter;
 import cc.wdev.platform.commons.ai.ui.UiResponse;
-import cc.wdev.platform.commons.utils.*;
+import cc.wdev.platform.commons.utils.CollectionUtils;
+import cc.wdev.platform.commons.utils.GsonUtils;
+import cc.wdev.platform.commons.utils.SecurityUtils;
+import cc.wdev.platform.commons.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -35,11 +37,12 @@ import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugment
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.session.DefaultSessionService;
+import org.springframework.ai.session.EventFilter;
 import org.springframework.ai.session.InMemorySessionRepository;
 import org.springframework.ai.session.SessionService;
-import org.springframework.ai.session.advisor.SessionMemoryAdvisor;
-import org.springframework.ai.session.compaction.SlidingWindowCompactionStrategy;
+import org.springframework.ai.session.advisor.SessionAdvisors;
 import org.springframework.ai.session.compaction.TurnCountTrigger;
+import org.springframework.ai.session.compaction.WindowCompactionStrategy;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -53,6 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static cc.wdev.platform.commons.ai.AiConstants.*;
+import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 
 /**
  * @author elvea
@@ -118,30 +122,26 @@ public abstract class AiUtils {
      * 3. 提示词
      */
     public static ChatClient.ChatClientRequestSpec processChatSpec(ChatClient chatClient, SimpleChatRequest request) {
-        ChatClient.ChatClientRequestSpec spec = chatClient.prompt().advisors(a -> {
-            a.param(CHAT_CONTEXT_SESSION_ID, request.getConversationId());
-            a.param(CHAT_CONTEXT_USER_ID, String.valueOf(request.getUserId()));
-            a.param(CHAT_CONTEXT_TENANT_ID, request.getTenantId());
-            a.param(CHAT_CONTEXT_CHAT_TYPE, request.getChatType());
-        }).user(u -> {
-            u.metadata(METADATA_SESSION_ID, request.getConversationId());
-            u.metadata(METADATA_TENANT_ID, request.getTenantId());
-            u.metadata(METADATA_USER_ID, String.valueOf(request.getUserId()));
-            u.metadata(METADATA_CHAT_TYPE, request.getChatType());
-            u.metadata(METADATA_AGENT_CODE, StringUtils.nvl(request.getAgentCode()));
+        Map<String, Object> params = Map.of(
+            CHAT_CONTEXT_SESSION, request.getConversationId(),
+            CHAT_CONTEXT_USER_ID, nvl(String.valueOf(SecurityUtils.getUid()), String.valueOf(request.getUserId())),
+            CHAT_CONTEXT_TENANT_ID, request.getTenantId(),
+            CHAT_CONTEXT_CHAT_TYPE, request.getUserId(),
+            CHAT_CONTEXT_AGENT_CODE, StringUtils.nvl(request.getAgentCode())
+        );
 
+        ChatClient.ChatClientRequestSpec spec = chatClient.prompt().toolContext(params).advisors(a -> {
+            a.params(params);
+            a.param(CHAT_CONTEXT_SESSION_METADATA, params);
+        }).system(s -> {
+            if (StringUtils.isNotEmpty(request.getSystemPrompt())) {
+                s.text(request.getSystemPrompt());
+            }
+            s.metadata(params);
+        }).user(u -> {
             u.text(request.getPrompt());
+            u.metadata(params);
         });
-        // 工具上下文
-        spec.toolContext(Map.of(
-            AiConstants.METADATA_SESSION_ID, request.getConversationId(),
-            AiConstants.METADATA_TENANT_ID, request.getTenantId(),
-            AiConstants.METADATA_USER_ID, request.getUserId()
-        ));
-        // 系统提示词
-        if (StringUtils.isNotEmpty(request.getSystemPrompt())) {
-            spec = spec.system(request.getSystemPrompt());
-        }
         // 温度参数
         if (request.getTemperature() != null && request.getTemperature() > 0) {
             spec = spec.options(ChatOptions.builder().temperature(request.getTemperature().doubleValue()));
@@ -340,15 +340,12 @@ public abstract class AiUtils {
             .build();
     }
 
-    public static SessionMemoryAdvisor getSessionMemoryAdvisor(SessionService sessionService) {
-        return SessionMemoryAdvisor.builder(sessionService)
-            .compactionTrigger(new TurnCountTrigger(20))
-            .compactionStrategy(SlidingWindowCompactionStrategy.builder().maxEvents(10).build())
+    public static List<Advisor> getSessionAdvisor(SessionService sessionService) {
+        return SessionAdvisors.builder(sessionService)
+            .compaction(new TurnCountTrigger(20), WindowCompactionStrategy.builder().lastTurns(10).build())
+            .asyncCompaction(true)
+            .memory(memory -> memory.eventFilter(EventFilter.lastN(50)))
             .build();
-    }
-
-    public static SessionMetadataAdvisor getSessionMetadataAdvisor(SessionService sessionService) {
-        return new SessionMetadataAdvisor(sessionService);
     }
 
     public static QuestionAnswerAdvisor getQuestionAnswerAdvisor(VectorStore vectorStore, RetrievalConfig config) {
@@ -459,29 +456,29 @@ public abstract class AiUtils {
     public static SplittingConfig resolveSplittingConfig(@NonNull SplittingConfig defaultConfig, @NonNull SplittingConfig config) {
         SplittingConfig.SplittingConfigBuilder builder = SplittingConfig.builder();
         builder.strategy(StringUtils.nvl(config.getStrategy(), defaultConfig.getStrategy()));
-        builder.chunkSize(ObjectUtils.nvl(config.getChunkSize(), defaultConfig.getChunkSize()));
-        builder.chunkOverlap(ObjectUtils.nvl(config.getChunkOverlap(), defaultConfig.getChunkOverlap()));
+        builder.chunkSize(nvl(config.getChunkSize(), defaultConfig.getChunkSize()));
+        builder.chunkOverlap(nvl(config.getChunkOverlap(), defaultConfig.getChunkOverlap()));
         return builder.build();
     }
 
     public static RetrievalConfig resolveRetrievalConfig(@NonNull RetrievalConfig defaultConfig, @NonNull RetrievalConfig config) {
         RetrievalConfig.RetrievalConfigBuilder builder = RetrievalConfig.builder();
-        builder.topK(ObjectUtils.nvl(config.getTopK(), defaultConfig.getTopK()));
-        builder.similarityThreshold(ObjectUtils.nvl(config.getSimilarityThreshold(), defaultConfig.getSimilarityThreshold()));
+        builder.topK(nvl(config.getTopK(), defaultConfig.getTopK()));
+        builder.similarityThreshold(nvl(config.getSimilarityThreshold(), defaultConfig.getSimilarityThreshold()));
         return builder.build();
     }
 
     public static VectorStoreConfig resolveVectorStoreConfig(@NonNull VectorStoreConfig defaultConfig, @NonNull VectorStoreConfig config) {
         VectorStoreConfig.VectorStoreConfigBuilder builder = VectorStoreConfig.builder();
-        builder.type(ObjectUtils.nvl(config.getType(), defaultConfig.getType()));
-        builder.embeddingProvider(ObjectUtils.nvl(config.getEmbeddingProvider(), defaultConfig.getEmbeddingProvider()));
-        builder.indexPrefix(ObjectUtils.nvl(config.getIndexPrefix(), defaultConfig.getIndexPrefix()));
+        builder.type(nvl(config.getType(), defaultConfig.getType()));
+        builder.embeddingProvider(nvl(config.getEmbeddingProvider(), defaultConfig.getEmbeddingProvider()));
+        builder.indexPrefix(nvl(config.getIndexPrefix(), defaultConfig.getIndexPrefix()));
         return builder.build();
     }
 
     public static VectorizationConfig resolveVectorizationConfig(@NonNull VectorizationConfig defaultConfig, @NonNull VectorizationConfig config) {
         VectorizationConfig.VectorizationConfigBuilder builder = VectorizationConfig.builder();
-        builder.batchSize(ObjectUtils.nvl(config.getBatchSize(), defaultConfig.getBatchSize()));
+        builder.batchSize(nvl(config.getBatchSize(), defaultConfig.getBatchSize()));
         return builder.build();
     }
 

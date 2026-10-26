@@ -9,10 +9,8 @@ import com.google.common.collect.Maps;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.session.advisor.SessionMemoryAdvisor;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -108,11 +106,9 @@ public class AiRagTests extends BaseTests {
     public void ragChatTest() {
         Assertions.assertNotNull(this.aiManager);
 
-        SessionMemoryAdvisor sessionMemoryAdvisor = this.aiManager.getSessionMemoryAdvisor();
-        RetrievalAugmentationAdvisor retrievalAugmentationAdvisor = this.aiManager.getRetrievalAugmentationAdvisor();
-
         ChatClient chatClient = ChatClient.builder(this.aiManager.getChatModel())
-            .defaultAdvisors(sessionMemoryAdvisor, retrievalAugmentationAdvisor)
+            .defaultAdvisors(this.aiManager.getSessionAdvisor())
+            .defaultAdvisors(this.aiManager.getRetrievalAugmentationAdvisor())
             .defaultTools(this.commonTools)
             .build();
 
@@ -135,11 +131,9 @@ public class AiRagTests extends BaseTests {
     public void questionAnswerAdvisorTest() {
         Assertions.assertNotNull(this.aiManager);
 
-        QuestionAnswerAdvisor questionAnswerAdvisor = this.aiManager.getQuestionAnswerAdvisor();
-        SessionMemoryAdvisor sessionMemoryAdvisor = this.aiManager.getSessionMemoryAdvisor();
-
         ChatClient chatClient = ChatClient.builder(this.aiManager.getChatModel())
-            .defaultAdvisors(questionAnswerAdvisor, sessionMemoryAdvisor)
+            .defaultAdvisors(this.aiManager.getSessionAdvisor())
+            .defaultAdvisors(this.aiManager.getRetrievalAugmentationAdvisor())
             .defaultTools(this.commonTools)
             .build();
 

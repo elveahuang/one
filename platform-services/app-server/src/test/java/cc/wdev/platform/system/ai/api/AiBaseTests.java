@@ -129,7 +129,7 @@ public class AiBaseTests extends BaseTests {
             .modelId(chatModelVo.getId())
             .kbId(aiKbVo.getId())
             .toolIds(tools.stream().map(AiToolSimpleVo::getId).toList())
-            .systemPrompt(AiConstants.DEFDAULT_PROMPT)
+            .systemPrompt(AiConstants.DEFAULT_PROMPT)
             .build();
         this.aiAgentApi.saveAiAgent(aiAgentSaveRequest);
     }

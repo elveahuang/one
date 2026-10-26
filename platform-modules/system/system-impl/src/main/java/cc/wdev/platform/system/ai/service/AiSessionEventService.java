@@ -4,8 +4,6 @@ import cc.wdev.platform.commons.service.CachingEntityService;
 import cc.wdev.platform.system.ai.domain.entity.AiSessionEventEntity;
 import cc.wdev.platform.system.ai.domain.request.AiSessionEventRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiSessionEventVo;
-import org.jspecify.annotations.NonNull;
-import org.springframework.ai.session.EventFilter;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -26,19 +24,14 @@ public interface AiSessionEventService extends CachingEntityService<AiSessionEve
     List<AiSessionEventEntity> findBySessionId(String sessionId);
 
     /**
-     * 将指定事件标记为归档
+     * 根据事件ID查询事件
      */
-    void archiveByIds(String sessionId, List<String> eventIds);
-
     AiSessionEventEntity findBySessionEventId(String sessionEventId);
 
-    List<AiSessionEventEntity> findFromSequence(String sessionId, Long fromSequence);
-
-    boolean deleteFromSequence(String sessionId, Long fromSequence);
-
-    List<AiSessionEventEntity> findTurnHead(String sessionId, String firstEventId, EventFilter filter);
-
-    List<AiSessionEventEntity> findEvents(@NonNull String sessionId, @NonNull EventFilter filter);
+    /**
+     * 根据事件ID查询事件
+     */
+    List<AiSessionEventEntity> findBySessionEventIds(List<String> sessionEventIds);
 
     /**
      * 获取会话历史记录

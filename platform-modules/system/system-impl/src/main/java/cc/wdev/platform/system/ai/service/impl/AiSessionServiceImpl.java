@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -33,6 +34,20 @@ public class AiSessionServiceImpl
     @Override
     public AiSessionEntity findBySessionId(String sessionId) {
         return this.findOne(lambdaQueryWrapper().eq(AiSessionEntity::getSessionId, sessionId));
+    }
+
+    /**
+     * @see AiSessionService#findBySessionIds(Collection)
+     */
+    @Override
+    public List<AiSessionEntity> findBySessionIds(Collection<String> sessionIds) {
+        if (ObjectUtils.isEmpty(sessionIds)) {
+            return List.of();
+        }
+        return this.lambdaQueryWrapper()
+            .in(AiSessionEntity::getSessionId, sessionIds)
+            .eq(AiSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .list();
     }
 
     /**
@@ -78,11 +93,22 @@ public class AiSessionServiceImpl
     }
 
     /**
-     * @see AiSessionService#deleteExpiredSessions(LocalDateTime)
+     * @see AiSessionService#findExpiredSessions(LocalDateTime)
      */
     @Override
-    public int deleteExpiredSessions(LocalDateTime before) {
+    public List<AiSessionEntity> findExpiredSessions(LocalDateTime before) {
+        return this.lambdaQueryWrapper()
+            .lt(AiSessionEntity::getExpiresAt, before)
+            .list();
+    }
+
+    /**
+     * @see AiSessionService#deleteExpiredSession(String, LocalDateTime)
+     */
+    @Override
+    public int deleteExpiredSession(String sessionId, LocalDateTime before) {
         return this.getMapper().delete(Wrappers.<AiSessionEntity>lambdaQuery()
+            .eq(AiSessionEntity::getSessionId, sessionId)
             .lt(AiSessionEntity::getExpiresAt, before)
         );
     }

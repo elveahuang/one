@@ -30,7 +30,7 @@ public class AiBaseTests extends BaseTests {
         Assertions.assertNotNull(this.aiManager);
 
         ChatClient chatClient = ChatClient.builder(this.aiManager.getChatModel())
-            .defaultAdvisors(this.aiManager.getSessionMemoryAdvisor())
+            .defaultAdvisors(this.aiManager.getSessionAdvisor())
             .defaultTools(this.commonTools)
             .build();
 

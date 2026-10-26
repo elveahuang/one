@@ -13,7 +13,6 @@ dependencies {
     implementation(libs.bundles.springAiCoreStarter)
     implementation(libs.bundles.springAiMcpCore)
     implementation(libs.bundles.springAiMcpStarter)
-    implementation(libs.bundles.springAiSessionStarter)
     implementation(libs.bundles.springSecurityCore)
     implementation(libs.bundles.springSecurityCoreStarter)
     implementation(libs.bundles.springSecurityClientStarter)

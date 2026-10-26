@@ -47,6 +47,12 @@ public class AiSessionEventEntity extends SimpleTenantEntity {
     private String sessionEventId;
 
     /**
+     * 事件类型
+     */
+    @Schema(description = "事件类型")
+    private String eventType;
+
+    /**
      * Timestamp
      */
     @Schema(description = "Timestamp")
@@ -70,7 +76,7 @@ public class AiSessionEventEntity extends SimpleTenantEntity {
      * 消息数据
      */
     @Schema(description = "消息数据")
-    private String messageData;
+    private String payload;
 
     /**
      * synthetic

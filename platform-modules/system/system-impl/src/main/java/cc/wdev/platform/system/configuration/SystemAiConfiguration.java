@@ -2,6 +2,7 @@ package cc.wdev.platform.system.configuration;
 
 import cc.wdev.platform.system.ai.api.AiApiKeyApi;
 import cc.wdev.platform.system.ai.service.AiSessionEventService;
+import cc.wdev.platform.system.ai.service.AiSessionIndexService;
 import cc.wdev.platform.system.ai.service.AiSessionService;
 import cc.wdev.platform.system.ai.support.CustomApiKeyRepository;
 import cc.wdev.platform.system.ai.support.CustomSessionRepository;
@@ -45,9 +46,11 @@ public class SystemAiConfiguration {
     @Bean
     public SessionService sessionService(AiSessionService aiSessionService,
                                          AiSessionEventService aiSessionEventService,
+                                         AiSessionIndexService aiSessionIndexService,
                                          PlatformTransactionManager transactionManager) {
         return DefaultSessionService.builder()
-            .sessionRepository(new CustomSessionRepository(aiSessionService, aiSessionEventService, transactionManager))
+            .sessionRepository(new CustomSessionRepository(
+                aiSessionService, aiSessionEventService, aiSessionIndexService, transactionManager))
             .defaultTimeToLive(Duration.ofDays(60))
             .build();
     }

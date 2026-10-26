@@ -4,19 +4,16 @@ import cc.wdev.platform.commons.core.tenant.TenantContext;
 import cc.wdev.platform.commons.enums.ActiveTypeEnum;
 import cc.wdev.platform.system.ai.domain.entity.AiSessionEntity;
 import cc.wdev.platform.system.ai.domain.entity.AiSessionEventEntity;
+import cc.wdev.platform.system.ai.domain.entity.AiSessionIndexEntity;
 import cc.wdev.platform.system.ai.service.AiSessionEventService;
+import cc.wdev.platform.system.ai.service.AiSessionIndexService;
 import cc.wdev.platform.system.ai.service.AiSessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
-import org.springframework.ai.session.EventFilter;
-import org.springframework.ai.session.Session;
-import org.springframework.ai.session.SessionEvent;
-import org.springframework.ai.session.SessionRepository;
-import org.springframework.ai.session.compaction.CompactionPlan;
+import org.springframework.ai.session.*;
 import org.springframework.ai.session.support.SessionEventCodec;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -37,8 +34,9 @@ import static cc.wdev.platform.commons.ai.AiConstants.CHAT_CONTEXT_TENANT_ID;
  * <ul>
  * <li>事件顺序由 {@code sys_ai_session_event.id}（BIGSERIAL，单调递增）承担参考实现中 {@code seq} 的角色。</li>
  * <li>{@code SessionEvent#getId()} 映射为全局唯一的 {@code session_event_id}，行主键只负责事件顺序。</li>
- * <li>会话行 {@code event_version} 承担 CAS 版本号：appendEvent 成功追加和 applyCompaction 成功时各递增一次。</li>
- * <li>过期会话通过单条 DELETE 清理，事件由外键级联删除；appendEvent 先锁定会话行，保证幂等检查和 compaction 的并发安全。</li>
+ * <li>会话行 {@code event_version} 承担 CAS 版本号：appendEvent 成功追加和 appendEvents 成功后各递增一次。</li>
+ * <li>压缩是追加 {@link EventType#COMPACTION} 边界事件，不修改或删除原事件；读取时由 {@link EventFilter} 投影活动视图。</li>
+ * <li>过期会话通过单条 DELETE 清理，事件由外键级联删除；appendEvent 先锁定会话行，保证幂等检查的并发安全。</li>
  * </ul>
  *
  * @author elvea
@@ -46,9 +44,13 @@ import static cc.wdev.platform.commons.ai.AiConstants.CHAT_CONTEXT_TENANT_ID;
 @Slf4j
 public class CustomSessionRepository implements SessionRepository {
 
+    private static final Set<String> INDEXED_ATTRIBUTES = Set.of(SessionAttributes.PRINCIPAL_NAME);
+
     private final AiSessionService aiSessionService;
 
     private final AiSessionEventService aiSessionEventService;
+
+    private final AiSessionIndexService aiSessionIndexService;
 
     private final TransactionTemplate transactionTemplate;
 
@@ -56,43 +58,61 @@ public class CustomSessionRepository implements SessionRepository {
 
     public CustomSessionRepository(AiSessionService aiSessionService,
                                    AiSessionEventService aiSessionEventService,
+                                   AiSessionIndexService aiSessionIndexService,
                                    PlatformTransactionManager transactionManager) {
         Assert.notNull(aiSessionService, "aiSessionService must not be null");
         Assert.notNull(aiSessionEventService, "aiSessionEventService must not be null");
+        Assert.notNull(aiSessionIndexService, "aiSessionIndexService must not be null");
         Assert.notNull(transactionManager, "transactionManager must not be null");
         this.aiSessionService = aiSessionService;
         this.aiSessionEventService = aiSessionEventService;
+        this.aiSessionIndexService = aiSessionIndexService;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
     // -------------------------------------------------------------------------
-    // SessionRepository - Session lifecycle
+    // SessionRepository - Sessions
     // -------------------------------------------------------------------------
 
     @Override
     public @NonNull Session save(@NonNull Session session) {
         Assert.notNull(session, "session must not be null");
 
-        AiSessionEntity entity = this.aiSessionService.findBySessionId(session.id());
-        if (entity == null) {
-            entity = toSessionEntity(session);
-        } else {
-            entity.setExpiresAt(toUtc(session.expiresAt()));
-            entity.setMetadata(this.codec.toJson(session.metadata()));
-            entity.setUserId(session.userId());
-        }
-        this.aiSessionService.save(entity);
+        this.transactionTemplate.executeWithoutResult(_ -> {
+            AiSessionEntity entity = this.aiSessionService.findBySessionId(session.id());
+            if (entity == null) {
+                entity = toSessionEntity(session);
+            } else {
+                entity.setExpiresAt(toUtc(session.expiresAt()));
+                entity.setMetadata(this.codec.toJson(session.metadata()));
+                String principalName = SessionAttributes.principalName(session);
+                if (principalName != null) {
+                    entity.setUserId(principalName);
+                }
+            }
+            this.aiSessionService.save(entity);
+            replaceSessionIndexes(session.id(), entity.getTenantId(), session.metadata());
+        });
         return Objects.requireNonNull(findById(session.id()), () -> "Session vanished after save: " + session.id());
     }
 
     @Override
     public boolean saveIfAbsent(@NonNull Session session) {
         Assert.notNull(session, "session must not be null");
-        if (this.aiSessionService.findBySessionId(session.id()) != null) {
+        try {
+            Boolean inserted = this.transactionTemplate.execute(_ -> {
+                if (this.aiSessionService.findBySessionId(session.id()) != null) {
+                    return false;
+                }
+                AiSessionEntity entity = toSessionEntity(session);
+                this.aiSessionService.insert(entity);
+                replaceSessionIndexes(session.id(), entity.getTenantId(), session.metadata());
+                return true;
+            });
+            return Boolean.TRUE.equals(inserted);
+        } catch (DuplicateKeyException ex) {
             return false;
         }
-        this.aiSessionService.insert(toSessionEntity(session));
-        return true;
     }
 
     @Override
@@ -102,25 +122,60 @@ public class CustomSessionRepository implements SessionRepository {
     }
 
     @Override
-    public @NonNull List<Session> findByUserId(@NonNull String userId) {
-        Assert.hasText(userId, "userId must not be null or empty");
-        return this.aiSessionService.findByUserId(userId).stream().map(this::toSession).toList();
+    public @NonNull List<Session> findByMetadata(@NonNull String name, @NonNull String value) {
+        Assert.hasText(name, "name must not be null or empty");
+        Assert.notNull(value, "value must not be null");
+        Set<String> sessionIds = this.aiSessionIndexService.findByAttrNameAndValue(name, value).stream()
+            .map(AiSessionIndexEntity::getSessionId)
+            .collect(java.util.stream.Collectors.toSet());
+        if (sessionIds.isEmpty()) {
+            return List.of();
+        }
+        List<AiSessionEntity> candidates = this.aiSessionService.findBySessionIds(sessionIds);
+        return candidates.stream()
+            .filter(entity -> Objects.equals(ActiveTypeEnum.ENABLED.getValue(), entity.getActive()))
+            .map(this::toSession)
+            .filter(Objects::nonNull)
+            .filter(session -> session.metadata().containsKey(name)
+                && value.equals(String.valueOf(session.metadata().get(name))))
+            .sorted(Comparator.comparing(Session::createdAt).thenComparing(Session::id))
+            .toList();
     }
 
     @Override
     public int deleteExpiredSessions(@NonNull Instant before) {
         Assert.notNull(before, "before must not be null");
-        return this.aiSessionService.deleteExpiredSessions(toUtc(before));
+        LocalDateTime cutoff = Objects.requireNonNull(toUtc(before), "expiration cutoff must not be null");
+        int deleted = 0;
+        for (AiSessionEntity session : this.aiSessionService.findExpiredSessions(cutoff)) {
+            Boolean removed = this.transactionTemplate.execute(_ -> {
+                // 先按 expires_at 条件删除会话，避免并发续期后误删子表数据。
+                int count = this.aiSessionService.deleteExpiredSession(session.getSessionId(), cutoff);
+                if (count > 0) {
+                    this.aiSessionEventService.deleteBySessionId(session.getSessionId());
+                    this.aiSessionIndexService.deleteBySessionId(session.getSessionId());
+                }
+                return count > 0;
+            });
+            if (Boolean.TRUE.equals(removed)) {
+                deleted++;
+            }
+        }
+        return deleted;
     }
 
     @Override
     public void delete(@NonNull String sessionId) {
         Assert.hasText(sessionId, "sessionId must not be null or empty");
-        this.aiSessionService.deleteBySessionId(sessionId);
+        this.transactionTemplate.executeWithoutResult(_ -> {
+            this.aiSessionService.deleteBySessionId(sessionId);
+            this.aiSessionEventService.deleteBySessionId(sessionId);
+            this.aiSessionIndexService.deleteBySessionId(sessionId);
+        });
     }
 
     // -------------------------------------------------------------------------
-    // SessionRepository — event log
+    // SessionRepository - Events
     // -------------------------------------------------------------------------
 
     @Override
@@ -129,7 +184,7 @@ public class CustomSessionRepository implements SessionRepository {
         String sessionId = event.getSessionId();
         try {
             this.transactionTemplate.executeWithoutResult(_ -> {
-                // UPDATE 先锁定会话行，既有并发 compaction 在这里串行化，事件序号也不会越过尚未提交的 compaction 尾部。
+                // UPDATE 先锁定会话行，并发 compaction 在这里串行化。
                 int updated = this.aiSessionService.incrementEventVersion(sessionId);
                 if (updated == 0) {
                     throw new IllegalArgumentException("Session not found: " + sessionId);
@@ -155,16 +210,37 @@ public class CustomSessionRepository implements SessionRepository {
     }
 
     @Override
-    public boolean applyCompaction(@NonNull String sessionId, @NonNull CompactionPlan plan, long expectedVersion) {
+    public boolean appendEvents(@NonNull String sessionId, @NonNull List<SessionEvent> events, long expectedVersion) {
         Assert.hasText(sessionId, "sessionId must not be null or empty");
-        Assert.notNull(plan, "plan must not be null");
-        AiSessionEntity session = requireSessionExists(sessionId);
+        Assert.notEmpty(events, "events must not be empty");
+        Set<String> batchIds = new HashSet<>();
+        for (SessionEvent event : events) {
+            Assert.isTrue(sessionId.equals(event.getSessionId()),
+                () -> "Event '" + event.getId() + "' belongs to session '" + event.getSessionId() + "'");
+            Assert.isTrue(batchIds.add(event.getId()),
+                () -> "Event id '" + event.getId() + "' appears twice in the batch");
+        }
+
         Boolean success = this.transactionTemplate.execute(_ -> {
-            if (this.aiSessionService.casIncrementEventVersion(sessionId, expectedVersion) == 0) {
+            int updated = this.aiSessionService.casIncrementEventVersion(sessionId, expectedVersion);
+            if (updated == 0) {
+                if (this.aiSessionService.findBySessionId(sessionId) == null) {
+                    throw new IllegalArgumentException("Session not found: " + sessionId);
+                }
                 return false;
             }
-            archiveInPlace(sessionId, plan.archiveIds());
-            insertEvents(sessionId, session.getTenantId(), plan.inserts());
+
+            List<AiSessionEventEntity> taken =
+                this.aiSessionEventService.findBySessionEventIds(List.copyOf(batchIds));
+            if (!taken.isEmpty()) {
+                throw new IllegalArgumentException("Event id '" + taken.getFirst().getSessionEventId()
+                    + "' is already in the log");
+            }
+
+            AiSessionEntity session = requireSessionExists(sessionId);
+            this.aiSessionEventService.saveBatch(events.stream()
+                .map(event -> toEventEntity(event, session.getTenantId()))
+                .toList());
             return true;
         });
         return Boolean.TRUE.equals(success);
@@ -182,117 +258,16 @@ public class CustomSessionRepository implements SessionRepository {
         Assert.hasText(sessionId, "sessionId must not be null or empty");
         Assert.notNull(filter, "filter must not be null");
 
-        // Pattern 与多关键词保留在内存中执行；其余条件尽量下推，窗口也随之下推。
-        boolean inMemoryWindow = filter.pattern() != null || filter.keywords() != null;
-        List<AiSessionEventEntity> entities = this.aiSessionEventService.findEvents(
-            sessionId, inMemoryWindow ? filter.withoutWindow() : filter);
-        List<SessionEvent> events = entities.stream().map(this::toSessionEvent).toList();
-
-        if (inMemoryWindow) {
-            return filter.apply(events);
-        }
-
-        if (filter.lastN() != null) {
-            List<SessionEvent> window = new ArrayList<>(events);
-            Collections.reverse(window);
-            return Collections.unmodifiableList(extendToTurnStart(sessionId, filter, window));
-        }
-        return events;
-    }
-
-    @Override
-    public @NonNull List<SessionEvent> findEventsByUserId(@NonNull String userId, @NonNull EventFilter filter) {
-        Assert.hasText(userId, "userId must not be null or empty");
-        Assert.notNull(filter, "filter must not be null");
-        EventFilter perSession = filter.withoutWindow();
-        List<SessionEvent> matches = new ArrayList<>();
-        for (Session session : findByUserId(userId)) {
-            matches.addAll(findEvents(session.id(), perSession));
-        }
-        matches.sort(Comparator.comparing(SessionEvent::getTimestamp).thenComparing(SessionEvent::getId));
-        return filter.applyWindow(matches);
+        List<SessionEvent> events = this.aiSessionEventService.findBySessionId(sessionId).stream()
+            .map(this::toSessionEvent)
+            .toList();
+        // activeView、turn 补齐和窗口语义统一由框架参考实现处理，避免两套规则漂移。
+        return filter.apply(events);
     }
 
     // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------
-
-    private void archiveInPlace(String sessionId, Set<String> archiveIds) {
-        if (archiveIds.isEmpty()) {
-            return;
-        }
-
-        this.aiSessionEventService.archiveByIds(sessionId, List.copyOf(archiveIds));
-    }
-
-    /**
-     * 将每个新事件组插入锚点之前；无锚点的组追加到末尾。顺序列由数据库生成，因此从最小锚点开始的尾部会重写，
-     * 与 {@link org.springframework.ai.session.jdbc.JdbcSessionRepository} 的行为保持一致。
-     */
-    private void insertEvents(String sessionId, @Nullable Long tenantId, List<CompactionPlan.Insert> inserts) {
-        if (inserts.isEmpty()) {
-            return;
-        }
-
-        Map<String, List<SessionEvent>> insertBefore = new LinkedHashMap<>();
-        List<SessionEvent> append = new ArrayList<>();
-        Map<String, Long> anchorSequences = new LinkedHashMap<>();
-        for (CompactionPlan.Insert insert : inserts) {
-            for (SessionEvent event : insert.events()) {
-                Assert.isTrue(sessionId.equals(event.getSessionId()),
-                    "Compaction insert contains an event for another session");
-            }
-            if (insert.isAppend()) {
-                append.addAll(insert.events());
-                continue;
-            }
-
-            String anchorId = insert.beforeEventId();
-            AiSessionEventEntity anchor = this.aiSessionEventService.findBySessionEventId(anchorId);
-            if (anchor == null || !sessionId.equals(anchor.getSessionId())) {
-                throw new IllegalArgumentException(
-                    "inserts refers to an anchor event that is not in the log of session " + sessionId);
-            }
-            anchorSequences.put(anchorId, anchor.getId());
-            insertBefore.computeIfAbsent(anchorId, _ -> new ArrayList<>()).addAll(insert.events());
-        }
-
-        List<SessionEvent> toInsert = new ArrayList<>();
-        if (!anchorSequences.isEmpty()) {
-            long fromSequence = anchorSequences.values().stream().mapToLong(Long::longValue).min().orElseThrow();
-            List<AiSessionEventEntity> tail = this.aiSessionEventService.findFromSequence(sessionId, fromSequence);
-            this.aiSessionEventService.deleteFromSequence(sessionId, fromSequence);
-            for (AiSessionEventEntity entity : tail) {
-                SessionEvent event = toSessionEvent(entity);
-                toInsert.addAll(insertBefore.getOrDefault(event.getId(), List.of()));
-                toInsert.add(event);
-            }
-        }
-        toInsert.addAll(append);
-        saveEvents(tenantId, toInsert);
-    }
-
-    /**
-     * lastN 窗口落在某个 turn 中间时，向前补齐到该 turn 的起点（USER 事件），
-     * 避免只返回工具调用而没有它所属的用户消息。
-     */
-    private List<SessionEvent> extendToTurnStart(String sessionId, EventFilter filter, List<SessionEvent> window) {
-        Integer lastN = filter.lastN();
-        if (lastN == null || window.isEmpty() || window.size() < lastN || window.getFirst().isTurnStart()
-            || filter.hasTextCriteria()
-            || (filter.messageTypes() != null && !filter.messageTypes().contains(MessageType.USER))) {
-            return window;
-        }
-        List<AiSessionEventEntity> head = this.aiSessionEventService.findTurnHead(
-            sessionId, window.getFirst().getId(), filter);
-        if (head.isEmpty()) {
-            return window;
-        }
-        List<SessionEvent> extended = new ArrayList<>(head.size() + window.size());
-        head.stream().map(this::toSessionEvent).forEach(extended::add);
-        extended.addAll(window);
-        return extended;
-    }
 
     private AiSessionEntity requireSessionExists(String sessionId) {
         AiSessionEntity entity = this.aiSessionService.findBySessionId(sessionId);
@@ -300,13 +275,6 @@ public class CustomSessionRepository implements SessionRepository {
             throw new IllegalArgumentException("Session not found: " + sessionId);
         }
         return entity;
-    }
-
-    private void saveEvents(@Nullable Long tenantId, List<SessionEvent> events) {
-        if (events.isEmpty()) {
-            return;
-        }
-        this.aiSessionEventService.saveBatch(events.stream().map(event -> toEventEntity(event, tenantId)).toList());
     }
 
     private static String eventIdCollisionMessage(String eventId) {
@@ -317,6 +285,16 @@ public class CustomSessionRepository implements SessionRepository {
         return MapUtils.getLong(session.metadata(), CHAT_CONTEXT_TENANT_ID, TenantContext.getTenantId());
     }
 
+    private String resolvePrincipalName(Session session) {
+        String principalName = SessionAttributes.principalName(session);
+        return principalName != null ? principalName : "";
+    }
+
+    private void replaceSessionIndexes(String sessionId, @Nullable Long tenantId, Map<String, Object> metadata) {
+        this.aiSessionIndexService.replaceSessionIndexes(
+            sessionId, tenantId, metadata, INDEXED_ATTRIBUTES);
+    }
+
     private AiSessionEntity toSessionEntity(Session session) {
         AiSessionEntity entity = new AiSessionEntity();
         entity.setCreatedAt(toUtc(session.createdAt()));
@@ -324,7 +302,7 @@ public class CustomSessionRepository implements SessionRepository {
         entity.setActive(ActiveTypeEnum.ENABLED.getValue());
         entity.setTenantId(resolveTenantId(session));
         entity.setSessionId(session.id());
-        entity.setUserId(session.userId());
+        entity.setUserId(resolvePrincipalName(session));
         entity.setMetadata(this.codec.toJson(session.metadata()));
         entity.setExpiresAt(toUtc(session.expiresAt()));
         return entity;
@@ -336,11 +314,15 @@ public class CustomSessionRepository implements SessionRepository {
             return null;
         }
 
+        Map<String, Object> metadata = new HashMap<>(this.codec.fromJsonMap(entity.getMetadata()));
+        if (!metadata.containsKey(SessionAttributes.PRINCIPAL_NAME) && entity.getUserId() != null) {
+            metadata.put(SessionAttributes.PRINCIPAL_NAME, entity.getUserId());
+        }
+
         Session.Builder builder = Session.builder()
             .id(entity.getSessionId())
-            .userId(entity.getUserId() != null ? entity.getUserId() : "")
             .createdAt(Objects.requireNonNull(fromUtc(entity.getCreatedAt()), "session.createdAt must not be null"))
-            .metadata(this.codec.fromJsonMap(entity.getMetadata()));
+            .metadata(metadata);
         if (entity.getExpiresAt() != null) {
             builder.expiresAt(fromUtc(entity.getExpiresAt()));
         }
@@ -348,34 +330,43 @@ public class CustomSessionRepository implements SessionRepository {
     }
 
     private SessionEvent toSessionEvent(AiSessionEventEntity entity) {
-        Message message = this.codec.decode(new SessionEventCodec.EncodedMessage(
-            MessageType.valueOf(entity.getMessageType()), entity.getMessageContent(), entity.getMessageData()));
+        EventType eventType = entity.getEventType() == null || entity.getEventType().isBlank()
+            ? EventType.MESSAGE
+            : EventType.of(entity.getEventType());
+        MessageType messageType = entity.getMessageType() == null || entity.getMessageType().isBlank()
+            ? null
+            : MessageType.valueOf(entity.getMessageType());
+        SessionEvent.Builder builder = this.codec.decode(new SessionEventCodec.EncodedEvent(
+            eventType,
+            messageType,
+            entity.getMessageContent(),
+            entity.getPayload() != null ? entity.getPayload() : ""));
+
         Map<String, Object> metadata = new HashMap<>(this.codec.fromJsonMap(entity.getMetadata()));
         if (entity.getSynthetic() != null && entity.getSynthetic() == 1) {
             metadata.put(SessionEvent.METADATA_SYNTHETIC, true);
         }
-        return SessionEvent.builder()
+        return builder
             .id(entity.getSessionEventId() != null ? entity.getSessionEventId() : String.valueOf(entity.getId()))
             .sessionId(entity.getSessionId())
             .timestamp(Objects.requireNonNull(fromUtc(entity.getTimestamp()), "event.timestamp must not be null"))
-            .message(message)
-            .archived(entity.getArchived() != null && entity.getArchived() == 1)
             .metadata(metadata)
             .build();
     }
 
     private AiSessionEventEntity toEventEntity(SessionEvent event, @Nullable Long tenantId) {
-        SessionEventCodec.EncodedMessage message = this.codec.encode(event.getMessage());
+        SessionEventCodec.EncodedEvent encoded = this.codec.encode(event);
         AiSessionEventEntity entity = new AiSessionEventEntity();
         entity.setTenantId(tenantId);
         entity.setSessionId(event.getSessionId());
         entity.setSessionEventId(event.getId());
+        entity.setEventType(encoded.type().name());
         entity.setTimestamp(toUtc(event.getTimestamp()));
-        entity.setMessageType(message.type().name());
-        entity.setMessageContent(message.text());
-        entity.setMessageData(message.data());
+        entity.setMessageType(encoded.messageType() != null ? encoded.messageType().name() : null);
+        entity.setMessageContent(encoded.text());
+        entity.setPayload(encoded.payload());
         entity.setSynthetic(event.isSynthetic() ? ActiveTypeEnum.ENABLED.getValue() : ActiveTypeEnum.DISABLED.getValue());
-        entity.setArchived(event.isArchived() ? ActiveTypeEnum.ENABLED.getValue() : ActiveTypeEnum.DISABLED.getValue());
+        entity.setArchived(ActiveTypeEnum.DISABLED.getValue());
         entity.setMetadata(this.codec.toJson(event.getMetadata()));
         entity.setActive(ActiveTypeEnum.ENABLED.getValue());
         return entity;

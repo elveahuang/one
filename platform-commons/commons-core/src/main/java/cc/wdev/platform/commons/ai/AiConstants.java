@@ -1,5 +1,6 @@
 package cc.wdev.platform.commons.ai;
 
+import org.springframework.ai.session.SessionAttributes;
 import org.springframework.ai.session.advisor.SessionMemoryAdvisor;
 
 import java.time.Duration;
@@ -9,13 +10,17 @@ import java.time.Duration;
  */
 public interface AiConstants {
 
-    String CHAT_CONTEXT_SESSION_ID = SessionMemoryAdvisor.SESSION_ID_CONTEXT_KEY;
+    String CHAT_CONTEXT_SESSION = SessionMemoryAdvisor.SESSION_ID_CONTEXT_KEY;
 
-    String CHAT_CONTEXT_USER_ID = SessionMemoryAdvisor.USER_ID_CONTEXT_KEY;
+    String CHAT_CONTEXT_SESSION_METADATA = SessionMemoryAdvisor.SESSION_METADATA_CONTEXT_KEY;
+
+    String CHAT_CONTEXT_USER_ID = SessionAttributes.PRINCIPAL_NAME;
 
     String CHAT_CONTEXT_TENANT_ID = "chat_memory_tenant_id";
 
     String CHAT_CONTEXT_CHAT_TYPE = "chat_memory_chat_type";
+
+    String CHAT_CONTEXT_AGENT_CODE = "chat_memory_agent_code";
 
     /**
      * 默认对话标识，只能用于单元测试，禁止在业务流程中使用
@@ -52,7 +57,7 @@ public interface AiConstants {
     /**
      * 系统默认提示词
      */
-    String DEFDAULT_PROMPT = """
+    String DEFAULT_PROMPT = """
         你是一个专业智能助手，你需要根据用户的问题，回答用户的问题。
         """;
 
@@ -62,14 +67,10 @@ public interface AiConstants {
 
     String METADATA_SESSION_ID = "sessionId";
 
-    String METADATA_CHAT_MEMORY_ID = "chatMemoryId";
-
     String METADATA_CHAT_TYPE = "chatType";
 
     String METADATA_AGENT_CODE = "agentCode";
 
     String DEFAULT_IMAGE_SIZE = "512*512";
-
-    int MAX_MEMORY_MESSAGE_COUNT = 36;
 
 }
