@@ -2333,7 +2333,7 @@ CREATE INDEX ix_sys_ai_api_key__apikey ON sys_ai_api_key (app_id);
 
 DROP TABLE IF EXISTS sys_ai_session;
 
-CREATE TABLE sys_ai_session
+CREATE TABLE IF NOT EXISTS sys_ai_session
 (
     `id`            BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
     `tenant_id`     BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
@@ -2349,6 +2349,9 @@ CREATE TABLE sys_ai_session
 ) COMMENT 'AI Session';
 
 CREATE UNIQUE INDEX ux_sys_ai_session__session_id ON sys_ai_session (session_id);
+CREATE INDEX ix_sys_ai_session__tenant_id ON sys_ai_session (tenant_id);
+CREATE INDEX ix_sys_ai_session__user_id ON sys_ai_session (user_id);
+CREATE INDEX ix_sys_ai_session__expires_at ON sys_ai_session (expires_at);
 
 --
 -- AI Session Index
@@ -2356,7 +2359,7 @@ CREATE UNIQUE INDEX ux_sys_ai_session__session_id ON sys_ai_session (session_id)
 
 DROP TABLE IF EXISTS sys_ai_session_index;
 
-CREATE TABLE sys_ai_session_index
+CREATE TABLE IF NOT EXISTS sys_ai_session_index
 (
     `id`         BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
     `tenant_id`  BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
@@ -2374,7 +2377,7 @@ CREATE INDEX ix_sys_ai_session_index__name_value ON sys_ai_session_index (attr_n
 
 DROP TABLE IF EXISTS sys_ai_session_event;
 
-CREATE TABLE sys_ai_session_event
+CREATE TABLE IF NOT EXISTS sys_ai_session_event
 (
     `id`               BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '事件顺序ID（对应参考 seq）',
     `tenant_id`        BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
@@ -2399,36 +2402,6 @@ CREATE INDEX ix_sys_ai_session_event__tenant_id ON sys_ai_session_event (tenant_
 CREATE INDEX ix_sys_ai_session_event__session ON sys_ai_session_event (session_id, id);
 CREATE INDEX ix_sys_ai_session_event__session_type_id ON sys_ai_session_event (session_id, event_type, id);
 CREATE INDEX ix_sys_ai_session_event__archived ON sys_ai_session_event (session_id, archived);
-
---
--- 对话记录
---
-
-DROP TABLE IF EXISTS sys_ai_chat_memory;
-
-CREATE TABLE sys_ai_chat_memory
-(
-    `id`              BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
-    `tenant_id`       BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
-    `user_id`         BIGINT       NOT NULL DEFAULT 0 COMMENT '用户ID',
-    `conversation_id` VARCHAR(100) NOT NULL DEFAULT '' COMMENT '会话标识',
-    `content`         TEXT         NULL COMMENT '对话内容',
-    `type`            VARCHAR(100) NOT NULL DEFAULT '' COMMENT '对话类型',
-    `chat_type`       VARCHAR(100) NOT NULL DEFAULT '' COMMENT '聊天类型',
-    `agent_code`      VARCHAR(100) NOT NULL DEFAULT '' COMMENT '智能体编号',
-    `version`         BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
-    `active`          SMALLINT     NOT NULL DEFAULT 1 COMMENT '启用状态',
-    `created_by`      BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
-    `created_at`      DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间',
-    `updated_by`      BIGINT       NOT NULL DEFAULT 0 COMMENT '修改人',
-    `updated_at`      DATETIME     NOT NULL DEFAULT NOW() COMMENT '修改时间',
-    `deleted_by`      BIGINT       NOT NULL DEFAULT 0 COMMENT '删除人',
-    `deleted_at`      DATETIME     NULL COMMENT '删除时间'
-) COMMENT '对话记录';
-
-CREATE INDEX ix_sys_ai_chat_memory__tenant_id ON sys_ai_chat_memory (tenant_id);
-CREATE INDEX ix_sys_ai_chat_memory__conversation_id ON sys_ai_chat_memory (conversation_id);
-CREATE INDEX ix_sys_ai_chat_memory__user_id ON sys_ai_chat_memory (user_id);
 
 --
 -- AI 用量统计

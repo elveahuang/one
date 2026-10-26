@@ -42,6 +42,9 @@ public interface AiConstants {
      */
     String DEFAULT_TEST_VECTOR_STORE_COLLECTION_NAME = "test";
 
+    /**
+     * 默认超时时间
+     */
     int DEFAULT_CHUNK_LIST_LIMIT = 500;
 
     /**
@@ -60,16 +63,6 @@ public interface AiConstants {
     String DEFAULT_PROMPT = """
         你是一个专业智能助手，你需要根据用户的问题，回答用户的问题。
         """;
-
-    String METADATA_TENANT_ID = "tenantId";
-
-    String METADATA_USER_ID = "userId";
-
-    String METADATA_SESSION_ID = "sessionId";
-
-    String METADATA_CHAT_TYPE = "chatType";
-
-    String METADATA_AGENT_CODE = "agentCode";
 
     String DEFAULT_IMAGE_SIZE = "512*512";
 

@@ -3789,10 +3789,10 @@ CREATE TABLE IF NOT EXISTS sys_ai_session
     created_at    TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
+CREATE UNIQUE INDEX ux_sys_ai_session__session_id ON sys_ai_session (session_id);
 CREATE INDEX ix_sys_ai_session__tenant_id ON sys_ai_session (tenant_id);
 CREATE INDEX ix_sys_ai_session__user_id ON sys_ai_session (user_id);
 CREATE INDEX ix_sys_ai_session__expires_at ON sys_ai_session (expires_at);
-CREATE UNIQUE INDEX ux_sys_ai_session__session_id ON sys_ai_session (session_id);
 
 COMMENT ON TABLE sys_ai_session IS 'AI Session';
 COMMENT ON COLUMN sys_ai_session.id IS '本地主键';
