@@ -8,6 +8,7 @@ import cc.wdev.platform.commons.ai.config.ServiceProviderConfig;
 import cc.wdev.platform.commons.ai.enums.AiModelProvider;
 import cc.wdev.platform.commons.ai.factory.ModelFactory;
 import cc.wdev.platform.commons.ai.factory.audio.OpenAiTranscriptionModelFactory;
+import cc.wdev.platform.commons.ai.factory.chat.AnthropicChatModelFactory;
 import cc.wdev.platform.commons.ai.factory.chat.DeepSeekChatModelFactory;
 import cc.wdev.platform.commons.ai.factory.chat.OpenAiChatModelFactory;
 import cc.wdev.platform.commons.ai.factory.embedding.OpenAiEmbeddingModelFactory;
@@ -35,6 +36,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.ai.anthropic.AnthropicChatModel;
+import org.springframework.ai.anthropic.http.okhttp.AnthropicHttpClientBuilderCustomizer;
 import org.springframework.ai.chat.observation.ChatModelObservationConvention;
 import org.springframework.ai.deepseek.DeepSeekChatModel;
 import org.springframework.ai.embedding.BatchingStrategy;
@@ -151,6 +154,23 @@ public class AiAutoConfiguration {
             config.getFactory().getChatModelProvider(), AiModelProvider.OPENAI.name()
         ).toLowerCase());
         return new OpenAiChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
+            observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(AnthropicChatModel.class)
+    public AnthropicChatModelFactory anthropicChatModelFactory(
+        AiConfig config,
+        ObjectProvider<ObservationRegistry> observationRegistry,
+        ObjectProvider<MeterRegistry> meterRegistry,
+        ObjectProvider<ChatModelObservationConvention> observationConvention,
+        ObjectProvider<AnthropicHttpClientBuilderCustomizer> httpClientBuilderCustomizers
+    ) {
+        ModelProviderConfig providerConfig = AiUtils.resolveModelProviderConfig(config, StringUtils.nvl(
+            config.getFactory().getChatModelProvider(), AiModelProvider.ANTHROPIC.name()
+        ).toLowerCase());
+        return new AnthropicChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
             observationRegistry, meterRegistry, observationConvention, httpClientBuilderCustomizers);
     }
 

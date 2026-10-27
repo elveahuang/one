@@ -26,8 +26,8 @@ mybatisVersion = "3.5.19"
 mybatisDynamicSqlVersion = "2.0.0"
 mybatisSpringVersion = "4.1.0"
 mybatisSpringStarterVersion = "4.1.0"
-mybatisPlusVersion = "3.5.17"
-jsqlparserVersion = "5.3"
+mybatisPlusVersion = "3.5.18"
+jsqlparserVersion = "5.4"
 shardingSphereVersion = "5.5.3"
 jacksonVersion = "3.2.4"
 okhttpVersion = "5.5.0"
@@ -165,8 +165,9 @@ spring-cloud-starter-loadbalancer = { module = "org.springframework.cloud:spring
 # Spring AI
 spring-ai-model = { module = "org.springframework.ai:spring-ai-model" }
 spring-ai-client-chat = { module = "org.springframework.ai:spring-ai-client-chat" }
-spring-ai-openai = { module = "org.springframework.ai:spring-ai-openai" }
+spring-ai-anthropic = { module = "org.springframework.ai:spring-ai-anthropic" }
 spring-ai-deepseek = { module = "org.springframework.ai:spring-ai-deepseek" }
+spring-ai-openai = { module = "org.springframework.ai:spring-ai-openai" }
 spring-ai-mcp = { module = "org.springframework.ai:spring-ai-mcp" }
 spring-ai-mcp-annotations = { module = "org.springframework.ai:spring-ai-mcp-annotations" }
 spring-ai-rag = { module = "org.springframework.ai:spring-ai-rag" }
@@ -469,7 +470,7 @@ springCloudCoreStarter = ["spring-cloud-starter-consul-discovery", "spring-cloud
 springCloudGatewayServerStarter = ["spring-cloud-starter-gateway-server-webflux"]
 
 # Spring AI
-springAiCore = ["spring-ai-client-chat", "spring-ai-openai", "spring-ai-deepseek", "spring-ai-rag", "spring-ai-vector-store-advisor", "spring-ai-agent-utils", "spring-ai-session", "spring-ai-session-jdbc", "spring-ai-session-advisor"]
+springAiCore = ["spring-ai-client-chat", "spring-ai-anthropic", "spring-ai-deepseek", "spring-ai-openai", "spring-ai-rag", "spring-ai-vector-store-advisor", "spring-ai-agent-utils", "spring-ai-session", "spring-ai-session-jdbc", "spring-ai-session-advisor"]
 springAiReader = ["spring-ai-jsoup-document-reader", "spring-ai-markdown-document-reader", "spring-ai-pdf-document-reader", "spring-ai-tika-document-reader"]
 springAiCoreStarter = ["spring-ai-autoconfigure-model-tool", "spring-ai-autoconfigure-retry", "spring-ai-autoconfigure-model-chat-observation"]
 springAiBaseStarter = ["spring-ai-starter-model-openai", "spring-ai-starter-model-deepseek"]

@@ -15,6 +15,7 @@ import lombok.Getter;
 public enum AiServiceProvider implements BaseEnum<String> {
     SPRING_AI_DEEPSEEK("SPRING_AI_DEEPSEEK", "Spring AI DeepSeek", true),
     SPRING_AI_OPENAI("SPRING_AI_OPENAI", "Spring AI OpenAI", true),
+    SPRING_AI_ANTHROPIC("SPRING_AI_ANTHROPIC", "Spring AI Anthropic", true),
     ALIYUN_DASHSCOPE_SDK("ALIYUN_DASHSCOPE_SDK", "Aliyun DashScope SDK", true),
     TENCENT_HUNYUAN_SDK("TENCENT_HUNYUAN_SDK", "Tencent HunYuan SDK", true),
     OPENAI_SDK("OPENAI_SDK", "OpenAI SDK", true),

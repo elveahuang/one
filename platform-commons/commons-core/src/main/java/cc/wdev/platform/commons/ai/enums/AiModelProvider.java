@@ -18,6 +18,16 @@ public enum AiModelProvider implements BaseEnum<String> {
         new AiModelType[]{AiModelType.TEXT, AiModelType.EMBEDDING}
     ),
 
+    ANTHROPIC("ANTHROPIC", "Anthropic", true,
+        new Model[]{
+            new Model("claude-opus-5-5", true, true, AiModelType.TEXT),
+            new Model("claude-sonnet-5-5", true, true, AiModelType.TEXT),
+            new Model("claude-haiku-5-5", true, true, AiModelType.TEXT),
+            new Model("claude-fable-5-1", true, true, AiModelType.TEXT),
+        },
+        new AiModelType[]{AiModelType.TEXT}
+    ),
+
     DEEPSEEK("DEEPSEEK", "深度求索", true,
         new Model[]{
             new Model("deepseek-flash", true, false, AiModelType.TEXT),
