@@ -1,6 +1,7 @@
 package cc.wdev.platform.system.security.domain.entity;
 
 import cc.wdev.platform.commons.data.mybatis.domain.BaseTenantEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 
@@ -17,8 +18,9 @@ import java.time.LocalDateTime;
 @TableName("sys_authorization")
 public class AuthorizationEntity extends BaseTenantEntity {
     /**
-     *
+     * uuid 与 jsqlparser 5.4 关键字冲突，用带引号标识符
      */
+    @TableField("\"uuid\"")
     private String uuid;
     /**
      *

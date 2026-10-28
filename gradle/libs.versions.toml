@@ -479,7 +479,7 @@ springAiRagStarter = ["spring-ai-starter-vector-store-elasticsearch", "spring-ai
 springAiMcpCore = ["spring-ai-mcp", "spring-ai-mcp-annotations", "mcp-client-security", "mcp-server-security"]
 springAiMcpStarter = ["spring-ai-starter-mcp-client", "spring-ai-starter-mcp-server-webmvc", "mcp-server-security-spring-boot"]
 
-# EmbabelAgent
+# Embabel Agent
 embabelAgentCore = ["embabel-agent-openai"]
 embabelAgentStarter = ["embabel-agent-starter-deepseek", "embabel-agent-starter-openai"]
 

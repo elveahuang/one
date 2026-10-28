@@ -5,6 +5,7 @@ import cc.wdev.platform.commons.core.cache.SimpleCacheKeyGenerator;
 import cc.wdev.platform.commons.data.mybatis.service.BaseCachingEntityService;
 import cc.wdev.platform.commons.data.mybatis.utils.MyBatisPlusUtils;
 import cc.wdev.platform.commons.enums.PlatformTypeEnum;
+import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.SecurityUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.commons.constants.SystemCacheConstants;
@@ -90,6 +91,21 @@ public class LoginSessionServiceImpl extends BaseCachingEntityService<LoginSessi
         LoginSessionEntity condition = new LoginSessionEntity();
         condition.setSessionId(sessionId);
         return this.findOne(new QueryWrapper<>(condition));
+    }
+
+    /**
+     * @see LoginSessionService#closeByUserId(Long)
+     */
+    @Override
+    public void closeByUserId(Long userId) {
+        if (!ObjectUtils.isValidId(userId)) {
+            return;
+        }
+        this.lambdaUpdateWrapper()
+            .eq(LoginSessionEntity::getUserId, userId)
+            .isNull(LoginSessionEntity::getEndDatetime)
+            .set(LoginSessionEntity::getEndDatetime, LocalDateTime.now())
+            .update();
     }
 
     /**

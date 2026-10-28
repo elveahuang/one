@@ -27,6 +27,11 @@ public interface LoginSessionService extends CachingEntityService<LoginSessionEn
     LoginSessionEntity findBySessionId(String sessionId);
 
     /**
+     * 关闭指定用户的未结束会话（写入结束时间），用于登出链路
+     */
+    void closeByUserId(Long userId);
+
+    /**
      * 用户会话终端来源饼图
      */
     ChartVo getPlatformPieChart(Integer type, String dateTime);

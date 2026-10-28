@@ -84,6 +84,7 @@ public class TagSysController extends AbstractController {
     @ApiResponse(description = "保存标签")
     @PostMapping(API_V1_SYS_PREFIX + "/tag/save")
     public R<?> tagSave(@RequestBody @Valid TagSaveRequest form) {
+        // 注意：/tag/search 固定查 tenant 0 但租户拦截器会追加当前租户条件（见 AGENTS 已知问题），当前保存语义与租户端点一致
         form.setTenantId(TenantContext.getTenantId());
         tagService.saveTag(form);
         return R.success();

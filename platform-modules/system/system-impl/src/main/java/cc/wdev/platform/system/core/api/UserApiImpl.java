@@ -74,6 +74,8 @@ public class UserApiImpl implements UserApi {
 
     private final UserRoleService userRoleService;
 
+    private final LoginSessionService loginSessionService;
+
     private final CaptchaService captchaService;
 
     private final TenantService tenantService;
@@ -551,6 +553,12 @@ public class UserApiImpl implements UserApi {
         if (SecurityUtils.isAnonymous()) {
             String userName = SecurityUtils.getUsername();
             log.info("Current username - [{}}]", userName);
+        }
+        // 登出时关闭该用户的未结束会话（会话经 RabbitMQ 异步落库，sessionId 与 access token jti 不同源，故按用户关闭）
+        Long userId = SecurityUtils.getUid();
+        log.info("Logout - username [{}], userId [{}]", SecurityUtils.getUsername(), userId);
+        if (ObjectUtils.isValidId(userId)) {
+            this.loginSessionService.closeByUserId(userId);
         }
         return R.success();
     }

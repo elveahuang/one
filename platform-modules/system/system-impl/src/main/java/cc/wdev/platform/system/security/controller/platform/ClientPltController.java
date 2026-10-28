@@ -22,7 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_SYS_PREFIX;
+import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_PLT_PREFIX;
 
 /**
  * @author elvea
@@ -42,7 +42,7 @@ public class ClientPltController extends AbstractController {
     @PreAuthorize("hasAnyAuthority('system:client')")
     @Operation(summary = "获取客户端列表")
     @ApiResponse(description = "获取客户端列表")
-    @GetMapping(API_V1_SYS_PREFIX + "/client/list")
+    @GetMapping(API_V1_PLT_PREFIX + "/client/list")
     public R<?> list(@Valid @Parameter(description = "分页查询参数") PageRequest pageRequest) {
         return R.success(clientService.findByPage(pageRequest.getPageable()));
     }
@@ -50,7 +50,7 @@ public class ClientPltController extends AbstractController {
     @PreAuthorize("hasAnyAuthority('system:client')")
     @Operation(summary = "获取客户端搜索列表")
     @ApiResponse(description = "获取客户端搜索列表")
-    @PostMapping(API_V1_SYS_PREFIX + "/client/search/list")
+    @PostMapping(API_V1_PLT_PREFIX + "/client/search/list")
     public R<Page<ClientEntity>> list(@Valid @Parameter(description = "客户端查询参数") ClientRequest request) {
         return R.success(clientService.findClientList(request));
     }
@@ -59,7 +59,7 @@ public class ClientPltController extends AbstractController {
     @Operation(summary = "保存客户端")
     @ApiResponse(description = "保存客户端")
     @OperationLog("保存客户端")
-    @PostMapping(API_V1_SYS_PREFIX + "/client/save")
+    @PostMapping(API_V1_PLT_PREFIX + "/client/save")
     public R<?> save(@RequestBody @Valid @Parameter(description = "客户端表单参数") ClientForm from) {
         return R.success(clientService.saveClient(from));
     }
@@ -67,7 +67,7 @@ public class ClientPltController extends AbstractController {
     @PreAuthorize("hasAnyAuthority('system:client:view')")
     @Operation(summary = "获取客户端详情")
     @ApiResponse(description = "获取客户端详情")
-    @PostMapping(API_V1_SYS_PREFIX + "/client/details")
+    @PostMapping(API_V1_PLT_PREFIX + "/client/details")
     public R<ClientEntity> details(@RequestParam("id") @Parameter(description = "客户端ID") Long id) {
         return R.success(clientService.findById(id));
     }
@@ -76,7 +76,7 @@ public class ClientPltController extends AbstractController {
     @Operation(summary = "删除客户端")
     @ApiResponse(description = "删除客户端")
     @OperationLog("删除客户端")
-    @PostMapping(API_V1_SYS_PREFIX + "/client/delete")
+    @PostMapping(API_V1_PLT_PREFIX + "/client/delete")
     public R<?> delete(@Valid @Parameter(description = "删除客户端参数") DeleteRequest request) {
         return R.success(clientService.deleteClient(request));
     }
@@ -84,7 +84,7 @@ public class ClientPltController extends AbstractController {
     @PreAuthorize("hasAnyAuthority('system:client:check')")
     @Operation(summary = "检查客户端是否重复")
     @ApiResponse(description = "检查客户端是否重复")
-    @GetMapping(API_V1_SYS_PREFIX + "/client/check")
+    @GetMapping(API_V1_PLT_PREFIX + "/client/check")
     public R<Boolean> check(@Valid @Parameter(description = "检查客户端重复参数") ClientCheckRequest request) {
         return R.success(clientService.checkClient(request));
     }

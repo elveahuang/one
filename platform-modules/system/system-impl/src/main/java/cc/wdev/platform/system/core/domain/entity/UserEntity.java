@@ -1,6 +1,7 @@
 package cc.wdev.platform.system.core.domain.entity;
 
 import cc.wdev.platform.commons.data.mybatis.domain.BaseTenantEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -19,9 +20,10 @@ import java.time.LocalDate;
 @Schema(description = "用户实体")
 public class UserEntity extends BaseTenantEntity {
     /**
-     * 用户标识
+     * 用户标识（uuid 与 jsqlparser 5.4 关键字冲突，用带引号标识符）
      */
     @Schema(description = "用户ID")
+    @TableField("\"uuid\"")
     private String uuid;
     /**
      * 用户名
