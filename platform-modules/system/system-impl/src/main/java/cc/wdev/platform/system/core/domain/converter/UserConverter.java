@@ -56,7 +56,7 @@ public interface UserConverter {
     @Mapping(target = "avatar", ignore = true)
     UserInfoDto entity2BaseUserInfoDtoNotHaveEmail(UserEntity entity);
 
-    @Mapping(target = "uuid", ignore = true)
+    @Mapping(target = "uid", ignore = true)
     @Mapping(target = "name", ignore = true)
     @Mapping(target = "idCardType", ignore = true)
     @Mapping(target = "idCardNo", ignore = true)
@@ -83,7 +83,7 @@ public interface UserConverter {
 
     UserSimpleInfoVo entityToSimpleVo(UserEntity entity);
 
-    @Mapping(target = "uuid", ignore = true)
+    @Mapping(target = "uid", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "avatarUrl", ignore = true)
     @Mapping(target = "displayName", source = "nickname")
@@ -107,7 +107,7 @@ public interface UserConverter {
     @Mapping(target = "lastLoginAt", ignore = true)
     UserEntity socialUserToEntity(SocialUser socialUser);
 
-    @Mapping(target = "uuid", ignore = true)
+    @Mapping(target = "uid", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "avatarUrl", ignore = true)
     @Mapping(target = "displayName", ignore = true)

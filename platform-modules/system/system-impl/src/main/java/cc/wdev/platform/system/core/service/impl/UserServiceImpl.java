@@ -391,8 +391,8 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
             if (isNotEmpty(model.getUsername())) {
                 getCacheService().set(this.cacheKeyGenerator.byUsername(model.getUsername()), model);
             }
-            if (isNotEmpty(model.getUuid())) {
-                getCacheService().set(this.cacheKeyGenerator.byUuid(model.getUuid()), model);
+            if (isNotEmpty(model.getUid())) {
+                getCacheService().set(this.cacheKeyGenerator.byUuid(model.getUid()), model);
             }
         }
     }
@@ -418,8 +418,8 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
             if (isNotEmpty(model.getMobileCountryCode()) && isNotEmpty(model.getMobileNumber())) {
                 getCacheService().delete(this.cacheKeyGenerator.byMobile(model.getMobileCountryCode(), model.getMobileNumber()));
             }
-            if (isNotEmpty(model.getUuid())) {
-                getCacheService().delete(this.cacheKeyGenerator.byUuid(model.getUuid()));
+            if (isNotEmpty(model.getUid())) {
+                getCacheService().delete(this.cacheKeyGenerator.byUuid(model.getUid()));
             }
             if (isNotEmpty(model.getUsername())) {
                 getCacheService().delete(this.cacheKeyGenerator.byUsername(model.getUsername()));

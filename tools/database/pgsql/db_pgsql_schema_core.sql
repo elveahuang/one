@@ -78,7 +78,7 @@ DROP TABLE IF EXISTS sys_identity;
 CREATE TABLE sys_identity
 (
     id         BIGSERIAL    NOT NULL PRIMARY KEY,
-    uuid       VARCHAR(150) NOT NULL DEFAULT '',
+    uid        VARCHAR(150) NOT NULL DEFAULT '',
     status     SMALLINT     NOT NULL DEFAULT 1,
     source     SMALLINT     NOT NULL DEFAULT 2,
     version    BIGINT       NOT NULL DEFAULT 0,
@@ -92,11 +92,11 @@ CREATE TABLE sys_identity
 );
 
 CREATE INDEX ix_sys_identity__active ON sys_identity (active);
-CREATE INDEX ix_sys_identity__uuid ON sys_identity (uuid);
+CREATE INDEX ix_sys_identity__uid ON sys_identity (uid);
 
 COMMENT ON TABLE sys_identity IS '身份主体表';
 COMMENT ON COLUMN sys_identity.id IS 'ID';
-COMMENT ON COLUMN sys_identity.uuid IS '用户标识';
+COMMENT ON COLUMN sys_identity.uid IS '用户标识';
 COMMENT ON COLUMN sys_identity.status IS '状态';
 COMMENT ON COLUMN sys_identity.source IS '来源';
 COMMENT ON COLUMN sys_identity.version IS '版本号';
@@ -716,7 +716,7 @@ CREATE TABLE sys_user
 (
     id                   BIGSERIAL    NOT NULL PRIMARY KEY,
     tenant_id            BIGINT       NOT NULL DEFAULT 0,
-    uuid                 VARCHAR(150) NOT NULL DEFAULT '',
+    uid                  VARCHAR(150) NOT NULL DEFAULT '',
     username             VARCHAR(150) NOT NULL DEFAULT '',
     name                 VARCHAR(255) NOT NULL DEFAULT '',
     display_name         VARCHAR(255) NOT NULL DEFAULT '',
@@ -764,7 +764,7 @@ CREATE INDEX ix_sys_user__invite_by ON sys_user (invite_by);
 COMMENT ON TABLE sys_user IS '用户表';
 COMMENT ON COLUMN sys_user.id IS 'ID';
 COMMENT ON COLUMN sys_user.tenant_id IS '租户ID';
-COMMENT ON COLUMN sys_user.uuid IS 'UUID';
+COMMENT ON COLUMN sys_user.uid IS 'UUID';
 COMMENT ON COLUMN sys_user.username IS '用户名';
 COMMENT ON COLUMN sys_user.name IS '姓名';
 COMMENT ON COLUMN sys_user.display_name IS '昵称';
@@ -2830,7 +2830,7 @@ CREATE TABLE sys_authorization
 (
     id                            BIGSERIAL    NOT NULL PRIMARY KEY,
     tenant_id                     BIGINT       NOT NULL DEFAULT 0,
-    uuid                          VARCHAR(200) NOT NULL DEFAULT '',
+    uid                           VARCHAR(200) NOT NULL DEFAULT '',
     client_id                     VARCHAR(100) NOT NULL DEFAULT '',
     principal_name                VARCHAR(200),
     authorization_grant_type      VARCHAR(100),
@@ -2870,7 +2870,7 @@ CREATE INDEX ix_sys_authorization__client_id ON sys_authorization (client_id);
 COMMENT ON TABLE sys_authorization IS '认证记录';
 COMMENT ON COLUMN sys_authorization.id IS 'ID';
 COMMENT ON COLUMN sys_authorization.tenant_id IS '租户ID';
-COMMENT ON COLUMN sys_authorization.uuid IS 'UUID';
+COMMENT ON COLUMN sys_authorization.uid IS 'UUID';
 COMMENT ON COLUMN sys_authorization.client_id IS '客户端ID';
 COMMENT ON COLUMN sys_authorization.principal_name IS '主体名称';
 COMMENT ON COLUMN sys_authorization.authorization_grant_type IS '授权类型';
@@ -2914,7 +2914,7 @@ CREATE TABLE sys_authorization_consent
 (
     id             BIGSERIAL     NOT NULL PRIMARY KEY,
     tenant_id      BIGINT        NOT NULL DEFAULT 0,
-    uuid           VARCHAR(100)  NOT NULL DEFAULT '',
+    uid            VARCHAR(100)  NOT NULL DEFAULT '',
     client_id      VARCHAR(100)  NOT NULL DEFAULT '',
     principal_name VARCHAR(200)  NOT NULL DEFAULT '',
     authorities    VARCHAR(2000) NOT NULL DEFAULT '',
@@ -2933,7 +2933,7 @@ CREATE INDEX ix_sys_authorization_consent ON sys_authorization_consent (client_i
 COMMENT ON TABLE sys_authorization_consent IS '授权记录';
 COMMENT ON COLUMN sys_authorization_consent.id IS 'ID';
 COMMENT ON COLUMN sys_authorization_consent.tenant_id IS '租户ID';
-COMMENT ON COLUMN sys_authorization_consent.uuid IS 'UUID';
+COMMENT ON COLUMN sys_authorization_consent.uid IS 'UUID';
 COMMENT ON COLUMN sys_authorization_consent.client_id IS '客户端ID';
 COMMENT ON COLUMN sys_authorization_consent.principal_name IS '主体名称';
 COMMENT ON COLUMN sys_authorization_consent.authorities IS '权限';

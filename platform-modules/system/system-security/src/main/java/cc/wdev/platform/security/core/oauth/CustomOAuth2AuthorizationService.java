@@ -93,7 +93,7 @@ public class CustomOAuth2AuthorizationService implements OAuth2AuthorizationServ
 
     @Override
     public OAuth2Authorization findById(@NonNull String id) {
-        return toObject(this.authorizationApi.findByUuid(id), tokenSettings);
+        return toObject(this.authorizationApi.findByUid(id), tokenSettings);
     }
 
     @Override
@@ -119,7 +119,7 @@ public class CustomOAuth2AuthorizationService implements OAuth2AuthorizationServ
             }
             RegisteredClient client = OAuth2Utils.toRegisteredClient(clientDto, tokenSettings);
             OAuth2Authorization.Builder builder = OAuth2Authorization.withRegisteredClient(client)
-                .id(String.valueOf(dto.getUuid()))
+                .id(String.valueOf(dto.getUid()))
                 .principalName(dto.getPrincipalName())
                 .authorizationGrantType(OAuth2Utils.resolveAuthorizationGrantType(dto.getAuthorizationGrantType()))
                 .attributes(attributes -> attributes.putAll(OAuth2Utils.parseMap(dto.getAttributes())));
@@ -169,7 +169,7 @@ public class CustomOAuth2AuthorizationService implements OAuth2AuthorizationServ
 
     public AuthorizationDto toEntity(OAuth2Authorization authorization) {
         AuthorizationDto entity = new AuthorizationDto();
-        entity.setUuid(authorization.getId());
+        entity.setUid(authorization.getId());
         entity.setClientId(authorization.getRegisteredClientId());
         entity.setPrincipalName(authorization.getPrincipalName());
         entity.setAuthorizationGrantType(authorization.getAuthorizationGrantType().getValue());

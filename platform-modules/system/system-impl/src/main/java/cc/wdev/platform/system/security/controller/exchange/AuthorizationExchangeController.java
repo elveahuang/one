@@ -23,7 +23,7 @@ public class AuthorizationExchangeController {
     @PostMapping(value = "/save")
     public void save(@RequestBody AuthorizationDto dto) {
         AuthorizationEntity entity = AuthorizationConverter.INSTANCE.dto2Entity(dto);
-        this.authorizationService.updateByUuid(entity);
+        this.authorizationService.updateByUid(entity);
     }
 
     @PostMapping("/delete-by-id")
@@ -31,9 +31,9 @@ public class AuthorizationExchangeController {
         this.authorizationService.deleteById(id);
     }
 
-    @PostMapping("/delete-by-uuid")
-    public void deleteByUuid(@Parameter(description = "UUID") @RequestParam("uuid") String uuid) {
-        this.authorizationService.deleteByUuid(uuid);
+    @PostMapping("/delete-by-uid")
+    public void deleteByUid(@Parameter(description = "UUID") @RequestParam("uid") String uid) {
+        this.authorizationService.deleteByUid(uid);
     }
 
     @PostMapping("/find-by-id")
@@ -42,9 +42,9 @@ public class AuthorizationExchangeController {
         return AuthorizationConverter.INSTANCE.entity2Dto(entity);
     }
 
-    @PostMapping("/find-by-uuid")
-    public AuthorizationDto findByUuid(@Parameter(description = "UUID") @RequestParam("uuid") String uuid) {
-        AuthorizationEntity entity = this.authorizationService.findByUuid(uuid);
+    @PostMapping("/find-by-uid")
+    public AuthorizationDto findByUid(@Parameter(description = "UUID") @RequestParam("uid") String uid) {
+        AuthorizationEntity entity = this.authorizationService.findByUid(uid);
         return AuthorizationConverter.INSTANCE.entity2Dto(entity);
     }
 

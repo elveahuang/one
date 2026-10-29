@@ -16,10 +16,10 @@ import lombok.*;
 @TableName("sys_identity")
 public class IdentityEntity extends BaseEntity {
     /**
-     * 用户标识（uuid 与 jsqlparser 5.4 关键字冲突，用带引号标识符；列型 varchar 与实体 Long 的不匹配由 DB 隐式转换承接）
+     * 用户标识
      */
-    @TableField("\"uuid\"")
-    private Long uuid;
+    @TableField("uid")
+    private Long uid;
     /**
      * 状态
      */

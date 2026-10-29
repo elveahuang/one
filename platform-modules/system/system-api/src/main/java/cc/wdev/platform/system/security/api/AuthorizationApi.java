@@ -21,14 +21,14 @@ public interface AuthorizationApi {
     @PostExchange("/delete-by-id")
     void deleteById(@Parameter(description = "ID") @RequestParam("id") Long id);
 
-    @PostExchange("/delete-by-uuid")
-    void deleteByUuid(@Parameter(description = "UUID") @RequestParam("uuid") String uuid);
+    @PostExchange("/delete-by-uid")
+    void deleteByUid(@Parameter(description = "UUID") @RequestParam("uid") String uid);
 
     @PostExchange("/find-by-id")
     AuthorizationDto findById(@Parameter(description = "ID") @RequestParam("id") Long id);
 
-    @PostExchange("/find-by-uuid")
-    AuthorizationDto findByUuid(@Parameter(description = "UUID") @RequestParam("uuid") String uuid);
+    @PostExchange("/find-by-uid")
+    AuthorizationDto findByUid(@Parameter(description = "UUID") @RequestParam("uid") String uid);
 
     @PostExchange("/find-by-state")
     AuthorizationDto findByState(@Parameter(description = "状态") @RequestParam("state") String state);

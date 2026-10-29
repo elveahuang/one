@@ -25,10 +25,10 @@ public class AuthorizationServiceImpl extends BaseCachingEntityService<Authoriza
     }
 
     @Override
-    public void updateByUuid(AuthorizationEntity entity) {
-        long count = this.lambdaQueryWrapper().eq(AuthorizationEntity::getUuid, entity.getUuid()).count();
+    public void updateByUid(AuthorizationEntity entity) {
+        long count = this.lambdaQueryWrapper().eq(AuthorizationEntity::getUid, entity.getUid()).count();
         if (count > 0) {
-            this.lambdaUpdateWrapper().eq(AuthorizationEntity::getUuid, entity.getUuid()).update(entity);
+            this.lambdaUpdateWrapper().eq(AuthorizationEntity::getUid, entity.getUid()).update(entity);
             this.deleteCache(entity);
         } else {
             this.save(entity);
@@ -36,8 +36,8 @@ public class AuthorizationServiceImpl extends BaseCachingEntityService<Authoriza
     }
 
     @Override
-    public void deleteByUuid(String uuid) {
-        AuthorizationEntity entity = this.findByUuid(uuid);
+    public void deleteByUid(String uid) {
+        AuthorizationEntity entity = this.findByUid(uid);
         if (ObjectUtils.isEmpty(entity)) {
             return;
         }
@@ -45,9 +45,9 @@ public class AuthorizationServiceImpl extends BaseCachingEntityService<Authoriza
     }
 
     @Override
-    public AuthorizationEntity findByUuid(String uuid) {
-        return getCacheService().get(getCacheKeyGenerator().byUuid(uuid), k -> lambdaQueryWrapper()
-            .eq(AuthorizationEntity::getUuid, uuid)
+    public AuthorizationEntity findByUid(String uid) {
+        return getCacheService().get(getCacheKeyGenerator().byUuid(uid), k -> lambdaQueryWrapper()
+            .eq(AuthorizationEntity::getUid, uid)
             .one()
         );
     }
@@ -101,8 +101,8 @@ public class AuthorizationServiceImpl extends BaseCachingEntityService<Authoriza
             if (!ObjectUtils.isEmpty(model.getId())) {
                 getCacheService().set(getCacheKeyGenerator().byId(model.getId()), model);
             }
-            if (StringUtils.isNotEmpty(model.getUuid())) {
-                getCacheService().set(getCacheKeyGenerator().byUuid(model.getUuid()), model);
+            if (StringUtils.isNotEmpty(model.getUid())) {
+                getCacheService().set(getCacheKeyGenerator().byUuid(model.getUid()), model);
             }
             if (StringUtils.isNotEmpty(model.getState())) {
                 getCacheService().set(getCacheKeyGenerator().keyByState(model.getState()), model);
@@ -131,8 +131,8 @@ public class AuthorizationServiceImpl extends BaseCachingEntityService<Authoriza
             if (!ObjectUtils.isEmpty(model.getId())) {
                 getCacheService().delete(getCacheKeyGenerator().byId(model.getId()));
             }
-            if (StringUtils.isNotEmpty(model.getUuid())) {
-                getCacheService().delete(getCacheKeyGenerator().byUuid(model.getUuid()));
+            if (StringUtils.isNotEmpty(model.getUid())) {
+                getCacheService().delete(getCacheKeyGenerator().byUuid(model.getUid()));
             }
             if (StringUtils.isNotEmpty(model.getState())) {
                 getCacheService().delete(getCacheKeyGenerator().keyByState(model.getState()));

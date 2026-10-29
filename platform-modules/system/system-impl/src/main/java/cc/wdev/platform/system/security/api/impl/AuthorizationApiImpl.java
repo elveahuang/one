@@ -23,7 +23,7 @@ public class AuthorizationApiImpl implements AuthorizationApi {
     @Override
     public void save(AuthorizationDto dto) {
         AuthorizationEntity entity = AuthorizationConverter.INSTANCE.dto2Entity(dto);
-        this.authorizationService.updateByUuid(entity);
+        this.authorizationService.updateByUid(entity);
     }
 
     /**
@@ -35,11 +35,11 @@ public class AuthorizationApiImpl implements AuthorizationApi {
     }
 
     /**
-     * @see AuthorizationApi#deleteByUuid(String)
+     * @see AuthorizationApi#deleteByUid(String)
      */
     @Override
-    public void deleteByUuid(String uuid) {
-        this.authorizationService.deleteByUuid(uuid);
+    public void deleteByUid(String uid) {
+        this.authorizationService.deleteByUid(uid);
     }
 
     /**
@@ -52,11 +52,11 @@ public class AuthorizationApiImpl implements AuthorizationApi {
     }
 
     /**
-     * @see AuthorizationApi#findByUuid(String)
+     * @see AuthorizationApi#findByUid(String)
      */
     @Override
-    public AuthorizationDto findByUuid(String uuid) {
-        AuthorizationEntity entity = this.authorizationService.findByUuid(uuid);
+    public AuthorizationDto findByUid(String uid) {
+        AuthorizationEntity entity = this.authorizationService.findByUid(uid);
         return AuthorizationConverter.INSTANCE.entity2Dto(entity);
     }
 

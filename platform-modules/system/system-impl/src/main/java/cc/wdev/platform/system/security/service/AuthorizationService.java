@@ -11,11 +11,11 @@ import cc.wdev.platform.system.security.domain.entity.AuthorizationEntity;
  */
 public interface AuthorizationService extends CachingEntityService<AuthorizationEntity, Long> {
 
-    void updateByUuid(AuthorizationEntity entity);
+    void updateByUid(AuthorizationEntity entity);
 
-    void deleteByUuid(String uuid);
+    void deleteByUid(String uid);
 
-    AuthorizationEntity findByUuid(String uuid);
+    AuthorizationEntity findByUid(String uid);
 
     AuthorizationEntity findByState(String state);
 

@@ -28,7 +28,7 @@ public class AuthorizationDto implements Serializable {
     @Schema(description = "ID")
     private Long id;
     @Schema(description = "UUID")
-    private String uuid;
+    private String uid;
     @Schema(description = "客户端ID")
     private String clientId;
     @Schema(description = "主体名称")

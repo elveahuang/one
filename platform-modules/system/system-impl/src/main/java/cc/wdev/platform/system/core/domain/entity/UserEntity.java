@@ -20,11 +20,11 @@ import java.time.LocalDate;
 @Schema(description = "用户实体")
 public class UserEntity extends BaseTenantEntity {
     /**
-     * 用户标识（uuid 与 jsqlparser 5.4 关键字冲突，用带引号标识符）
+     * UUID
      */
-    @Schema(description = "用户ID")
-    @TableField("\"uuid\"")
-    private String uuid;
+    @Schema(description = "UUID")
+    @TableField("uid")
+    private String uid;
     /**
      * 用户名
      */

@@ -53,7 +53,7 @@ DROP TABLE IF EXISTS sys_identity;
 CREATE TABLE sys_identity
 (
     `id`         BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
-    `uuid`       VARCHAR(150) NOT NULL DEFAULT '' COMMENT '用户标识',
+    `uid`        VARCHAR(150) NOT NULL DEFAULT '' COMMENT '用户标识',
     `status`     SMALLINT     NOT NULL DEFAULT 1 COMMENT '状态',
     `source`     SMALLINT     NOT NULL DEFAULT 2 COMMENT '来源',
     `version`    BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
@@ -67,7 +67,7 @@ CREATE TABLE sys_identity
 ) COMMENT '身份主体表';
 
 CREATE INDEX ix_sys_identity__active ON sys_identity (active);
-CREATE INDEX ix_sys_identity__uuid ON sys_identity (uuid);
+CREATE INDEX ix_sys_identity__uid ON sys_identity (uid);
 
 --
 -- 租户表
@@ -444,7 +444,7 @@ CREATE TABLE sys_user
 (
     `id`                   BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
     `tenant_id`            BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
-    `uuid`                 VARCHAR(150) NOT NULL DEFAULT '' COMMENT 'UUID',
+    `uid`                  VARCHAR(150) NOT NULL DEFAULT '' COMMENT 'UUID',
     `username`             VARCHAR(150) NOT NULL DEFAULT '' COMMENT '用户名',
     `name`                 VARCHAR(255) NOT NULL DEFAULT '' COMMENT '姓名',
     `display_name`         VARCHAR(255) NOT NULL DEFAULT '' COMMENT '昵称',
@@ -1756,7 +1756,7 @@ CREATE TABLE sys_authorization
 (
     `id`                            BIGINT        NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
     `tenant_id`                     BIGINT        NOT NULL DEFAULT 0 COMMENT '租户ID',
-    `uuid`                          VARCHAR(200)  NOT NULL DEFAULT '' COMMENT 'UUID',
+    `uid`                           VARCHAR(200)  NOT NULL DEFAULT '' COMMENT 'UUID',
     `client_id`                     VARCHAR(100)  NOT NULL DEFAULT '' COMMENT '客户端ID',
     `principal_name`                VARCHAR(200)  NULL COMMENT '主体名称',
     `authorization_grant_type`      VARCHAR(100)  NULL COMMENT '授权类型',
@@ -1803,7 +1803,7 @@ CREATE TABLE sys_authorization_consent
 (
     `id`             BIGINT        NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
     `tenant_id`      BIGINT        NOT NULL DEFAULT 0 COMMENT '租户ID',
-    `uuid`           VARCHAR(100)  NOT NULL DEFAULT '' COMMENT 'UUID',
+    `uid`            VARCHAR(100)  NOT NULL DEFAULT '' COMMENT 'UUID',
     `client_id`      VARCHAR(100)  NOT NULL DEFAULT '' COMMENT '客户端ID',
     `principal_name` VARCHAR(200)  NOT NULL DEFAULT '' COMMENT '主体名称',
     `authorities`    VARCHAR(2000) NOT NULL DEFAULT '' COMMENT '权限',

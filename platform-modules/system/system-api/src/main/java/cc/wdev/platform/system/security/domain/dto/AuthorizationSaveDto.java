@@ -21,7 +21,7 @@ public class AuthorizationSaveDto implements Serializable {
      *
      */
     private Long id;
-    private String uuid;
+    private String uid;
     /**
      *
      */
