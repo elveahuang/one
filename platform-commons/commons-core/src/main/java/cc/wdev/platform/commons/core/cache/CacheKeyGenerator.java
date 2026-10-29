@@ -48,8 +48,8 @@ public interface CacheKeyGenerator {
         return this.key(PREFIX_CODE, code);
     }
 
-    default CacheKey byUuid(String uuid) {
-        return this.key(PREFIX_UUID, uuid);
+    default CacheKey byUid(String uid) {
+        return this.key(PREFIX_UUID, uid);
     }
 
     default CacheKey byUid(Long userId) {

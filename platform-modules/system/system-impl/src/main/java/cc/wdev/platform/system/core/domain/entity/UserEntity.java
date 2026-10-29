@@ -22,7 +22,7 @@ public class UserEntity extends BaseTenantEntity {
     /**
      * UUID
      */
-    @Schema(description = "UUID")
+    @Schema(description = "UID")
     @TableField("uid")
     private String uid;
     /**

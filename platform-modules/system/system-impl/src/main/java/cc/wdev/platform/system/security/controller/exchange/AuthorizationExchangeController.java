@@ -32,7 +32,7 @@ public class AuthorizationExchangeController {
     }
 
     @PostMapping("/delete-by-uid")
-    public void deleteByUid(@Parameter(description = "UUID") @RequestParam("uid") String uid) {
+    public void deleteByUid(@Parameter(description = "UID") @RequestParam("uid") String uid) {
         this.authorizationService.deleteByUid(uid);
     }
 
@@ -43,7 +43,7 @@ public class AuthorizationExchangeController {
     }
 
     @PostMapping("/find-by-uid")
-    public AuthorizationDto findByUid(@Parameter(description = "UUID") @RequestParam("uid") String uid) {
+    public AuthorizationDto findByUid(@Parameter(description = "UID") @RequestParam("uid") String uid) {
         AuthorizationEntity entity = this.authorizationService.findByUid(uid);
         return AuthorizationConverter.INSTANCE.entity2Dto(entity);
     }

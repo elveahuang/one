@@ -27,7 +27,7 @@ public class AuthorizationDto implements Serializable {
     @JsonSerialize(using = ToStringSerializer.class)
     @Schema(description = "ID")
     private Long id;
-    @Schema(description = "UUID")
+    @Schema(description = "UID")
     private String uid;
     @Schema(description = "客户端ID")
     private String clientId;

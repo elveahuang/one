@@ -21,7 +21,7 @@ public class AuthorizationConsentDto implements Serializable {
     /**
      *
      */
-    @Schema(description = "UUID")
+    @Schema(description = "UID")
     private String uid;
     /**
      *
