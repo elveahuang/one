@@ -43,10 +43,9 @@ public class RoleForm implements Serializable {
     @Schema(description = "分组类型")
     private String groupType;
     /**
-     * 标题
+     * 标题（save-authority 端点复用本表单，必填校验在 saveRole 服务方法内）
      */
     @Schema(description = "标题")
-    @NotBlank(message = "角色名称不能为空")
     private String title;
     /**
      * 文本

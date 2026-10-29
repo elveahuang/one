@@ -373,6 +373,7 @@ CREATE TABLE sys_entity_authority
 );
 
 CREATE INDEX ix_sys_entity_authority__entity ON sys_entity_authority (tenant_id, biz_type, entity_id);
+CREATE INDEX ix_sys_entity_authority__authority_id ON sys_entity_authority (authority_id);
 
 COMMENT ON TABLE sys_entity_authority IS '实体-权限关联表';
 COMMENT ON COLUMN sys_entity_authority.id IS 'ID';
@@ -1001,6 +1002,7 @@ CREATE INDEX ix_sys_login_session__tenant_id ON sys_login_session (tenant_id);
 CREATE INDEX ix_sys_login_session__user_id ON sys_login_session (user_id);
 CREATE INDEX ix_sys_login_session__session_id ON sys_login_session (session_id);
 CREATE INDEX ix_sys_login_session__username ON sys_login_session (username);
+CREATE INDEX ix_sys_login_session__client_id ON sys_login_session (client_id);
 
 COMMENT ON TABLE sys_login_session IS '登录会话记录';
 COMMENT ON COLUMN sys_login_session.id IS 'ID';
@@ -1877,6 +1879,7 @@ CREATE TABLE sys_operation_log
 );
 CREATE INDEX ix_sys_operation_log__tenant_id ON sys_operation_log (tenant_id);
 CREATE INDEX ix_sys_operation_log__biz_id ON sys_operation_log (biz_type, biz_id);
+CREATE INDEX ix_sys_operation_log__request_id ON sys_operation_log (request_id);
 
 COMMENT ON TABLE sys_operation_log IS '操作日志表';
 COMMENT ON COLUMN sys_operation_log.id IS 'ID';

@@ -134,6 +134,10 @@ public class RoleServiceImpl extends BaseCachingEntityService<RoleEntity, Long, 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveRole(@NonNull RoleForm form) {
+        // save-authority 端点复用本表单，仅保存角色时才要求角色名称
+        if (StringUtils.isEmpty(form.getTitle())) {
+            throw new ServiceException(ResponseCodeEnum.PARAM_ERROR);
+        }
         RoleEntity entity = this.checkExistsOrReturn(form.getId(), new RoleEntity(), ResponseCodeEnum.ROLE__NOT_PRESENT);
         if (ObjectUtils.isInvalidId(form.getId())) {
             form.setId(null);
