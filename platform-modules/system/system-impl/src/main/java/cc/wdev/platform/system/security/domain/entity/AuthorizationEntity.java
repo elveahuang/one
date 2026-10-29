@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @TableName("sys_authorization")
 public class AuthorizationEntity extends BaseTenantEntity {
     /**
-     * UUID
+     * 授权标识
      */
     @TableField("uid")
     private String uid;

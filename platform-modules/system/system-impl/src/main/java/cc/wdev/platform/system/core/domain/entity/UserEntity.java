@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @Schema(description = "用户实体")
 public class UserEntity extends BaseTenantEntity {
     /**
-     * UUID
+     * 用户标识
      */
     @Schema(description = "UID")
     @TableField("uid")
