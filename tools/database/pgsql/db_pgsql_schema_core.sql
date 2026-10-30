@@ -1381,6 +1381,7 @@ CREATE TABLE sys_catalog_relation
     ancestor_id   BIGINT        NOT NULL DEFAULT 0,
     entity_id     BIGINT        NOT NULL DEFAULT 0,
     parent_ind    SMALLINT      NOT NULL DEFAULT 0,
+    relation_type VARCHAR(100)  NOT NULL DEFAULT '',
     relation_path VARCHAR(2000) NOT NULL DEFAULT '',
     idx           INT           NOT NULL DEFAULT 999,
     version       BIGINT        NOT NULL DEFAULT 0,
@@ -1391,6 +1392,7 @@ CREATE TABLE sys_catalog_relation
 
 CREATE INDEX ix_sys_catalog_relation__tenant_id ON sys_catalog_relation (tenant_id);
 CREATE INDEX ix_sys_catalog_relation__biz_type ON sys_catalog_relation (biz_type);
+CREATE INDEX ix_sys_catalog_relation__relation_type ON sys_catalog_relation (relation_type);
 CREATE INDEX ix_sys_catalog_relation__ancestor_id ON sys_catalog_relation (ancestor_id);
 CREATE INDEX ix_sys_catalog_relation__entity_id ON sys_catalog_relation (entity_id);
 
@@ -1398,6 +1400,7 @@ COMMENT ON TABLE sys_catalog_relation IS '目录分类关联表';
 COMMENT ON COLUMN sys_catalog_relation.id IS 'ID';
 COMMENT ON COLUMN sys_catalog_relation.tenant_id IS '租户ID';
 COMMENT ON COLUMN sys_catalog_relation.biz_type IS '业务类型';
+COMMENT ON COLUMN sys_catalog_relation.relation_type IS '关系类型';
 COMMENT ON COLUMN sys_catalog_relation.ancestor_id IS '祖先ID';
 COMMENT ON COLUMN sys_catalog_relation.entity_id IS '实体ID';
 COMMENT ON COLUMN sys_catalog_relation.parent_ind IS '是否直接上级';
