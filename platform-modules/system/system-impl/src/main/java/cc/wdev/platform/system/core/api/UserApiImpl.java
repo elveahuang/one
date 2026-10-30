@@ -412,18 +412,21 @@ public class UserApiImpl implements UserApi {
 
         // 解析生效的角色类型：请求头/服务端记录都必须落在该用户真实拥有的类型内，
         // 否则伪造 x-role-type 即可绕过身份切换造成的权限收窄。
-        // 无论走哪条分支，都必须在本方法结束前恢复原有上下文，避免 MDC 残留污染同线程的后续请求。
+        //
+        // 不能用 SecurityUtils.getUid() 判断「是否本人查询自己」：
+        // JWT 转换器构建 Authentication 时 SecurityContext 尚未建立，getUid() 返回 0，
+        // 判断永远为 false，身份过滤会被整体跳过（这正是伪造请求头能提权的原因）。
+        // 该方法的唯一职责是「为当前请求主体算权限」，因此直接按目标用户自己的身份记录收窄即可。
         String previousRoleType = RoleTypeContext.getRoleType();
         boolean contextChanged = false;
         try {
-            String requested = previousRoleType;
-            String effective = userRoleTypeService.resolveEffectiveRoleType(user.getId(), requested);
+            String effective = userRoleTypeService.resolveEffectiveRoleType(user.getId(), previousRoleType);
             if (!Objects.equals(effective, previousRoleType)) {
                 RoleTypeContext.setRoleType(effective);
                 contextChanged = true;
             }
-            if (StringUtils.isNotEmpty(requested) && !Objects.equals(requested, effective)) {
-                log.warn("[RoleType] user [{}] requested role type [{}] not owned, ignored", user.getId(), requested);
+            if (StringUtils.isNotEmpty(previousRoleType) && !Objects.equals(previousRoleType, effective)) {
+                log.warn("[RoleType] user [{}] requested role type [{}] not honoured", user.getId(), previousRoleType);
             }
 
             return this.buildUserAuthority(user, dto);

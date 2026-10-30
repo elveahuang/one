@@ -157,13 +157,12 @@ public class UserRoleTypeServiceImpl implements UserRoleTypeService {
         // 3) 从未切换过：多身份用户自动落到默认（最高）身份。
         //    否则「展示的是平台管理员、实际生效的却是全部角色合并」，
         //    用户会看到权限在切换前后莫名少了几项。
-        if (this.buildAvailable(owned).size() > 1) {
-            String fallback = this.defaultRoleType(this.buildAvailable(owned));
-            if (StringUtils.isNotEmpty(fallback)) {
-                cacheService.set(this.cacheKey(userId), fallback, CURRENT_ROLE_TYPE_TTL);
-                log.info("[RoleType] user [{}] initialized role type to default [{}]", userId, fallback);
-                return fallback;
-            }
+        List<String> available = this.buildAvailable(owned);
+        if (available.size() > 1) {
+            String fallback = available.getFirst();
+            cacheService.set(this.cacheKey(userId), fallback, CURRENT_ROLE_TYPE_TTL);
+            log.info("[RoleType] user [{}] initialized role type to default [{}]", userId, fallback);
+            return fallback;
         }
 
         // 单身份或纯会员：不做类型过滤，沿用原有「全部角色合并」行为
