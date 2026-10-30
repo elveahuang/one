@@ -410,18 +410,48 @@ public class UserApiImpl implements UserApi {
             return dto;
         }
 
-        // 身份切换：请求未显式指定时，回填该用户当前激活的角色类型
-        if (!RoleTypeContext.isPresent()) {
-            RoleTypeContext.setRoleType(userRoleTypeService.getCurrentRoleType(user.getId()));
-        }
+        // 解析生效的角色类型：请求头/服务端记录都必须落在该用户真实拥有的类型内，
+        // 否则伪造 x-role-type 即可绕过身份切换造成的权限收窄。
+        // 无论走哪条分支，都必须在本方法结束前恢复原有上下文，避免 MDC 残留污染同线程的后续请求。
+        String previousRoleType = RoleTypeContext.getRoleType();
+        boolean contextChanged = false;
+        try {
+            String requested = previousRoleType;
+            String effective = userRoleTypeService.resolveEffectiveRoleType(user.getId(), requested);
+            if (!Objects.equals(effective, previousRoleType)) {
+                RoleTypeContext.setRoleType(effective);
+                contextChanged = true;
+            }
+            if (StringUtils.isNotEmpty(requested) && !Objects.equals(requested, effective)) {
+                log.warn("[RoleType] user [{}] requested role type [{}] not owned, ignored", user.getId(), requested);
+            }
 
+            return this.buildUserAuthority(user, dto);
+        } finally {
+            if (contextChanged) {
+                RoleTypeContext.setRoleType(previousRoleType);
+            }
+        }
+    }
+
+    /**
+     * 组装权限与角色。抽出来是为了让 {@link #getUserAuthority(Long)} 的
+     * try/finally 只负责上下文还原。
+     */
+    private UserAuthorityDto buildUserAuthority(UserEntity user, UserAuthorityDto dto) {
         List<AuthorityEntity> authorityEntityList = authorityService.findByUserId(user.getId());
         // 系统权限
         if (CollectionUtils.isNotEmpty(authorityEntityList)) {
             dto.setAuthorities(AuthorityConverter.INSTANCE.entityListToDtoList(authorityEntityList));
         }
-        // 系统角色
+        // 系统角色：切换身份后只返回当前类型下的角色，避免 roles/ROLE_* 仍暴露全部身份
+        String activeRoleType = RoleTypeContext.getRoleType();
         List<RoleEntity> roleEntityList = roleService.findByUserId(user.getId());
+        if (CollectionUtils.isNotEmpty(roleEntityList) && StringUtils.isNotEmpty(activeRoleType)) {
+            roleEntityList = roleEntityList.stream()
+                .filter(r -> activeRoleType.equalsIgnoreCase(r.getBizType()))
+                .toList();
+        }
         if (CollectionUtils.isNotEmpty(roleEntityList)) {
             dto.setRoles(RoleConverter.INSTANCE.entityListToDtoList(roleEntityList));
         }

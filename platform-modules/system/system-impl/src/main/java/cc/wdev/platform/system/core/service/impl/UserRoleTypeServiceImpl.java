@@ -118,6 +118,58 @@ public class UserRoleTypeServiceImpl implements UserRoleTypeService {
         return this.findOwnedRoleTypes(userId).contains(value) ? value : null;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>安全要点：<b>服务端记录的当前身份优先于请求头</b>。用户一旦通过接口切换过身份，
+     * 该选择就固化在服务端，请求头只能在不存在的记录时才起作用（用于多标签页等场景）。
+     * 否则用户切到低权限身份后，只要伪造 {@code x-role-type} 就能恢复高权限，收窄形同虚设。</p>
+     */
+    @Override
+    public String resolveEffectiveRoleType(Long userId, String requestedRoleType) {
+        if (!ObjectUtils.isValidId(userId)) {
+            return null;
+        }
+        List<String> owned = this.findOwnedRoleTypes(userId);
+        if (CollectionUtils.isEmpty(owned)) {
+            return null;
+        }
+
+        // 1) 服务端已记录的切换结果最优先，且必须是本人仍拥有的类型
+        String stored = cacheService.get(this.cacheKey(userId));
+        if (StringUtils.isNotEmpty(stored)) {
+            if (owned.contains(stored)) {
+                return stored;
+            }
+            // 记录已失效（角色被移除等），丢弃并继续走后面的分支
+            log.info("[RoleType] user [{}] stored role type [{}] no longer owned, dropped", userId, stored);
+        }
+
+        // 2) 没有服务端记录时才接受请求头，且必须属于本人拥有的类型
+        if (StringUtils.isNotEmpty(requestedRoleType)) {
+            String normalized = requestedRoleType.trim().toUpperCase();
+            if (owned.contains(normalized)) {
+                return normalized;
+            }
+            log.warn("[RoleType] user [{}] requested role type [{}] not owned, ignored", userId, requestedRoleType);
+        }
+
+        // 3) 从未切换过：多身份用户自动落到默认（最高）身份。
+        //    否则「展示的是平台管理员、实际生效的却是全部角色合并」，
+        //    用户会看到权限在切换前后莫名少了几项。
+        if (this.buildAvailable(owned).size() > 1) {
+            String fallback = this.defaultRoleType(this.buildAvailable(owned));
+            if (StringUtils.isNotEmpty(fallback)) {
+                cacheService.set(this.cacheKey(userId), fallback, CURRENT_ROLE_TYPE_TTL);
+                log.info("[RoleType] user [{}] initialized role type to default [{}]", userId, fallback);
+                return fallback;
+            }
+        }
+
+        // 单身份或纯会员：不做类型过滤，沿用原有「全部角色合并」行为
+        return null;
+    }
+
     @Override
     public void clearRoleType(Long userId) {
         if (!ObjectUtils.isValidId(userId)) {
