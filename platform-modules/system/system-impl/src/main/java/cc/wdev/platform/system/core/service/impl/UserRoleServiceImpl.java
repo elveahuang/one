@@ -5,13 +5,18 @@ import cc.wdev.platform.commons.data.mybatis.service.BaseCachingEntityService;
 import cc.wdev.platform.commons.service.CachingEntityService;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.ObjectUtils;
+import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.core.cache.UserAuthorityCacheKeyGenerator;
 import cc.wdev.platform.system.core.cache.UserRoleCacheKeyGenerator;
+import cc.wdev.platform.system.core.domain.entity.RoleEntity;
 import cc.wdev.platform.system.core.domain.entity.UserRoleEntity;
 import cc.wdev.platform.system.core.repository.UserRoleRepository;
+import cc.wdev.platform.system.core.service.RoleService;
 import cc.wdev.platform.system.core.service.UserRoleService;
 import com.google.common.collect.Lists;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -26,11 +31,18 @@ import static cc.wdev.platform.commons.utils.ObjectUtils.isValidId;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserRoleServiceImpl
     extends BaseCachingEntityService<UserRoleEntity, Long, UserRoleRepository>
     implements UserRoleService {
 
     private final CacheKeyGenerator cacheKeyGenerator = new UserRoleCacheKeyGenerator();
+
+    /**
+     * 用 ObjectProvider 延迟获取，避免与 RoleServiceImpl 形成构造器循环依赖
+     * （RoleServiceImpl 依赖 UserRoleService 查询用户角色）。
+     */
+    private final ObjectProvider<RoleService> roleServiceProvider;
 
     /**
      * @see CachingEntityService#getCacheKeyGenerator()
@@ -67,6 +79,26 @@ public class UserRoleServiceImpl
                 .map(UserRoleEntity::getRoleId)
                 .collect(Collectors.toSet())
         );
+    }
+
+    /**
+     * @see UserRoleService#findRoleIdsByUserId(Long, String)
+     */
+    @Override
+    public Set<Long> findRoleIdsByUserId(Long userId, String roleType) {
+        Set<Long> roleIds = this.findRoleIdsByUserId(userId);
+        if (StringUtils.isEmpty(roleType) || CollectionUtils.isEmpty(roleIds)) {
+            return roleIds;
+        }
+        // 只保留属于该角色类型的角色；roleService 已带缓存，这里直接批量过滤
+        List<RoleEntity> roles = this.roleServiceProvider.getObject().findCacheByIds(roleIds);
+        if (CollectionUtils.isEmpty(roles)) {
+            return Collections.emptySet();
+        }
+        return roles.stream()
+            .filter(r -> roleType.equalsIgnoreCase(r.getBizType()))
+            .map(RoleEntity::getId)
+            .collect(Collectors.toSet());
     }
 
     /**

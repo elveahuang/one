@@ -9,6 +9,7 @@ import cc.wdev.platform.commons.utils.WebServletUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -127,6 +128,19 @@ public abstract class GlobalExceptionHandler {
         }
         // 数据库异常细节不回传客户端，完整堆栈仅记录服务端日志
         return R.fail(ResponseCodeEnum.ERROR);
+    }
+
+    /**
+     * 方法级鉴权失败（@PreAuthorize 不通过）。
+     *
+     * <p>身份切换后越权访问会经常出现，必须返回明确的 403 语义，
+     * 否则会落到兜底分支变成「系统错误」，用户无法区分权限不足与服务异常。</p>
+     */
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public R<?> handleAuthorizationDeniedException(AuthorizationDeniedException e) {
+        log.warn("handleAuthorizationDeniedException : {}", e.getMessage());
+        return R.fail(ResponseCodeEnum.FORBIDDEN);
     }
 
     /**

@@ -12,6 +12,7 @@ import cc.wdev.platform.system.commons.constants.SystemCacheConstants;
 import cc.wdev.platform.system.commons.enums.BizScopeTypeEnum;
 import cc.wdev.platform.system.commons.enums.EntityAuthorityBizTypeEnum;
 import cc.wdev.platform.system.core.cache.UserAuthorityCacheKeyGenerator;
+import cc.wdev.platform.commons.core.role.RoleTypeContext;
 import cc.wdev.platform.system.core.domain.converter.AuthorityConverter;
 import cc.wdev.platform.system.core.domain.entity.AuthorityEntity;
 import cc.wdev.platform.system.core.domain.vo.AuthorityVo;
@@ -55,8 +56,11 @@ public class AuthorityServiceImpl extends BaseCachingEntityService<AuthorityEnti
             return Collections.emptyList();
         }
 
-        Collection<Long> authorityIds = getCacheService().get(UserAuthorityCacheKeyGenerator.keyByUserId(userId), _ -> {
-            Set<Long> roleIds = this.userRoleService.findRoleIdsByUserId(userId);
+        // 当前激活的角色类型；为空表示未切换，按全部角色合并（保持原有行为）
+        String roleType = RoleTypeContext.getRoleType();
+
+        Collection<Long> authorityIds = getCacheService().get(UserAuthorityCacheKeyGenerator.keyByUserId(userId, roleType), _ -> {
+            Set<Long> roleIds = this.userRoleService.findRoleIdsByUserId(userId, roleType);
             if (CollectionUtils.isEmpty(roleIds)) {
                 return Collections.emptyList();
             }

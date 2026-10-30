@@ -3,6 +3,7 @@ package cc.wdev.platform.system.core.cache;
 import cc.wdev.platform.commons.core.cache.CacheKey;
 import cc.wdev.platform.commons.core.cache.TenantCacheKeyGenerator;
 import cc.wdev.platform.commons.utils.CollectionUtils;
+import cc.wdev.platform.commons.utils.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -30,6 +31,18 @@ public class UserAuthorityCacheKeyGenerator implements TenantCacheKeyGenerator {
 
     public static CacheKey keyByUserId(Long userId) {
         return new UserAuthorityCacheKeyGenerator().byUid(userId);
+    }
+
+    /**
+     * 切换身份后权限集合不同，缓存键必须区分角色类型，否则会命中切换前的旧权限。
+     * roleType 为空时与 {@link #keyByUserId(Long)} 完全一致（保持向后兼容）。
+     */
+    public static CacheKey keyByUserId(Long userId, String roleType) {
+        CacheKey base = keyByUserId(userId);
+        if (StringUtils.isEmpty(roleType)) {
+            return base;
+        }
+        return new CacheKey(base.getKey() + ":" + roleType.toLowerCase());
     }
 
     public static List<String> keysByUserIds(Collection<Long> userIds) {

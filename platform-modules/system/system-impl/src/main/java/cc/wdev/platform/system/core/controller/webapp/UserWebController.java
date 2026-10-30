@@ -12,7 +12,10 @@ import cc.wdev.platform.system.core.domain.form.*;
 import cc.wdev.platform.system.core.domain.request.UserChangeInfoRequest;
 import cc.wdev.platform.system.core.domain.request.UserCheckRequest;
 import cc.wdev.platform.system.core.domain.request.UserOriPasswordCheckRequest;
+import cc.wdev.platform.system.core.domain.request.UserRoleTypeSwitchRequest;
 import cc.wdev.platform.system.core.domain.vo.UserForgetPasswordVo;
+import cc.wdev.platform.system.core.domain.vo.UserRoleTypeVo;
+import cc.wdev.platform.system.core.service.UserRoleTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,6 +36,8 @@ import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.A
 public class UserWebController {
 
     private final UserApi userApi;
+
+    private final UserRoleTypeService userRoleTypeService;
 
     @Anonymous
     @Operation(summary = "检查用户名是否可用")
@@ -83,6 +88,25 @@ public class UserWebController {
     @GetMapping(API_V1_PREFIX + "/user/info")
     public R<UserInfoDto> info(@Parameter(description = "用户ID") @RequestParam(value = "userId") Long userId) {
         return R.success(this.userApi.getBaseUserInfo(userId));
+    }
+
+    @Authenticated
+    @Operation(summary = "获取我的身份信息")
+    @ApiResponse(description = "获取我的身份信息")
+    @GetMapping(API_V1_PREFIX + "/user/role-type")
+    public R<UserRoleTypeVo> roleType() {
+        Long userId = SecurityUtils.getUid();
+        return R.success(this.userRoleTypeService.getRoleType(userId));
+    }
+
+    @Authenticated
+    @OperationLog("切换身份")
+    @Operation(summary = "切换身份")
+    @ApiResponse(description = "切换身份")
+    @PostMapping(API_V1_PREFIX + "/user/role-type")
+    public R<UserRoleTypeVo> switchRoleType(@RequestBody @Valid UserRoleTypeSwitchRequest request) {
+        Long userId = SecurityUtils.getUid();
+        return R.success(this.userRoleTypeService.switchRoleType(userId, request.getRoleType()));
     }
 
     @Anonymous

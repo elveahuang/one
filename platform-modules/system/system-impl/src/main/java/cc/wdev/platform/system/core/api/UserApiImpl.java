@@ -1,6 +1,7 @@
 package cc.wdev.platform.system.core.api;
 
 import cc.wdev.platform.commons.constants.SecurityConstants;
+import cc.wdev.platform.commons.core.role.RoleTypeContext;
 import cc.wdev.platform.commons.core.tenant.TenantContext;
 import cc.wdev.platform.commons.data.core.utils.SpringDataUtils;
 import cc.wdev.platform.commons.domain.R;
@@ -79,6 +80,8 @@ public class UserApiImpl implements UserApi {
     private final CaptchaService captchaService;
 
     private final TenantService tenantService;
+
+    private final UserRoleTypeService userRoleTypeService;
 
     /**
      * @see UserApi#search(UserSearchRequest)
@@ -407,6 +410,11 @@ public class UserApiImpl implements UserApi {
             return dto;
         }
 
+        // 身份切换：请求未显式指定时，回填该用户当前激活的角色类型
+        if (!RoleTypeContext.isPresent()) {
+            RoleTypeContext.setRoleType(userRoleTypeService.getCurrentRoleType(user.getId()));
+        }
+
         List<AuthorityEntity> authorityEntityList = authorityService.findByUserId(user.getId());
         // 系统权限
         if (CollectionUtils.isNotEmpty(authorityEntityList)) {
@@ -424,8 +432,8 @@ public class UserApiImpl implements UserApi {
 
         Set<GrantedAuthority> authorities = Sets.newHashSet();
 
-        // 顶层租户超级管理员
-        if (TenantContext.isRootTenant() && ROOT_USER.equalsIgnoreCase(user.getUsername())) {
+        // 顶层租户超级管理员；已显式切换身份时不再短路，否则切换对 admin 无效
+        if (!RoleTypeContext.isPresent() && TenantContext.isRootTenant() && ROOT_USER.equalsIgnoreCase(user.getUsername())) {
             authorities.add(new SimpleGrantedAuthority(ROOT_AUTHORITY));
         }
 
@@ -559,6 +567,8 @@ public class UserApiImpl implements UserApi {
         log.info("Logout - username [{}], userId [{}]", SecurityUtils.getUsername(), userId);
         if (ObjectUtils.isValidId(userId)) {
             this.loginSessionService.closeByUserId(userId);
+            // 清除切换身份记录，避免下次登录继承上次的身份
+            this.userRoleTypeService.clearRoleType(userId);
         }
         return R.success();
     }
