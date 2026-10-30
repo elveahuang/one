@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -176,7 +177,7 @@ public class UserIdentitySideServiceImpl implements UserIdentitySideService {
             .filter(side -> side != null)
             .collect(Collectors.toSet());
         // 保持枚举声明顺序：ADMIN 在前
-        return java.util.Arrays.stream(IdentitySideEnum.values())
+        return Arrays.stream(IdentitySideEnum.values())
             .filter(ownedSides::contains)
             .map(IdentitySideEnum::getValue)
             .collect(Collectors.toList());
@@ -195,7 +196,7 @@ public class UserIdentitySideServiceImpl implements UserIdentitySideService {
      */
     private void evictAuthorityCache(Long userId) {
         try {
-            String pattern = UserAuthorityCacheKeyGenerator.keyByUserId(userId).getKey() + "*";
+            String pattern = UserAuthorityCacheKeyGenerator.keyPatternByUserId(userId);
             Set<String> keys = cacheService.scan(pattern);
             if (CollectionUtils.isNotEmpty(keys)) {
                 keys.forEach(cacheService::delete);

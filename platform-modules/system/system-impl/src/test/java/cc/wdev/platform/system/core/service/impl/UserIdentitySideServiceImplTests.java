@@ -241,4 +241,35 @@ class UserIdentitySideServiceImplTests {
         verify(cacheService, never()).delete(any(String[].class));
     }
 
+    @Test
+    @DisplayName("切换身份清掉该用户所有身份维度的权限缓存")
+    void switchEvictsEveryAuthorityCacheVariant() {
+        givenOwnedRoles("PLATFORM_ADMINISTRATOR", "MEMBER");
+        // 权限缓存键带身份端后缀，只删基础键会漏掉 :admin/:member
+        when(cacheService.scan(anyString())).thenReturn(new LinkedHashSet<>(List.of(
+            "user-authority:1000001:uid_1002001",
+            "user-authority:1000001:uid_1002001:admin",
+            "user-authority:1000001:uid_1002001:member"
+        )));
+
+        service.switchIdentitySide(USER_ID, "MEMBER");
+
+        verify(cacheService).scan("user-authority:1000001:uid_1002001*");
+        // cacheService::delete 绑定到 delete(String...) 变参重载，逐个校验
+        verify(cacheService).delete("user-authority:1000001:uid_1002001");
+        verify(cacheService).delete("user-authority:1000001:uid_1002001:admin");
+        verify(cacheService).delete("user-authority:1000001:uid_1002001:member");
+    }
+
+    @Test
+    @DisplayName("身份端记录沿用刷新令牌量级的有效期")
+    void sideRecordOutlivesAccessToken() {
+        givenOwnedRoles("PLATFORM_ADMINISTRATOR", "MEMBER");
+
+        service.switchIdentitySide(USER_ID, "MEMBER");
+
+        verify(cacheService).set(anyString(), any(),
+            org.mockito.ArgumentMatchers.argThat((Duration d) -> d != null && d.compareTo(Duration.ofDays(14)) >= 0));
+    }
+
 }

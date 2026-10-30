@@ -37,10 +37,6 @@ public class IdentitySideContext {
         return MDC.get(IDENTITY_SIDE);
     }
 
-    public static boolean isPresent() {
-        return StringUtils.isNotEmpty(MDC.get(IDENTITY_SIDE));
-    }
-
     public static void clear() {
         MDC.remove(IDENTITY_SIDE);
     }

@@ -205,7 +205,8 @@ public class RoleServiceImpl extends BaseCachingEntityService<RoleEntity, Long, 
             this.userRoleService.deleteByRoleIds(roleIds);
 
             // 清理缓存
-            getCacheService().delete(UserAuthorityCacheKeyGenerator.keysByUserIds(userIds));
+            UserAuthorityCacheKeyGenerator.keyPatternsByUserIds(userIds)
+                .forEach(getCacheService()::deleteByPattern);
             getCacheService().delete(UserRoleCacheKeyGenerator.keysByUserIds(userIds));
         }
 
@@ -303,7 +304,8 @@ public class RoleServiceImpl extends BaseCachingEntityService<RoleEntity, Long, 
         // 查询角色关联用户缓存
         Collection<Long> userIds = userRoleService.findUserIdsByRoleId(roleId);
         if (CollectionUtils.isNotEmpty(userIds)) {
-            getCacheService().delete(UserAuthorityCacheKeyGenerator.keysByUserIds(userIds));
+            UserAuthorityCacheKeyGenerator.keyPatternsByUserIds(userIds)
+                .forEach(getCacheService()::deleteByPattern);
         }
     }
 

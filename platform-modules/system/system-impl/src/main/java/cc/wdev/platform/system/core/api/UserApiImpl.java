@@ -469,8 +469,15 @@ public class UserApiImpl implements UserApi {
 
         Set<GrantedAuthority> authorities = Sets.newHashSet();
 
-        // 顶层租户超级管理员；已显式切换身份时不再短路，否则切换对 admin 无效
-        if (!IdentitySideContext.isPresent() && TenantContext.isRootTenant() && ROOT_USER.equalsIgnoreCase(user.getUsername())) {
+        // 顶层租户超级管理员：只在「当前端不是会员端」时短路。
+        //
+        // 不能用 IdentitySideContext.isPresent() 判断：拥有两端的用户首次访问就会被
+        // resolveEffectiveIdentitySide 写入 ADMIN 记录，此后 isPresent() 恒为真，
+        // root 的 *:*:* 会被永久关掉，只能依赖库里逐条配置的权限行。
+        // 而切到会员端时必须真正收窄，所以判据是「生效端是否为 MEMBER」。
+        if (activeSide != IdentitySideEnum.MEMBER
+            && TenantContext.isRootTenant()
+            && ROOT_USER.equalsIgnoreCase(user.getUsername())) {
             authorities.add(new SimpleGrantedAuthority(ROOT_AUTHORITY));
         }
 

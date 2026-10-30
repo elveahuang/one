@@ -205,7 +205,9 @@ public class UserRoleServiceImpl
     public void deleteCacheByUserIds(Collection<Long> userIds) {
         if (CollectionUtils.isNotEmpty(userIds)) {
             getCacheService().delete(UserRoleCacheKeyGenerator.keysByUserIds(userIds));
-            getCacheService().delete(UserAuthorityCacheKeyGenerator.keysByUserIds(userIds));
+            // 权限缓存键带身份端后缀，只删基础键清不掉 :admin/:member 变体
+            UserAuthorityCacheKeyGenerator.keyPatternsByUserIds(userIds)
+                .forEach(getCacheService()::deleteByPattern);
         }
     }
 
