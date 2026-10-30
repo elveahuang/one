@@ -2,21 +2,25 @@ package cc.wdev.platform.system.open.controller.system;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
 import cc.wdev.platform.commons.domain.R;
+import cc.wdev.platform.commons.web.request.PageRequest;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
 import cc.wdev.platform.system.open.api.WxMpApi;
+import cc.wdev.platform.system.open.domain.entity.WxMpAppEntity;
 import cc.wdev.platform.system.open.domain.form.WxMpConfigForm;
+import cc.wdev.platform.system.open.service.WxMpAppService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
+import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_SYS_PREFIX;
 import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_SYS_PREFIX;
 
 /**
@@ -28,6 +32,8 @@ import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.A
 public class WxMpSysController extends AbstractController {
 
     private final WxMpApi wxMpApi;
+
+    private final WxMpAppService wxMpAppService;
 
     @PreAuthorize("hasAnyAuthority('open:wechat:mp:list')")
     @Operation(summary = "获取系统基本信息")
@@ -45,6 +51,17 @@ public class WxMpSysController extends AbstractController {
     public R<?> postBase(@Parameter(description = "新增租户表单") @RequestBody @Valid WxMpConfigForm form) {
         wxMpApi.saveWxMpConfig(form);
         return R.success();
+    }
+
+    /**
+     * 获取应用列表
+     */
+    @PreAuthorize("hasAnyAuthority('open:wechat:mp:list')")
+    @Operation(summary = "获取应用列表")
+    @ApiResponse(description = "获取应用列表")
+    @GetMapping(API_V1_SYS_PREFIX + "/oapis/wx/mp/list")
+    public R<Page<WxMpAppEntity>> list(@Valid PageRequest pageRequest) {
+        return R.success(wxMpAppService.findByPage(pageRequest.getPageable()));
     }
 
 }

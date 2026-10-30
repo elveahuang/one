@@ -2,21 +2,25 @@ package cc.wdev.platform.system.open.controller.system;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
 import cc.wdev.platform.commons.domain.R;
+import cc.wdev.platform.commons.web.request.PageRequest;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
 import cc.wdev.platform.system.open.api.WxCpApi;
+import cc.wdev.platform.system.open.domain.entity.WxCpAppEntity;
 import cc.wdev.platform.system.open.domain.form.WxCpConfigForm;
+import cc.wdev.platform.system.open.service.WxCpAppService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
+import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_SYS_PREFIX;
 import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_SYS_PREFIX;
 
 /**
@@ -28,6 +32,8 @@ import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.A
 public class WxCpSysController extends AbstractController {
 
     private final WxCpApi wxCpApi;
+
+    private final WxCpAppService wxCpAppService;
 
     /**
      * 获取系统基本信息
@@ -51,6 +57,17 @@ public class WxCpSysController extends AbstractController {
     public R<?> postBase(@Parameter(description = "企业微信配置表单") @RequestBody @Valid WxCpConfigForm form) {
         wxCpApi.saveWxCpConfig(form);
         return R.success();
+    }
+
+    /**
+     * 获取应用列表
+     */
+    @PreAuthorize("hasAnyAuthority('open:wechat:cp')")
+    @Operation(summary = "获取应用列表")
+    @ApiResponse(description = "获取应用列表")
+    @GetMapping(API_V1_SYS_PREFIX + "/oapis/wx/cp/list")
+    public R<Page<WxCpAppEntity>> list(@Valid PageRequest pageRequest) {
+        return R.success(wxCpAppService.findByPage(pageRequest.getPageable()));
     }
 
 }
