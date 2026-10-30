@@ -72,6 +72,7 @@ Windows 用 `.\gradlew.bat`，Linux/macOS 用 `./gradlew`（不要写成 `./grad
 - 全量测试：`./gradlew test`（**谨慎**，见 7.10）
 - 本地启动主服务：`./gradlew :platform-services:app-server:bootRun`（或 IDE 运行 `AppServerApplication`；JDK 25 下非 public 的 main 是合法入口，不据此判断启动失败）
 - 初始化本地数据库：`tools/database/bin/pgsql_init.cmd`（Windows）/ `pgsql_init.sh`（Linux）。**警告：脚本链含 `DROP DATABASE` / `DROP TABLE` / `TRUNCATE`，重跑整库清空，仅用于本地**；SQL 在 `tools/database/pgsql/`，新建表必须同步 `db_pgsql_schema_core.sql`。
+- 重置本地 admin 口令：`tools/database/bin/reset_admin_password.cmd`（Windows）/ `.sh`（Linux），默认置为 `admin`，同时清理 Redis 用户缓存。仅限 local/development。
 - CI 产物复制脚本：`tools/scripts/build.sh` / `build.cmd`
 - wrapper 发行版本地未缓存且下载卡住时，可用 `~/.gradle/wrapper/dists/` 下已缓存的版本直接调 `gradle.bat`；**不要改 `gradle-wrapper.properties`**。
 
@@ -195,7 +196,11 @@ one (Gradle root, group cc.wdev)
 2. 后端：`./gradlew :platform-services:app-server:bootRun`，8181 监听即就绪（约 1–2 分钟）。
 3. 前端：`pnpm run webapp:start`、`pnpm run mobile:start`。
 4. 验证：`curl -k -X POST https://wdev.cc/api/v1/initialize` 返回 `code:200`；打开 `https://wdev.cc/webapp/` 应跳登录页（`sys_config` 无 `LOGIN_CAPTCHA_ENABLED` 时无需验证码）。
-5. 账号：ROOT 租户 `admin`。**口令为 BCrypt、不可逆推，向维护者索取；不要猜、不要写进文档或入库文件。** 登录前先按 6.2 核对客户端密钥，否则 401 与口令无关。
+5. 账号：ROOT 租户 `admin`，**本地库口令固定为 `admin`**（`sys_user.password` 存 `{bcrypt}$2a$...` 哈希，登录时由 `DelegatingPasswordEncoder` 校验，库里不是明文）。需要重置时执行脚本，**不要手写明文、不要复用其它环境的哈希、不要用在线工具生成**：
+   - Windows：`tools\database\bin\reset_admin_password.cmd`
+   - Linux/macOS：`tools/database/bin/reset_admin_password.sh`
+
+   脚本会生成 BCrypt 哈希写库，并清理 Redis（db 11）用户缓存；**手工改库必须同步清缓存，否则旧凭据仍生效**。该约定只适用于 local/development，禁止用于 sit/pro。登录前先按 6.2 核对客户端密钥，否则 401 与口令无关。
 6. 登录验证必须用真实输入事件（合成 `click()`/`requestSubmit()` 不触发 Vue 提交）。成功后网络序列 `POST /oauth/token` 200 → `GET /api/v1/user` 200 → `/webapp/home`，并出现 WebSocket 连接成功日志；未登录访问受保护页跳 `/login?redirect=...`。
 7. 后端重启使旧 JWT 失效，验证前重新取 token。无法真实输入时，可在页面上下文 `fetch('/oauth/token')` 换 token，并同步写 `localStorage` 的 `ACCESS_TOKEN`/`REFRESH_TOKEN` 与持久化 user store（**三处独立，都要更新**）。
 8. 停止后 Windows 常残留子进程继续监听端口，用 `netstat -ano` 找 PID 后 `taskkill /F /T`。
@@ -370,7 +375,7 @@ one (Gradle root, group cc.wdev)
 
 ## 11. 禁止事项
 
-- 不提交真实密钥/口令；配置只允许占位或 `${ENV_VAR}` 引用
+- 不提交真实密钥；口令只允许占位或 `${ENV_VAR}` 引用。**唯一例外**：本地开发库的 `admin` 账号口令（见 6.3 第 5 条）固定为 `admin`，便于自动化联调——这只适用于 local/development 库，**禁止把同一约定带到 sit/pro，也禁止写进任何入库配置文件**
 - 不修改/不提交 `application-local.yml`、`application-production.yml`（已 gitignore，属本地/生产私有配置）
 - 不删除 `tools/deploy/binaries/` 下的本地部署产物
 - 不使用 `System.out.println` / `printStackTrace`（测试辅助除外）
