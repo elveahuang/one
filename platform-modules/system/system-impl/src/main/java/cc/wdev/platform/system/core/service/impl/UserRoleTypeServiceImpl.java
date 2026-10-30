@@ -44,9 +44,14 @@ public class UserRoleTypeServiceImpl implements UserRoleTypeService {
     private static final String CURRENT_ROLE_TYPE_PREFIX = "user-role-type";
 
     /**
-     * 当前身份的存活时间；访问令牌默认 60 分钟，留一点余量
+     * 当前身份的存活时间。
+     *
+     * <p>必须覆盖「刷新令牌」的整个有效期（默认 14 天），否则用户切换身份后，
+     * 记录先于会话过期，{@code resolveEffectiveRoleType} 会回落到「默认最高身份」，
+     * 相当于把用户主动收窄的身份静默提升回去。登出会显式清理该键，
+     * 因此不需要靠 TTL 做会话回收。</p>
      */
-    private static final Duration CURRENT_ROLE_TYPE_TTL = Duration.ofHours(12);
+    private static final Duration CURRENT_ROLE_TYPE_TTL = Duration.ofDays(15);
 
     /**
      * 参与身份切换的类型优先级：越靠前权限越大，用于「未切换时默认选最高」
@@ -67,7 +72,8 @@ public class UserRoleTypeServiceImpl implements UserRoleTypeService {
     public UserRoleTypeVo getRoleType(Long userId) {
         List<String> owned = this.findOwnedRoleTypes(userId);
         List<String> available = this.buildAvailable(owned);
-        String current = this.getCurrentRoleType(userId);
+        // 与权限计算走同一套解析，避免「页面显示的当前身份」和「实际生效的身份」出现分歧
+        String current = this.resolveEffectiveRoleType(userId, null);
         return UserRoleTypeVo.builder()
             .current(current != null ? current : this.defaultRoleType(available))
             .owned(owned)
@@ -103,19 +109,6 @@ public class UserRoleTypeServiceImpl implements UserRoleTypeService {
             .available(available)
             .switchable(available.size() > 1)
             .build();
-    }
-
-    @Override
-    public String getCurrentRoleType(Long userId) {
-        if (!ObjectUtils.isValidId(userId)) {
-            return null;
-        }
-        String value = cacheService.get(this.cacheKey(userId));
-        if (StringUtils.isEmpty(value)) {
-            return null;
-        }
-        // 记录的类型可能因角色变更失效，需回查是否仍拥有
-        return this.findOwnedRoleTypes(userId).contains(value) ? value : null;
     }
 
     /**
