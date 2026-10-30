@@ -82,21 +82,28 @@ public class UserRoleServiceImpl
     }
 
     /**
-     * @see UserRoleService#findRoleIdsByUserId(Long, String)
+     * @see UserRoleService#findRoleIdsByUserId(Long, Collection)
      */
     @Override
-    public Set<Long> findRoleIdsByUserId(Long userId, String roleType) {
+    public Set<Long> findRoleIdsByUserId(Long userId, Collection<String> roleTypes) {
         Set<Long> roleIds = this.findRoleIdsByUserId(userId);
-        if (StringUtils.isEmpty(roleType) || CollectionUtils.isEmpty(roleIds)) {
+        if (CollectionUtils.isEmpty(roleTypes) || CollectionUtils.isEmpty(roleIds)) {
             return roleIds;
         }
-        // 只保留属于该角色类型的角色；roleService 已带缓存，这里直接批量过滤
+        // 大小写不敏感匹配；roleService 已带缓存，这里直接批量过滤
+        Set<String> normalized = roleTypes.stream()
+            .filter(StringUtils::isNotEmpty)
+            .map(t -> t.trim().toUpperCase())
+            .collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(normalized)) {
+            return roleIds;
+        }
         List<RoleEntity> roles = this.roleServiceProvider.getObject().findCacheByIds(roleIds);
         if (CollectionUtils.isEmpty(roles)) {
             return Collections.emptySet();
         }
         return roles.stream()
-            .filter(r -> roleType.equalsIgnoreCase(r.getBizType()))
+            .filter(r -> r.getBizType() != null && normalized.contains(r.getBizType().toUpperCase()))
             .map(RoleEntity::getId)
             .collect(Collectors.toSet());
     }

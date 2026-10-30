@@ -11,8 +11,9 @@ import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.system.commons.constants.SystemCacheConstants;
 import cc.wdev.platform.system.commons.enums.BizScopeTypeEnum;
 import cc.wdev.platform.system.commons.enums.EntityAuthorityBizTypeEnum;
+import cc.wdev.platform.system.commons.enums.IdentitySideEnum;
 import cc.wdev.platform.system.core.cache.UserAuthorityCacheKeyGenerator;
-import cc.wdev.platform.commons.core.role.RoleTypeContext;
+import cc.wdev.platform.commons.core.identity.IdentitySideContext;
 import cc.wdev.platform.system.core.domain.converter.AuthorityConverter;
 import cc.wdev.platform.system.core.domain.entity.AuthorityEntity;
 import cc.wdev.platform.system.core.domain.vo.AuthorityVo;
@@ -56,11 +57,13 @@ public class AuthorityServiceImpl extends BaseCachingEntityService<AuthorityEnti
             return Collections.emptyList();
         }
 
-        // 当前激活的角色类型；为空表示未切换，按全部角色合并（保持原有行为）
-        String roleType = RoleTypeContext.getRoleType();
+        // 当前激活的身份端（管理端/会员端）；为空表示未切换，按全部角色合并（保持原有行为）
+        String identitySide = IdentitySideContext.getIdentitySide();
+        // 端内包含多个角色类型（管理端 = 平台管理员 + 系统管理员 + 普通用户），权限取其并集
+        Collection<String> roleTypes = this.resolveRoleTypes(identitySide);
 
-        Collection<Long> authorityIds = getCacheService().get(UserAuthorityCacheKeyGenerator.keyByUserId(userId, roleType), _ -> {
-            Set<Long> roleIds = this.userRoleService.findRoleIdsByUserId(userId, roleType);
+        Collection<Long> authorityIds = getCacheService().get(UserAuthorityCacheKeyGenerator.keyByUserId(userId, identitySide), _ -> {
+            Set<Long> roleIds = this.userRoleService.findRoleIdsByUserId(userId, roleTypes);
             if (CollectionUtils.isEmpty(roleIds)) {
                 return Collections.emptyList();
             }
@@ -80,6 +83,14 @@ public class AuthorityServiceImpl extends BaseCachingEntityService<AuthorityEnti
         return this.findCacheByIds(authorityIds).stream()
             .filter(e -> e.getActive() == BooleanTypeEnum.TRUE.getValue().intValue())
             .collect(Collectors.toList());
+    }
+
+    /**
+     * 把身份端解析为它包含的角色类型集合；端为空或无法识别时返回空集合（表示不过滤）。
+     */
+    private Collection<String> resolveRoleTypes(String identitySide) {
+        IdentitySideEnum side = IdentitySideEnum.of(identitySide);
+        return side == null ? Collections.emptySet() : side.getRoleTypes();
     }
 
     @Override

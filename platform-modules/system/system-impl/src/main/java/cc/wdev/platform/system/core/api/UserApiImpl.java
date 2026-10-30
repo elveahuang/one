@@ -1,7 +1,7 @@
 package cc.wdev.platform.system.core.api;
 
 import cc.wdev.platform.commons.constants.SecurityConstants;
-import cc.wdev.platform.commons.core.role.RoleTypeContext;
+import cc.wdev.platform.commons.core.identity.IdentitySideContext;
 import cc.wdev.platform.commons.core.tenant.TenantContext;
 import cc.wdev.platform.commons.data.core.utils.SpringDataUtils;
 import cc.wdev.platform.commons.domain.R;
@@ -13,6 +13,7 @@ import cc.wdev.platform.commons.security.domain.OtpUser;
 import cc.wdev.platform.commons.security.domain.SocialUser;
 import cc.wdev.platform.commons.utils.*;
 import cc.wdev.platform.system.commons.constants.SymbolConstants;
+import cc.wdev.platform.system.commons.enums.IdentitySideEnum;
 import cc.wdev.platform.system.core.domain.converter.AuthorityConverter;
 import cc.wdev.platform.system.core.domain.converter.RoleConverter;
 import cc.wdev.platform.system.core.domain.converter.UserConverter;
@@ -81,7 +82,7 @@ public class UserApiImpl implements UserApi {
 
     private final TenantService tenantService;
 
-    private final UserRoleTypeService userRoleTypeService;
+    private final UserIdentitySideService userIdentitySideService;
 
     /**
      * @see UserApi#search(UserSearchRequest)
@@ -410,29 +411,29 @@ public class UserApiImpl implements UserApi {
             return dto;
         }
 
-        // 解析生效的角色类型：请求头/服务端记录都必须落在该用户真实拥有的类型内，
-        // 否则伪造 x-role-type 即可绕过身份切换造成的权限收窄。
+        // 解析生效的身份端（管理端/会员端）：请求头/服务端记录都必须落在该用户真实拥有的端内，
+        // 否则伪造 x-identity-side 即可绕过身份切换造成的权限收窄。
         //
         // 不能用 SecurityUtils.getUid() 判断「是否本人查询自己」：
         // JWT 转换器构建 Authentication 时 SecurityContext 尚未建立，getUid() 返回 0，
         // 判断永远为 false，身份过滤会被整体跳过（这正是伪造请求头能提权的原因）。
         // 该方法的唯一职责是「为当前请求主体算权限」，因此直接按目标用户自己的身份记录收窄即可。
-        String previousRoleType = RoleTypeContext.getRoleType();
+        String previousSide = IdentitySideContext.getIdentitySide();
         boolean contextChanged = false;
         try {
-            String effective = userRoleTypeService.resolveEffectiveRoleType(user.getId(), previousRoleType);
-            if (!Objects.equals(effective, previousRoleType)) {
-                RoleTypeContext.setRoleType(effective);
+            String effective = userIdentitySideService.resolveEffectiveIdentitySide(user.getId(), previousSide);
+            if (!Objects.equals(effective, previousSide)) {
+                IdentitySideContext.setIdentitySide(effective);
                 contextChanged = true;
             }
-            if (StringUtils.isNotEmpty(previousRoleType) && !Objects.equals(previousRoleType, effective)) {
-                log.warn("[RoleType] user [{}] requested role type [{}] not honoured", user.getId(), previousRoleType);
+            if (StringUtils.isNotEmpty(previousSide) && !Objects.equals(previousSide, effective)) {
+                log.warn("[IdentitySide] user [{}] requested side [{}] not honoured", user.getId(), previousSide);
             }
 
             return this.buildUserAuthority(user, dto);
         } finally {
             if (contextChanged) {
-                RoleTypeContext.setRoleType(previousRoleType);
+                IdentitySideContext.setIdentitySide(previousSide);
             }
         }
     }
@@ -447,12 +448,15 @@ public class UserApiImpl implements UserApi {
         if (CollectionUtils.isNotEmpty(authorityEntityList)) {
             dto.setAuthorities(AuthorityConverter.INSTANCE.entityListToDtoList(authorityEntityList));
         }
-        // 系统角色：切换身份后只返回当前类型下的角色，避免 roles/ROLE_* 仍暴露全部身份
-        String activeRoleType = RoleTypeContext.getRoleType();
+        // 系统角色：切换身份后只返回当前端包含的类型下的角色，避免 roles/ROLE_* 仍暴露全部身份
+        IdentitySideEnum activeSide = IdentitySideEnum.of(IdentitySideContext.getIdentitySide());
         List<RoleEntity> roleEntityList = roleService.findByUserId(user.getId());
-        if (CollectionUtils.isNotEmpty(roleEntityList) && StringUtils.isNotEmpty(activeRoleType)) {
+        if (CollectionUtils.isNotEmpty(roleEntityList) && activeSide != null) {
+            Set<String> sideRoleTypes = activeSide.getRoleTypes().stream()
+                .map(t -> t.toUpperCase())
+                .collect(Collectors.toSet());
             roleEntityList = roleEntityList.stream()
-                .filter(r -> activeRoleType.equalsIgnoreCase(r.getBizType()))
+                .filter(r -> r.getBizType() != null && sideRoleTypes.contains(r.getBizType().toUpperCase()))
                 .toList();
         }
         if (CollectionUtils.isNotEmpty(roleEntityList)) {
@@ -466,7 +470,7 @@ public class UserApiImpl implements UserApi {
         Set<GrantedAuthority> authorities = Sets.newHashSet();
 
         // 顶层租户超级管理员；已显式切换身份时不再短路，否则切换对 admin 无效
-        if (!RoleTypeContext.isPresent() && TenantContext.isRootTenant() && ROOT_USER.equalsIgnoreCase(user.getUsername())) {
+        if (!IdentitySideContext.isPresent() && TenantContext.isRootTenant() && ROOT_USER.equalsIgnoreCase(user.getUsername())) {
             authorities.add(new SimpleGrantedAuthority(ROOT_AUTHORITY));
         }
 
@@ -601,7 +605,7 @@ public class UserApiImpl implements UserApi {
         if (ObjectUtils.isValidId(userId)) {
             this.loginSessionService.closeByUserId(userId);
             // 清除切换身份记录，避免下次登录继承上次的身份
-            this.userRoleTypeService.clearRoleType(userId);
+            this.userIdentitySideService.clearIdentitySide(userId);
         }
         return R.success();
     }

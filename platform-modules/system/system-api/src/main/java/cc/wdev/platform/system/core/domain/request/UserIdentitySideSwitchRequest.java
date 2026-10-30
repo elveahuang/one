@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
- * 切换身份请求
+ * 切换身份端请求
  *
  * @author elvea
  */
@@ -18,11 +18,11 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "切换身份请求")
-public class UserRoleTypeSwitchRequest implements Serializable {
+@Schema(description = "切换身份端请求")
+public class UserIdentitySideSwitchRequest implements Serializable {
 
-    @Schema(description = "目标角色类型", example = "USER")
-    @NotBlank(message = "角色类型不能为空")
-    private String roleType;
+    @Schema(description = "目标身份端（ADMIN / MEMBER）", example = "MEMBER")
+    @NotBlank(message = "身份端不能为空")
+    private String side;
 
 }

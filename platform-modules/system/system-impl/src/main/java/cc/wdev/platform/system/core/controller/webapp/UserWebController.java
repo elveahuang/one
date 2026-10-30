@@ -12,10 +12,10 @@ import cc.wdev.platform.system.core.domain.form.*;
 import cc.wdev.platform.system.core.domain.request.UserChangeInfoRequest;
 import cc.wdev.platform.system.core.domain.request.UserCheckRequest;
 import cc.wdev.platform.system.core.domain.request.UserOriPasswordCheckRequest;
-import cc.wdev.platform.system.core.domain.request.UserRoleTypeSwitchRequest;
+import cc.wdev.platform.system.core.domain.request.UserIdentitySideSwitchRequest;
 import cc.wdev.platform.system.core.domain.vo.UserForgetPasswordVo;
-import cc.wdev.platform.system.core.domain.vo.UserRoleTypeVo;
-import cc.wdev.platform.system.core.service.UserRoleTypeService;
+import cc.wdev.platform.system.core.domain.vo.UserIdentitySideVo;
+import cc.wdev.platform.system.core.service.UserIdentitySideService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -37,7 +37,7 @@ public class UserWebController {
 
     private final UserApi userApi;
 
-    private final UserRoleTypeService userRoleTypeService;
+    private final UserIdentitySideService userIdentitySideService;
 
     @Anonymous
     @Operation(summary = "检查用户名是否可用")
@@ -91,22 +91,22 @@ public class UserWebController {
     }
 
     @Authenticated
-    @Operation(summary = "获取我的身份信息")
-    @ApiResponse(description = "获取我的身份信息")
-    @GetMapping(API_V1_PREFIX + "/user/role-type")
-    public R<UserRoleTypeVo> roleType() {
+    @Operation(summary = "获取我的身份端信息")
+    @ApiResponse(description = "获取我的身份端信息")
+    @GetMapping(API_V1_PREFIX + "/user/identity-side")
+    public R<UserIdentitySideVo> identitySide() {
         Long userId = SecurityUtils.getUid();
-        return R.success(this.userRoleTypeService.getRoleType(userId));
+        return R.success(this.userIdentitySideService.getIdentitySide(userId));
     }
 
     @Authenticated
     @OperationLog("切换身份")
-    @Operation(summary = "切换身份")
-    @ApiResponse(description = "切换身份")
-    @PostMapping(API_V1_PREFIX + "/user/role-type")
-    public R<UserRoleTypeVo> switchRoleType(@RequestBody @Valid UserRoleTypeSwitchRequest request) {
+    @Operation(summary = "切换身份端")
+    @ApiResponse(description = "切换身份端")
+    @PostMapping(API_V1_PREFIX + "/user/identity-side")
+    public R<UserIdentitySideVo> switchIdentitySide(@RequestBody @Valid UserIdentitySideSwitchRequest request) {
         Long userId = SecurityUtils.getUid();
-        return R.success(this.userRoleTypeService.switchRoleType(userId, request.getRoleType()));
+        return R.success(this.userIdentitySideService.switchIdentitySide(userId, request.getSide()));
     }
 
     @Anonymous

@@ -28,13 +28,16 @@ public interface UserRoleService extends CachingEntityService<UserRoleEntity, Lo
     Set<Long> findRoleIdsByUserId(Long userId);
 
     /**
-     * 按角色类型筛选用户的角色ID。
+     * 按角色类型集合筛选用户的角色ID。
      *
-     * @param userId   用户ID
-     * @param roleType 角色类型（sys_role.biz_type），为空则等价于 {@link #findRoleIdsByUserId(Long)}
-     * @return 属于该类型的角色ID
+     * <p>身份切换以「端」为单位：管理端一次要取三类角色（平台管理员/系统管理员/普通用户）的并集，
+     * 因此这里接受类型集合而不是单一类型。</p>
+     *
+     * @param userId    用户ID
+     * @param roleTypes 角色类型集合（sys_role.biz_type）；为空则等价于 {@link #findRoleIdsByUserId(Long)}
+     * @return 属于这些类型的角色ID
      */
-    Set<Long> findRoleIdsByUserId(Long userId, String roleType);
+    Set<Long> findRoleIdsByUserId(Long userId, Collection<String> roleTypes);
 
     /**
      * 根据角色ID获取用户ID数组

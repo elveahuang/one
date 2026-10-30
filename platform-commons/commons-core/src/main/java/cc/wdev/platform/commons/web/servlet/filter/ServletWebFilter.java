@@ -1,6 +1,6 @@
 package cc.wdev.platform.commons.web.servlet.filter;
 
-import cc.wdev.platform.commons.core.role.RoleTypeContext;
+import cc.wdev.platform.commons.core.identity.IdentitySideContext;
 import cc.wdev.platform.commons.core.tenant.TenantContext;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.exception.ServiceException;
@@ -41,8 +41,8 @@ public class ServletWebFilter implements Filter {
                 // 初始化租户上下文
                 TenantContext.handleServletRequest(request, response);
 
-                // 初始化角色类型上下文（身份切换）；未带该头则由 system 侧按缓存回填
-                RoleTypeContext.setRoleType(request.getHeader(RoleTypeContext.ROLE_TYPE_HEADER));
+                // 初始化身份端上下文（管理端/会员端切换）；未带该头则由 system 侧按缓存回填
+                IdentitySideContext.setIdentitySide(request.getHeader(IdentitySideContext.IDENTITY_SIDE_HEADER));
 
                 // 记录执行时间
                 startTime = System.currentTimeMillis();
@@ -66,7 +66,7 @@ public class ServletWebFilter implements Filter {
                 // 清理租户上下文
                 TenantContext.clear();
                 // 清理角色类型上下文
-                RoleTypeContext.clear();
+                IdentitySideContext.clear();
                 // 清理MDC上下文
                 MdcContext.clear();
                 //
