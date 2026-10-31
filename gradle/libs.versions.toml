@@ -13,15 +13,15 @@ springAiMcpSecurityVersion = "0.1.14"
 embabelAgentVersion = "1.5.4"
 grpcVersion = "1.85.1"
 nettyVersion = "4.2.19.Final"
-cosidVersion = "4.1.1"
+cosidVersion = "5.0.0"
 redissonVersion = "4.8.0"
 kotlinVersion = "2.4.21"
 groovyVersion = "6.0.0"
 hutoolVersion = "5.8.48"
-awsSdkVersion = "2.57.2"
+awsSdkVersion = "2.57.7"
 wxJavaVersion = "4.8.6.B"
 mockitoVersion = "5.24.0"
-seleniumVersion = "4.51.0"
+seleniumVersion = "4.52.0"
 mybatisVersion = "3.5.19"
 mybatisDynamicSqlVersion = "2.0.0"
 mybatisSpringVersion = "4.1.0"
@@ -253,7 +253,7 @@ redisson-spring-data = { module = "org.redisson:redisson-spring-data-41", versio
 redisson-spring-boot-starter = { module = "org.redisson:redisson-spring-boot-starter", version.ref = "redissonVersion" }
 cosid-bom = { module = "me.ahoo.cosid:cosid-bom", version.ref = "cosidVersion" }
 cosid-core = { module = "me.ahoo.cosid:cosid-core", version.ref = "cosidVersion" }
-cosid-spring-redis = { module = "me.ahoo.cosid:cosid-spring-redis", version.ref = "cosidVersion" }
+cosid-store-redis = { module = "me.ahoo.cosid:cosid-store-redis", version.ref = "cosidVersion" }
 cosid-spring-boot-starter = { module = "me.ahoo.cosid:cosid-spring-boot-starter", version.ref = "cosidVersion" }
 
 # Caffeine
@@ -492,7 +492,7 @@ hibernate = ["spring-data-jpa", "hibernate-core"]
 hibernateStarter = ["spring-boot-starter-jdbc", "spring-boot-starter-data-jpa"]
 
 # Redis
-redis = ["jedis", "redisson", "redisson-spring-cache", "redisson-spring-data", "cosid-core", "cosid-spring-redis", "netty-resolver-dns-native-macos"]
+redis = ["jedis", "redisson", "redisson-spring-cache", "redisson-spring-data", "cosid-core", "cosid-store-redis", "netty-resolver-dns-native-macos"]
 redisStarter = ["redisson-spring-boot-starter", "cosid-spring-boot-starter"]
 
 # RabbitMQ

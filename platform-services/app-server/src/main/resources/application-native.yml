@@ -85,17 +85,15 @@ springdoc:
 cosid:
     enabled: true
     namespace: ${spring.application.name}
+    stores:
+        redis:
+            type: redis
     machine:
-        enabled: true
-        distributor:
-            type: manual
-            manual:
-                machine-id: 1
-        guarder:
-            enabled: true
-    snowflake:
-        enabled: true
-        epoch: 1672502400000
+        leased: { store: redis }
+    generators:
+        default:
+            strategy: snowflake
+            epoch: 1672502400000
 ### --------------------------------------------------------------------------------------------------------------------
 ### Platform Config
 ### --------------------------------------------------------------------------------------------------------------------
