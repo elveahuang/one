@@ -108,6 +108,11 @@ public interface UserService extends CachingEntityService<UserEntity, Long> {
     List<UserEntity> findUserByIds(List<Long> ids);
 
     /**
+     * 获取邀请人邀请注册的用户
+     */
+    List<UserEntity> findByInviteBy(Long inviteBy);
+
+    /**
      * 注册用户
      */
     UserEntity registerSocialUser(SocialUser socialUser);

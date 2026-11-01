@@ -275,6 +275,17 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
         return this.findCacheByIds(ids);
     }
 
+    @Override
+    public List<UserEntity> findByInviteBy(Long inviteBy) {
+        if (!ObjectUtils.isValidId(inviteBy)) {
+            return Collections.emptyList();
+        }
+        return this.findList(lambdaQueryWrapper()
+            .eq(UserEntity::getInviteBy, inviteBy)
+            .eq(UserEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .orderByDesc(UserEntity::getCreatedAt));
+    }
+
 
     @Override
     @TargetUser

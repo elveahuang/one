@@ -54,6 +54,16 @@ public interface UserApi {
     boolean check(UserCheckRequest request);
 
     /**
+     * 检查邀请码是否可用
+     */
+    boolean checkInviteCode(String inviteCode);
+
+    /**
+     * 获取当前用户邀请注册的用户列表
+     */
+    List<UserSimpleInfoVo> findInvitedUsers(Long userId);
+
+    /**
      * 用户注册
      */
     R<?> register(UserRegisterForm userRegisterForm);

@@ -15,6 +15,7 @@ import cc.wdev.platform.system.core.domain.request.UserOriPasswordCheckRequest;
 import cc.wdev.platform.system.core.domain.request.UserIdentitySideSwitchRequest;
 import cc.wdev.platform.system.core.domain.vo.UserForgetPasswordVo;
 import cc.wdev.platform.system.core.domain.vo.UserIdentitySideVo;
+import cc.wdev.platform.system.core.domain.vo.UserSimpleInfoVo;
 import cc.wdev.platform.system.core.service.UserIdentitySideService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,6 +24,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import static cc.wdev.platform.commons.enums.RateLimitTypeEnum.IP;
 import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_PREFIX;
@@ -64,6 +67,24 @@ public class UserWebController {
     @RateLimiter(type = IP)
     public R<Boolean> checkMobile(@Valid @Parameter(description = "用户检查请求") UserCheckRequest request) {
         return R.success(userApi.check(request));
+    }
+
+    @Anonymous
+    @Operation(summary = "检查邀请码是否可用")
+    @ApiResponse(description = "检查邀请码是否可用")
+    @GetMapping(API_V1_PREFIX + "/user/check-code")
+    @RateLimiter(type = IP)
+    public R<Boolean> checkInviteCode(@Parameter(description = "邀请码") @RequestParam(value = "inviteCode") String inviteCode) {
+        return R.success(userApi.checkInviteCode(inviteCode));
+    }
+
+    @Authenticated
+    @Operation(summary = "获取我邀请的用户")
+    @ApiResponse(description = "获取我邀请的用户")
+    @PostMapping(API_V1_PREFIX + "/user/inviter-details")
+    public R<List<UserSimpleInfoVo>> inviterDetails() {
+        Long userId = SecurityUtils.getUid();
+        return R.success(userApi.findInvitedUsers(userId));
     }
 
     @Authenticated

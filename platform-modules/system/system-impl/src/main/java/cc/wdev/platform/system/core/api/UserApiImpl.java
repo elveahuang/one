@@ -123,6 +123,27 @@ public class UserApiImpl implements UserApi {
     }
 
     /**
+     * @see UserApi#checkInviteCode(String)
+     */
+    @Override
+    public boolean checkInviteCode(String inviteCode) {
+        if (StringUtils.isBlank(inviteCode)) {
+            return false;
+        }
+        InviteStatisticVo statistic = this.inviteStatisticApi.getByCode(inviteCode);
+        return statistic != null && ObjectUtils.isValidId(statistic.getId());
+    }
+
+    /**
+     * @see UserApi#findInvitedUsers(Long)
+     */
+    @Override
+    public List<UserSimpleInfoVo> findInvitedUsers(Long userId) {
+        List<UserEntity> entities = this.userService.findByInviteBy(userId);
+        return entities.stream().map(UserConverter.INSTANCE::entityToSimpleVo).toList();
+    }
+
+    /**
      * @see UserApi#getUserInfo(Long)
      */
     @Override

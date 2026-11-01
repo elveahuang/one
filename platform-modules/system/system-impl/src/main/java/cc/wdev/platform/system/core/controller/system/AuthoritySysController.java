@@ -26,7 +26,7 @@ public class AuthoritySysController extends AbstractController {
 
     private final AuthorityService authorityService;
 
-    @PreAuthorize("hasAnyAuthority('system:authority')")
+    @PreAuthorize("hasAnyAuthority('platform:authority')")
     @Operation(summary = "获取权限列表")
     @ApiResponse(description = "获取权限列表")
     @GetMapping(API_V1_SYS_PREFIX + "/authority/list")
