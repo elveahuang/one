@@ -39,7 +39,7 @@ public interface UserIdentitySideService {
      * 只接受该用户真实拥有的端，任何伪造值都会被丢弃；返回 null 表示不做端过滤
      * （按全部角色合并，用于只属于单一端的用户）。</p>
      *
-     * @param userId               用户ID
+     * @param userId                用户ID
      * @param requestedIdentitySide 请求声明的端（如请求头），可为空
      * @return 生效的端；null 表示不过滤
      */
