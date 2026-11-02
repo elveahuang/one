@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * @author elvea
  */
 @RegisterReflection(memberCategories = MemberCategory.INVOKE_DECLARED_METHODS)
-public class CommonTools {
+public class CommonTools implements AiTool {
 
     @Tool(name = "getVersion", description = "获取应用版本号")
     public String getVersion() {

@@ -228,4 +228,13 @@ public abstract class DateTimeUtils {
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
+    public static String formatTime(int seconds) {
+        if (seconds <= 0) {
+            return "00:00";
+        }
+        int m = seconds / 60;
+        int s = seconds % 60;
+        return String.format("%02d:%02d", m, s);
+    }
+
 }

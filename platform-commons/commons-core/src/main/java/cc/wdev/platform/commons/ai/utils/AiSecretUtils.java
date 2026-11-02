@@ -23,7 +23,7 @@ public abstract class AiSecretUtils {
     }
 
     /**
-     * 解密存储值（历史明文直接透传）
+     * 解密存储值
      */
     public static String decrypt(String value) {
         if (StringUtils.isEmpty(value) || !value.startsWith(PREFIX)) {
@@ -32,7 +32,6 @@ public abstract class AiSecretUtils {
         try {
             return SensitiveUtils.doAesDecrypt(value.substring(PREFIX.length()));
         } catch (Exception e) {
-            // 解密失败（密钥更换/数据异常）时原样返回，避免影响主流程
             return value;
         }
     }

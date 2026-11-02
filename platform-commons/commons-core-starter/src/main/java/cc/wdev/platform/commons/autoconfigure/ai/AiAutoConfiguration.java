@@ -17,6 +17,7 @@ import cc.wdev.platform.commons.ai.factory.vectorstore.ElasticsearchVectorStoreF
 import cc.wdev.platform.commons.ai.factory.vectorstore.MariaDBVectorStoreFactory;
 import cc.wdev.platform.commons.ai.factory.vectorstore.PgVectorStoreFactory;
 import cc.wdev.platform.commons.ai.factory.vectorstore.VectorStoreFactory;
+import cc.wdev.platform.commons.ai.tools.AiTool;
 import cc.wdev.platform.commons.ai.tools.CommonTools;
 import cc.wdev.platform.commons.ai.ui.UiComponentDefinition;
 import cc.wdev.platform.commons.ai.ui.UiComponentManager;
@@ -50,6 +51,7 @@ import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.openai.OpenAiImageModel;
 import org.springframework.ai.openai.http.okhttp.OpenAiHttpClientBuilderCustomizer;
 import org.springframework.ai.session.SessionService;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStore;
@@ -323,8 +325,10 @@ public class AiAutoConfiguration {
     }
 
     @Bean
-    public MethodToolCallbackProvider toolCallbackProvider(CommonTools commonTools) {
-        return MethodToolCallbackProvider.builder().toolObjects(commonTools).build();
+    public ToolCallbackProvider toolCallbackProvider(List<AiTool> toolObjects) {
+        return MethodToolCallbackProvider.builder()
+            .toolObjects(CollectionUtils.nvl(toolObjects).toArray())
+            .build();
     }
 
     @Bean

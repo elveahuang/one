@@ -126,7 +126,7 @@ public abstract class AiUtils {
             CHAT_CONTEXT_SESSION, request.getConversationId(),
             CHAT_CONTEXT_USER_ID, nvl(String.valueOf(SecurityUtils.getUid()), String.valueOf(request.getUserId())),
             CHAT_CONTEXT_TENANT_ID, request.getTenantId(),
-            CHAT_CONTEXT_CHAT_TYPE, request.getUserId(),
+            CHAT_CONTEXT_CHAT_TYPE, request.getChatType(),
             CHAT_CONTEXT_AGENT_CODE, StringUtils.nvl(request.getAgentCode())
         );
 
@@ -196,13 +196,7 @@ public abstract class AiUtils {
         } else {
             // 默认模式，响应数据由大模型直接按提示词约束生成，无事件定义
             log.info("processStreamChatResponse [{}] text", request.getConversationId());
-            // 中途异常推错误事件兜底；客户端断连/取消时记录日志，避免资源无清理
-            return spec.stream().content()
-                .onErrorResume(e -> {
-                    log.error("processStreamChatResponse [{}] stream error", request.getConversationId(), e);
-                    return Flux.just(AiUtils.getErrorContent());
-                })
-                .doOnCancel(() -> log.info("processStreamChatResponse [{}] stream cancelled by client", request.getConversationId()));
+            return spec.stream().content();
         }
     }
 
