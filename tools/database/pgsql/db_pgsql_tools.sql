@@ -42,6 +42,7 @@ SET session_replication_role = 'origin';
 -- 清除消息所有记录
 --
 
+SET session_replication_role = 'replica';
 truncate sys_message_type cascade;
 truncate sys_message_channel cascade;
 truncate sys_message cascade;
@@ -50,12 +51,15 @@ truncate sys_message_content cascade;
 truncate sys_message_user cascade;
 truncate sys_message_history cascade;
 truncate sys_notice cascade;
+SET session_replication_role = 'origin';
 
 --
 -- 清除重置权限
 --
 
+SET session_replication_role = 'replica';
 truncate sys_role cascade;
 truncate sys_entity_authority cascade;
 truncate sys_user_role cascade;
 truncate sys_authority cascade;
+SET session_replication_role = 'origin';

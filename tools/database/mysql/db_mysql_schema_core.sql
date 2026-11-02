@@ -237,6 +237,8 @@ CREATE TABLE sys_entity_authority
 ) COMMENT '实体-权限关联表';
 
 CREATE INDEX ix_sys_entity_authority__entity ON sys_entity_authority (tenant_id, biz_type, entity_id);
+CREATE INDEX ix_sys_entity_authority__authority_id ON sys_entity_authority (authority_id);
+CREATE UNIQUE INDEX ux_sys_entity_authority__entity_authority ON sys_entity_authority (tenant_id, biz_type, entity_id, authority_id);
 
 --
 -- 套餐实体关联表
@@ -562,6 +564,7 @@ CREATE TABLE sys_user_role
 CREATE INDEX ix_sys_user_role__tenant_id ON sys_user_role (tenant_id);
 CREATE INDEX ix_sys_user_role__role_id ON sys_user_role (role_id);
 CREATE INDEX ix_sys_user_role__user_id ON sys_user_role (user_id);
+CREATE UNIQUE INDEX ux_sys_user_role__user_role ON sys_user_role (user_id, role_id);
 
 --
 -- 实体关联表
@@ -637,6 +640,7 @@ CREATE INDEX ix_sys_login_session__tenant_id ON sys_login_session (tenant_id);
 CREATE INDEX ix_sys_login_session__user_id ON sys_login_session (user_id);
 CREATE INDEX ix_sys_login_session__session_id ON sys_login_session (session_id);
 CREATE INDEX ix_sys_login_session__username ON sys_login_session (username);
+CREATE INDEX ix_sys_login_session__client_id ON sys_login_session (client_id);
 
 --
 -- 系统设置表
@@ -809,6 +813,7 @@ CREATE TABLE sys_entity_label
 ) COMMENT '实体多语言文本表';
 
 CREATE INDEX ix_sys_entity_label ON sys_entity_label (entity_id, entity_class, entity_property);
+CREATE INDEX ix_sys_entity_label__lang_id ON sys_entity_label (lang_id);
 
 --
 -- 目录表
@@ -854,8 +859,9 @@ CREATE TABLE sys_catalog_relation
     `ancestor_id`   BIGINT        NOT NULL DEFAULT 0 COMMENT '祖先ID',
     `entity_id`     BIGINT        NOT NULL DEFAULT 0 COMMENT '实体ID',
     `parent_ind`    SMALLINT      NOT NULL DEFAULT 0 COMMENT '是否直接上级',
+    `relation_type` VARCHAR(100)  NOT NULL DEFAULT '' COMMENT '关系类型',
     `relation_path` VARCHAR(2000) NOT NULL DEFAULT '' COMMENT '关联路径',
-    `idx`           VARCHAR(2000) NOT NULL DEFAULT '' COMMENT '关联层级',
+    `idx`           INT           NOT NULL DEFAULT 999 COMMENT '关联层级',
     `version`       BIGINT        NOT NULL DEFAULT 0 COMMENT '版本号',
     `active`        SMALLINT      NOT NULL DEFAULT 1 COMMENT '启用状态',
     `created_by`    BIGINT        NOT NULL DEFAULT 0 COMMENT '创建人',
@@ -864,6 +870,7 @@ CREATE TABLE sys_catalog_relation
 
 CREATE INDEX ix_sys_catalog_relation__tenant_id ON sys_catalog_relation (tenant_id);
 CREATE INDEX ix_sys_catalog_relation__biz_type ON sys_catalog_relation (biz_type);
+CREATE INDEX ix_sys_catalog_relation__relation_type ON sys_catalog_relation (relation_type);
 CREATE INDEX ix_sys_catalog_relation__ancestor_id ON sys_catalog_relation (ancestor_id);
 CREATE INDEX ix_sys_catalog_relation__entity_id ON sys_catalog_relation (entity_id);
 
@@ -900,6 +907,7 @@ CREATE TABLE sys_dict
 
 CREATE INDEX ix_sys_dict__biz_type ON sys_dict (biz_type, biz_id);
 CREATE INDEX ix_sys_dict__tenant_id ON sys_dict (tenant_id);
+CREATE INDEX ix_sys_dict__reference_id ON sys_dict (reference_id);
 
 --
 -- 字典关联表
@@ -985,6 +993,7 @@ CREATE TABLE sys_tag
 
 CREATE INDEX ix_sys_tag__tenant_id ON sys_tag (tenant_id);
 CREATE INDEX ix_sys_tag__biz_type ON sys_tag (biz_type, biz_id);
+CREATE INDEX ix_sys_tag__reference_id ON sys_tag (reference_id);
 
 --
 -- 标签关联表
@@ -1176,6 +1185,7 @@ CREATE TABLE sys_operation_log
 ) COMMENT '操作日志表';
 CREATE INDEX ix_sys_operation_log__tenant_id ON sys_operation_log (tenant_id);
 CREATE INDEX ix_sys_operation_log__biz_id ON sys_operation_log (biz_type, biz_id);
+CREATE INDEX ix_sys_operation_log__request_id ON sys_operation_log (request_id);
 
 --
 -- 系统日志表
@@ -1271,6 +1281,8 @@ CREATE TABLE sys_message_channel
     `deleted_at`    DATETIME     NULL COMMENT '删除时间'
 ) COMMENT '消息通道表';
 
+CREATE INDEX ix_sys_message_channel__tenant_id ON sys_message_channel (tenant_id);
+
 --
 -- 消息类型表
 --
@@ -1296,6 +1308,8 @@ CREATE TABLE sys_message_type
     `deleted_at`  DATETIME     NULL COMMENT '删除时间'
 ) COMMENT '消息类型表';
 
+CREATE INDEX ix_sys_message_type__tenant_id ON sys_message_type (tenant_id);
+
 --
 -- 消息模板表
 --
@@ -1319,6 +1333,8 @@ CREATE TABLE sys_message_template
     `deleted_by`      BIGINT       NOT NULL DEFAULT 0 COMMENT '删除人',
     `deleted_at`      DATETIME     NULL COMMENT '删除时间'
 ) COMMENT '消息模板表';
+
+CREATE INDEX ix_sys_message_template__tenant_id ON sys_message_template (tenant_id);
 
 --
 -- 消息表
@@ -1385,6 +1401,7 @@ CREATE INDEX ix_sys_message_user__tenant_id ON sys_message_user (tenant_id);
 CREATE INDEX ix_sys_message_user__message_id ON sys_message_user (message_id);
 CREATE INDEX ix_sys_message_user__biz_type ON sys_message_user (biz_type);
 CREATE INDEX ix_sys_message_user__user_type ON sys_message_user (user_type, user_id);
+CREATE INDEX ix_sys_message_user__user_id ON sys_message_user (user_id);
 
 --
 -- 消息内容表
@@ -1473,6 +1490,7 @@ CREATE TABLE sys_notice
 CREATE INDEX ix_sys_notice__tenant_id ON sys_notice (tenant_id);
 CREATE INDEX ix_sys_notice__sender ON sys_notice (recipient_type, sender_id);
 CREATE INDEX ix_sys_notice__recipient ON sys_notice (sender_type, recipient_id);
+CREATE INDEX ix_sys_notice__recipient_id ON sys_notice (recipient_id, read_ind);
 
 --
 -- 宣传栏
@@ -1482,21 +1500,26 @@ DROP TABLE IF EXISTS sys_banner;
 
 CREATE TABLE sys_banner
 (
-    `id`          BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
-    `tenant_id`   BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
-    `title`       VARCHAR(150) NOT NULL DEFAULT '' COMMENT '标题',
-    `details`     TEXT         NULL COMMENT '详情',
-    `description` TEXT         NULL COMMENT '备注',
-    `idx`         INT          NOT NULL DEFAULT 999 COMMENT '序号',
-    `status`      SMALLINT     NOT NULL DEFAULT 1 COMMENT '状态',
-    `version`     BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
-    `active`      SMALLINT     NOT NULL DEFAULT 1 COMMENT '启用状态',
-    `created_by`  BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
-    `created_at`  DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间',
-    `updated_by`  BIGINT       NOT NULL DEFAULT 0 COMMENT '修改人',
-    `updated_at`  DATETIME     NOT NULL DEFAULT NOW() COMMENT '修改时间',
-    `deleted_by`  BIGINT       NOT NULL DEFAULT 0 COMMENT '删除人',
-    `deleted_at`  DATETIME     NULL COMMENT '删除时间'
+    `id`                BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
+    `tenant_id`         BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
+    `title`             VARCHAR(150) NOT NULL DEFAULT '' COMMENT '标题',
+    `details`           TEXT         NULL COMMENT '详情',
+    `description`       TEXT         NULL COMMENT '备注',
+    `idx`               INT          NOT NULL DEFAULT 999 COMMENT '序号',
+    `link_type`         VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '链接类型（JOB/EXTERNAL）',
+    `link_params`       VARCHAR(255) NOT NULL DEFAULT '' COMMENT '链接参数（JSON）',
+    `link_external_url` VARCHAR(500) NOT NULL DEFAULT '' COMMENT '外部链接地址',
+    `start_datetime`    DATETIME     NULL COMMENT '开始时间',
+    `end_datetime`      DATETIME     NULL COMMENT '结束时间',
+    `status`            SMALLINT     NOT NULL DEFAULT 1 COMMENT '状态',
+    `version`           BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
+    `active`            SMALLINT     NOT NULL DEFAULT 1 COMMENT '启用状态',
+    `created_by`        BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
+    `created_at`        DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间',
+    `updated_by`        BIGINT       NOT NULL DEFAULT 0 COMMENT '修改人',
+    `updated_at`        DATETIME     NOT NULL DEFAULT NOW() COMMENT '修改时间',
+    `deleted_by`        BIGINT       NOT NULL DEFAULT 0 COMMENT '删除人',
+    `deleted_at`        DATETIME     NULL COMMENT '删除时间'
 ) COMMENT '宣传栏';
 
 CREATE INDEX ix_sys_banner__tenant_id ON sys_banner (tenant_id);
@@ -1586,7 +1609,6 @@ CREATE TABLE sys_region
 
 CREATE INDEX ix_sys_region__parent_id ON sys_region (parent_id);
 CREATE INDEX ix_sys_region__code ON sys_region (code);
--- PostgreSQL GiST 空间索引 MySQL 不支持，已忽略（sys_region.wkb_geometry）
 
 --
 -- 地区关联表
@@ -1792,6 +1814,12 @@ CREATE TABLE sys_authorization
 ) COMMENT '认证记录';
 
 CREATE INDEX ix_sys_authorization__client_id ON sys_authorization (client_id);
+CREATE INDEX ix_sys_authorization__uid ON sys_authorization (uid);
+CREATE INDEX ix_sys_authorization__principal_name ON sys_authorization (principal_name);
+CREATE INDEX ix_sys_authorization__state ON sys_authorization (state(255));
+CREATE INDEX ix_sys_authorization__authorization_code_value ON sys_authorization (authorization_code_value(255));
+CREATE INDEX ix_sys_authorization__access_token_value ON sys_authorization (access_token_value(255));
+CREATE INDEX ix_sys_authorization__refresh_token_value ON sys_authorization (refresh_token_value(255));
 
 --
 -- 认证同意授权记录
@@ -1831,23 +1859,24 @@ DROP TABLE IF EXISTS sys_chat_session;
 
 CREATE TABLE sys_chat_session
 (
-    `id`              BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
-    `tenant_id`       BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
-    `biz_type`        VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '业务类型',
-    `biz_id`          BIGINT       NOT NULL DEFAULT 0 COMMENT '业务ID',
-    `user_id`         BIGINT       NOT NULL DEFAULT 0 COMMENT '用户ID',
-    `target_user_id`  BIGINT       NOT NULL DEFAULT 0 COMMENT '目标用户ID',
-    `last_message_id` BIGINT       NOT NULL DEFAULT 0 COMMENT '最新消息的ID',
-    `session_id`      VARCHAR(100) NOT NULL DEFAULT '' COMMENT '会话标识',
-    `status`          SMALLINT     NOT NULL DEFAULT 1 COMMENT '状态',
-    `version`         BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
-    `active`          SMALLINT     NOT NULL DEFAULT 1 COMMENT '启用状态',
-    `created_by`      BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
-    `created_at`      DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间',
-    `updated_by`      BIGINT       NOT NULL DEFAULT 0 COMMENT '最后修改人',
-    `updated_at`      DATETIME     NOT NULL DEFAULT NOW() COMMENT '最后修改时间',
-    `deleted_by`      BIGINT       NOT NULL DEFAULT 0 COMMENT '删除人',
-    `deleted_at`      DATETIME     NULL COMMENT '删除时间'
+    `id`                   BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
+    `tenant_id`            BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
+    `biz_type`             VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '业务类型',
+    `biz_id`               BIGINT       NOT NULL DEFAULT 0 COMMENT '业务ID',
+    `user_id`              BIGINT       NOT NULL DEFAULT 0 COMMENT '用户ID',
+    `target_user_id`       BIGINT       NOT NULL DEFAULT 0 COMMENT '目标用户ID',
+    `last_message_id`      BIGINT       NOT NULL DEFAULT 0 COMMENT '最新消息的ID',
+    `last_message_send_at` DATETIME     NULL COMMENT '最新消息发送时间',
+    `session_id`           VARCHAR(100) NOT NULL DEFAULT '' COMMENT '会话标识',
+    `status`               SMALLINT     NOT NULL DEFAULT 1 COMMENT '状态',
+    `version`              BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
+    `active`               SMALLINT     NOT NULL DEFAULT 1 COMMENT '启用状态',
+    `created_by`           BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
+    `created_at`           DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间',
+    `updated_by`           BIGINT       NOT NULL DEFAULT 0 COMMENT '最后修改人',
+    `updated_at`           DATETIME     NOT NULL DEFAULT NOW() COMMENT '最后修改时间',
+    `deleted_by`           BIGINT       NOT NULL DEFAULT 0 COMMENT '删除人',
+    `deleted_at`           DATETIME     NULL COMMENT '删除时间'
 ) COMMENT '互动会话表';
 
 CREATE INDEX ix_sys_chat_session__tenant_id ON sys_chat_session (tenant_id);
@@ -2275,24 +2304,26 @@ DROP TABLE IF EXISTS sys_ai_kb_task;
 
 CREATE TABLE sys_ai_kb_task
 (
-    `id`          BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
-    `tenant_id`   BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
-    `kb_id`       BIGINT       NOT NULL DEFAULT 0 COMMENT '知识库ID',
-    `kb_item_id`  BIGINT       NOT NULL DEFAULT 0 COMMENT '知识条目ID',
-    `task_id`     VARCHAR(150) NOT NULL DEFAULT '' COMMENT '任务标识',
-    `task_type`   VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '任务类型（ITEM/REBUILD）',
-    `progress`    INT          NOT NULL DEFAULT 0 COMMENT '进度',
-    `token_usage` BIGINT       NOT NULL DEFAULT 0 COMMENT '消耗词元',
-    `exception`   TEXT         NULL COMMENT '异常信息',
-    `status`      SMALLINT     NOT NULL DEFAULT 1 COMMENT '状态',
-    `version`     BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
-    `active`      SMALLINT     NOT NULL DEFAULT 1 COMMENT '启用状态',
-    `created_by`  BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
-    `created_at`  DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间',
-    `updated_by`  BIGINT       NOT NULL DEFAULT 0 COMMENT '修改人',
-    `updated_at`  DATETIME     NOT NULL DEFAULT NOW() COMMENT '修改时间',
-    `deleted_by`  BIGINT       NOT NULL DEFAULT 0 COMMENT '删除人',
-    `deleted_at`  DATETIME     NULL COMMENT '删除时间'
+    `id`            BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'ID',
+    `tenant_id`     BIGINT       NOT NULL DEFAULT 0 COMMENT '租户ID',
+    `kb_id`         BIGINT       NOT NULL DEFAULT 0 COMMENT '知识库ID',
+    `kb_item_id`    BIGINT       NOT NULL DEFAULT 0 COMMENT '知识条目ID',
+    `task_id`       VARCHAR(150) NOT NULL DEFAULT '' COMMENT '任务标识',
+    `task_type`     VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '任务类型（ITEM/REBUILD）',
+    `progress`      INT          NOT NULL DEFAULT 0 COMMENT '进度',
+    `token_usage`   BIGINT       NOT NULL DEFAULT 0 COMMENT '消耗词元',
+    `exception`     TEXT         NULL COMMENT '异常信息',
+    `retry_count`   INT          NOT NULL DEFAULT 0 COMMENT '已重试次数',
+    `next_retry_at` DATETIME     NULL COMMENT '下次重试时间',
+    `status`        SMALLINT     NOT NULL DEFAULT 1 COMMENT '状态',
+    `version`       BIGINT       NOT NULL DEFAULT 0 COMMENT '版本号',
+    `active`        SMALLINT     NOT NULL DEFAULT 1 COMMENT '启用状态',
+    `created_by`    BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
+    `created_at`    DATETIME     NOT NULL DEFAULT NOW() COMMENT '创建时间',
+    `updated_by`    BIGINT       NOT NULL DEFAULT 0 COMMENT '修改人',
+    `updated_at`    DATETIME     NOT NULL DEFAULT NOW() COMMENT '修改时间',
+    `deleted_by`    BIGINT       NOT NULL DEFAULT 0 COMMENT '删除人',
+    `deleted_at`    DATETIME     NULL COMMENT '删除时间'
 ) COMMENT '知识库向量化任务';
 
 CREATE INDEX ix_sys_ai_kb_task__tenant_id ON sys_ai_kb_task (tenant_id);

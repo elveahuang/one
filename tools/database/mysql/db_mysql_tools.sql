@@ -2,9 +2,10 @@
 -- 常用数据库脚本整理
 -- =====================================================================================================================
 
-/*
-* 清理所有定时任务表
-*/
+--
+-- 清理所有定时任务表
+--
+
 SET foreign_key_checks = 0;
 TRUNCATE TABLE `QRTZ_BLOB_TRIGGERS`;
 TRUNCATE TABLE `QRTZ_CALENDARS`;
@@ -19,9 +20,10 @@ TRUNCATE TABLE `QRTZ_TRIGGERS`;
 TRUNCATE TABLE `QRTZ_JOB_DETAILS`;
 SET foreign_key_checks = 1;
 
-/*
-* 删除所有定时任务表
-*/
+--
+-- 删除所有定时任务表
+--
+
 SET foreign_key_checks = 0;
 DROP TABLE IF EXISTS `QRTZ_FIRED_TRIGGERS`;
 DROP TABLE IF EXISTS `QRTZ_PAUSED_TRIGGER_GRPS`;

@@ -577,7 +577,6 @@ CREATE TABLE sys_role
 
 CREATE INDEX ix_sys_role__tenant_id ON sys_role (tenant_id);
 CREATE INDEX ix_sys_role__code ON sys_role (code);
-CREATE UNIQUE INDEX ux_sys_role__tenant_code ON sys_role (tenant_id, code) WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE sys_role IS '角色表';
 COMMENT ON COLUMN sys_role.id IS 'ID';
@@ -763,9 +762,6 @@ CREATE INDEX ix_sys_user__active ON sys_user (active);
 CREATE INDEX ix_sys_user__mobile ON sys_user (mobile_country_code, mobile_number);
 CREATE INDEX ix_sys_user__invite_code ON sys_user (invite_code);
 CREATE INDEX ix_sys_user__invite_by ON sys_user (invite_by);
-CREATE UNIQUE INDEX ux_sys_user__tenant_username ON sys_user (tenant_id, username) WHERE deleted_at IS NULL;
-CREATE UNIQUE INDEX ux_sys_user__tenant_email ON sys_user (tenant_id, email) WHERE deleted_at IS NULL AND email <> '';
-CREATE UNIQUE INDEX ux_sys_user__tenant_mobile ON sys_user (tenant_id, mobile_country_code, mobile_number) WHERE deleted_at IS NULL AND mobile_number <> '';
 
 COMMENT ON TABLE sys_user IS '用户表';
 COMMENT ON COLUMN sys_user.id IS 'ID';
@@ -1078,7 +1074,6 @@ CREATE TABLE sys_config
 CREATE INDEX ix_sys_config__tenant_id ON sys_config (tenant_id);
 CREATE INDEX ix_sys_config__key ON sys_config (config_key);
 CREATE INDEX ix_sys_config__group ON sys_config (config_group_type);
-CREATE UNIQUE INDEX ux_sys_config__tenant_key ON sys_config (tenant_id, config_key) WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE sys_config IS '系统设置表';
 COMMENT ON COLUMN sys_config.id IS 'ID';
@@ -2379,9 +2374,6 @@ CREATE INDEX ix_sys_notice__tenant_id ON sys_notice (tenant_id);
 CREATE INDEX ix_sys_notice__sender ON sys_notice (recipient_type, sender_id);
 CREATE INDEX ix_sys_notice__recipient ON sys_notice (sender_type, recipient_id);
 CREATE INDEX ix_sys_notice__recipient_id ON sys_notice (recipient_id, read_ind);
-CREATE INDEX ix_sys_message_type__tenant_id ON sys_message_type (tenant_id);
-CREATE INDEX ix_sys_message_template__tenant_id ON sys_message_template (tenant_id);
-CREATE INDEX ix_sys_message_user__user_id ON sys_message_user (user_id);
 
 COMMENT ON TABLE sys_notice IS '系统通知表';
 COMMENT ON COLUMN sys_notice.id IS 'ID';
@@ -2579,7 +2571,6 @@ CREATE TABLE sys_region
 
 CREATE INDEX ix_sys_region__parent_id ON sys_region (parent_id);
 CREATE INDEX ix_sys_region__code ON sys_region (code);
-CREATE INDEX ix_sys_region__wkb_geometry ON sys_region USING GIST (wkb_geometry);
 
 COMMENT ON TABLE sys_region IS '行政区域表';
 COMMENT ON COLUMN sys_region.id IS 'ID';
@@ -3021,11 +3012,6 @@ CREATE INDEX ix_sys_chat_session__biz_type ON sys_chat_session (biz_type, biz_id
 CREATE INDEX ix_sys_chat_session__owner ON sys_chat_session (user_id);
 CREATE INDEX ix_sys_chat_session__target ON sys_chat_session (target_user_id);
 CREATE INDEX ix_sys_chat_session__session_id ON sys_chat_session (session_id);
--- 同一业务实体下一对用户只应有一条会话（收发共用）；用最小/最大用户 ID 归一，防止并发创建出重复会话
-CREATE UNIQUE INDEX ux_sys_chat_session__pair ON sys_chat_session (
-                                                                   tenant_id, biz_type, biz_id,
-                                                                   LEAST(user_id, target_user_id), GREATEST(user_id, target_user_id)
-    ) WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE sys_chat_session IS '互动会话表';
 COMMENT ON COLUMN sys_chat_session.id IS 'ID';
