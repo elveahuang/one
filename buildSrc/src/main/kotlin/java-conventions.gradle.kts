@@ -109,6 +109,9 @@ configurations.configureEach {
         if (requested.group == "net.java.dev.jna") {
             useVersion(libs.versions.jnaVersion.get())
         }
+        if (requested.module.toString() == "ognl:ognl") {
+            useVersion(libs.versions.ognlVersion.get())
+        }
         if (requested.module.toString() == "com.alibaba:dashscope-sdk-java") {
             useVersion(libs.versions.dashscopeSdkJavaVersion.get())
         }

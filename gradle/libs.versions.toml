@@ -69,6 +69,7 @@ commonsLangVersion = "3.21.0"
 commonsCompressVersion = "1.28.0"
 commonsCollectionsVersion = "4.6.0"
 dashscopeSdkJavaVersion = "2.23.3"
+ognlVersion = "3.4.17"
 
 [plugins]
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "springDependencyManagementVersion" }
