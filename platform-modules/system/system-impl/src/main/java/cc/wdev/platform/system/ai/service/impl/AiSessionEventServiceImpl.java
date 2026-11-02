@@ -66,6 +66,24 @@ public class AiSessionEventServiceImpl
     }
 
     /**
+     * @see AiSessionEventService#findUserMessagesBySessionIds(List)
+     */
+    @Override
+    public List<AiSessionEventEntity> findUserMessagesBySessionIds(List<String> sessionIds) {
+        if (ObjectUtils.isEmpty(sessionIds)) {
+            return List.of();
+        }
+        // 会话归属已在上层按用户+租户过滤，这里按事件顺序批量取用户消息用于生成标题
+        return this.lambdaQueryWrapper()
+            .in(AiSessionEventEntity::getSessionId, sessionIds)
+            .eq(AiSessionEventEntity::getEventType, EventType.MESSAGE.name())
+            .eq(AiSessionEventEntity::getMessageType, "USER")
+            .eq(AiSessionEventEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .orderByAsc(AiSessionEventEntity::getId)
+            .list();
+    }
+
+    /**
      * @see AiSessionEventService#findBySessionEventId(String)
      */
     @Override

@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * AI 用量统计服务实现
  *
@@ -72,6 +74,9 @@ public class AiUsageServiceImpl
      */
     @Override
     public Page<AiUsageEntity> findByPage(AiUsageSearchRequest request) {
+        // 排序字段仅允许白名单内的列，非法列置空后走默认排序
+        request.check(List.of("id", "usage_type", "usageType", "model_name", "modelName",
+            "call_count", "callCount", "total_tokens", "totalTokens", "created_at", "createdAt"));
         IPage<AiUsageEntity> page = this.lambdaQueryWrapper()
             .eq(ObjectUtils.isValidId(request.getKbId()), AiUsageEntity::getKbId, request.getKbId())
             .eq(ObjectUtils.isValidId(request.getUserId()), AiUsageEntity::getUserId, request.getUserId())

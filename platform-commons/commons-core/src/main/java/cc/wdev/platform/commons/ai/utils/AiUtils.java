@@ -196,7 +196,13 @@ public abstract class AiUtils {
         } else {
             // 默认模式，响应数据由大模型直接按提示词约束生成，无事件定义
             log.info("processStreamChatResponse [{}] text", request.getConversationId());
-            return spec.stream().content();
+            // 中途异常推错误事件兜底；客户端断连/取消时记录日志，避免资源无清理
+            return spec.stream().content()
+                .onErrorResume(e -> {
+                    log.error("processStreamChatResponse [{}] stream error", request.getConversationId(), e);
+                    return Flux.just(AiUtils.getErrorContent());
+                })
+                .doOnCancel(() -> log.info("processStreamChatResponse [{}] stream cancelled by client", request.getConversationId()));
         }
     }
 

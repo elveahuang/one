@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,5 +48,11 @@ public class AiProperties {
 
     @NestedConfigurationProperty
     private MemoryConfig memory = MemoryConfig.builder().build();
+
+    /**
+     * 会员端（MEMBER）可用模型编码白名单，仅约束 chatType=CHAT 的直连模型对话；
+     * 为空表示不限制（保持既有行为）。智能体/知识库绑定的模型由管理端配置，不受此白名单约束。
+     */
+    private List<String> memberAllowedModels = new ArrayList<>();
 
 }

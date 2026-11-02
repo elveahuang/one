@@ -34,6 +34,11 @@ public interface AiSessionEventService extends CachingEntityService<AiSessionEve
     List<AiSessionEventEntity> findBySessionEventIds(List<String> sessionEventIds);
 
     /**
+     * 批量查询多个会话的用户消息事件（用于列表页批量生成会话标题，避免逐会话查询）
+     */
+    List<AiSessionEventEntity> findUserMessagesBySessionIds(List<String> sessionIds);
+
+    /**
      * 获取会话历史记录
      */
     Page<AiSessionEventVo> findHistory(AiSessionEventRequest request);

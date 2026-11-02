@@ -66,6 +66,7 @@ public class AiKbTaskServiceImpl
         return this.lambdaQueryWrapper()
             .eq(AiKbTaskEntity::getStatus, AiVectorizationStatus.PENDING.getValue())
             .eq(AiKbTaskEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .and(w -> w.isNull(AiKbTaskEntity::getNextRetryAt).or().le(AiKbTaskEntity::getNextRetryAt, now))
             .list();
     }
 
@@ -78,6 +79,7 @@ public class AiKbTaskServiceImpl
         return this.lambdaQueryWrapper()
             .eq(AiKbTaskEntity::getStatus, AiVectorizationStatus.PROCESSING.getValue())
             .eq(AiKbTaskEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .le(AiKbTaskEntity::getUpdatedAt, now.minusMinutes(maxProcessingMinutes))
             .list();
     }
 
@@ -89,6 +91,7 @@ public class AiKbTaskServiceImpl
         this.lambdaUpdateWrapper()
             .eq(AiKbTaskEntity::getId, id)
             .set(AiKbTaskEntity::getStatus, AiVectorizationStatus.PROCESSING.getValue())
+            .set(AiKbTaskEntity::getUpdatedAt, LocalDateTime.now())
             .update();
     }
 
@@ -97,13 +100,15 @@ public class AiKbTaskServiceImpl
      */
     @Override
     public void markProgress(Long id, int total, int processed) {
-        long progress = 0;
+        int progress = 0;
         if (processed >= 0 && total > 0) {
-            progress = processed / total;
+            // 进度按百分比（0-100）回写，原实现 processed/total 为整数除法恒为 0/1
+            progress = (int) Math.min(100, processed * 100L / total);
         }
         this.lambdaUpdateWrapper()
             .eq(AiKbTaskEntity::getId, id)
             .set(AiKbTaskEntity::getProgress, progress)
+            .set(AiKbTaskEntity::getUpdatedAt, LocalDateTime.now())
             .update();
     }
 
@@ -115,6 +120,7 @@ public class AiKbTaskServiceImpl
         this.lambdaUpdateWrapper()
             .eq(AiKbTaskEntity::getId, id)
             .set(AiKbTaskEntity::getStatus, AiVectorizationStatus.COMPLETED.getValue())
+            .set(AiKbTaskEntity::getUpdatedAt, LocalDateTime.now())
             .update();
     }
 
@@ -127,6 +133,7 @@ public class AiKbTaskServiceImpl
             .eq(AiKbTaskEntity::getId, id)
             .set(AiKbTaskEntity::getStatus, AiVectorizationStatus.FAILED.getValue())
             .set(AiKbTaskEntity::getException, nvl(error))
+            .set(AiKbTaskEntity::getNextRetryAt, null)
             .update();
     }
 
@@ -138,6 +145,8 @@ public class AiKbTaskServiceImpl
         this.lambdaUpdateWrapper()
             .eq(AiKbTaskEntity::getId, id)
             .set(AiKbTaskEntity::getStatus, AiVectorizationStatus.PENDING.getValue())
+            .set(AiKbTaskEntity::getNextRetryAt, nextRetryAt)
+            .setSql("retry_count = retry_count + 1")
             .update();
     }
 

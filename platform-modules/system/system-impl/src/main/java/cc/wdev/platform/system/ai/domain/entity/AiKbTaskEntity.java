@@ -7,6 +7,8 @@ import lombok.*;
 import tools.jackson.databind.annotation.JsonSerialize;
 import tools.jackson.databind.ser.std.ToStringSerializer;
 
+import java.time.LocalDateTime;
+
 /**
  * 知识库向量化任务
  *
@@ -52,6 +54,18 @@ public class AiKbTaskEntity extends BaseTenantEntity {
      */
     @Schema(description = "异常信息")
     private String exception;
+
+    /**
+     * 已重试次数
+     */
+    @Schema(description = "已重试次数")
+    private Integer retryCount;
+
+    /**
+     * 下次重试时间（退避重试；为空表示立即可执行）
+     */
+    @Schema(description = "下次重试时间")
+    private LocalDateTime nextRetryAt;
 
     /**
      * 消耗词元

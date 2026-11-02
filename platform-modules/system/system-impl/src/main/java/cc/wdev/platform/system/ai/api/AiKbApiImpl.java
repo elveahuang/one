@@ -47,6 +47,7 @@ import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -143,6 +144,7 @@ public class AiKbApiImpl implements AiKbApi {
      * @see AiKbApi#saveKb(AiKbSaveRequest)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void saveKb(AiKbSaveRequest request) {
         // 检测向量模型和向量索引是否变更，变更时需要删除已有向量数据再重建
         boolean needRebuild = false;
@@ -189,6 +191,7 @@ public class AiKbApiImpl implements AiKbApi {
      * @see AiKbApi#deleteKb(DeleteRequest)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteKb(DeleteRequest request) {
         List<Long> ids = Arrays.asList(request.getIds());
         for (Long id : ids) {

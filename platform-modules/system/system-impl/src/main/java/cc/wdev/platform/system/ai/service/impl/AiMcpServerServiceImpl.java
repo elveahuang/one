@@ -6,7 +6,9 @@ import cc.wdev.platform.commons.data.core.utils.SpringDataUtils;
 import cc.wdev.platform.commons.data.mybatis.service.BaseCachingEntityService;
 import cc.wdev.platform.commons.data.mybatis.utils.MyBatisPlusUtils;
 import cc.wdev.platform.commons.enums.ActiveTypeEnum;
+import cc.wdev.platform.commons.enums.ResponseCodeEnum;
 import cc.wdev.platform.commons.enums.StatusTypeEnum;
+import cc.wdev.platform.commons.exception.ServiceException;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.ai.domain.converter.AiMcpServerConverter;
@@ -16,6 +18,8 @@ import cc.wdev.platform.system.ai.domain.request.AiMcpServerSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiMcpServerVo;
 import cc.wdev.platform.system.ai.repository.AiMcpServerRepository;
 import cc.wdev.platform.system.ai.service.AiMcpServerService;
+import cc.wdev.platform.system.ai.support.McpClientManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -30,9 +34,12 @@ import static cc.wdev.platform.system.commons.constants.SystemCacheConstants.AI_
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AiMcpServerServiceImpl extends BaseCachingEntityService<AiMcpServerEntity, Long, AiMcpServerRepository> implements AiMcpServerService {
 
     private static final String MCP_CODE_PREFIX = "MCP";
+
+    private final McpClientManager mcpClientManager;
 
     private final CacheKeyGenerator cacheKeyGenerator = new SimpleTenantCacheKeyGenerator(AI_MCP_SERVER);
 
@@ -74,6 +81,13 @@ public class AiMcpServerServiceImpl extends BaseCachingEntityService<AiMcpServer
         if (CollectionUtils.isEmpty(ids)) {
             return;
         }
+        // 先按 code 清理已建立的 MCP 连接，避免删除后连接与子进程泄漏
+        ids.stream()
+            .map(this::findById)
+            .filter(java.util.Objects::nonNull)
+            .map(AiMcpServerEntity::getCode)
+            .filter(StringUtils::isNotEmpty)
+            .forEach(this.mcpClientManager::evict);
         this.softDeleteBatchById(ids);
     }
 
@@ -81,6 +95,15 @@ public class AiMcpServerServiceImpl extends BaseCachingEntityService<AiMcpServer
     public void saveAiMcpServer(AiMcpServerSaveRequest request) {
         if (null == request) {
             return;
+        }
+        this.validateTransport(request);
+        // 更新场景先记下旧 code：code 可能被改写，旧连接需要一并清理
+        String previousCode = null;
+        if (null != request.getId() && request.getId() > 0) {
+            AiMcpServerEntity existing = this.findById(request.getId());
+            if (existing != null) {
+                previousCode = existing.getCode();
+            }
         }
         AiMcpServerEntity entity = AiMcpServerConverter.INSTANCE.form2Entity(request);
         if (null != request.getId() && request.getId() > 0) {
@@ -90,6 +113,28 @@ public class AiMcpServerServiceImpl extends BaseCachingEntityService<AiMcpServer
             entity.setCode(generateCode(MCP_CODE_PREFIX));
         }
         this.save(entity);
+        // 配置可能已变更（url/headers/env/command 等），清掉旧连接让下次对话按新配置重建
+        if (StringUtils.isNotEmpty(previousCode)) {
+            this.mcpClientManager.evict(previousCode);
+        }
+        this.mcpClientManager.evict(entity.getCode());
+    }
+
+    /**
+     * 按传输类型做条件校验：stdio 必须有 command，其余传输必须有 url。
+     * <p>请求类上不能用 {@code @NotBlank} 统一约束 url——stdio 型本来就没有 url。</p>
+     */
+    private void validateTransport(AiMcpServerSaveRequest request) {
+        String protocol = StringUtils.nvl(request.getProtocol()).trim().toUpperCase();
+        if ("STDIO".equals(protocol)) {
+            if (StringUtils.isEmpty(request.getCommand())) {
+                throw new ServiceException(ResponseCodeEnum.PARAM_ERROR);
+            }
+            return;
+        }
+        if (StringUtils.isEmpty(request.getUrl())) {
+            throw new ServiceException(ResponseCodeEnum.PARAM_ERROR);
+        }
     }
 
     @Override

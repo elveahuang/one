@@ -146,6 +146,14 @@ public class AiChatWebController extends AbstractController {
     }
 
     @Authenticated
+    @Operation(summary = "文本补全")
+    @ApiResponse(description = "文本补全")
+    @PostMapping(value = API_V1_PREFIX + "/ai/chat/completion", produces = MediaType.TEXT_PLAIN_VALUE)
+    public Flux<String> completion(@RequestBody SimpleChatRequest request) {
+        return aiChatApi.chatStream(request);
+    }
+
+    @Authenticated
     @Operation(summary = "模型列表")
     @ApiResponse(description = "模型列表")
     @GetMapping(API_V1_PREFIX + "/ai/chat/models")

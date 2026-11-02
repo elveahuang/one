@@ -45,23 +45,34 @@ public class AiMcpServerSaveRequest implements Serializable {
     private String protocol;
 
     /**
-     * 服务地址
+     * 服务地址（HTTP / SSE / Streamable 传输必填；stdio 传输不需要）
      */
     @Schema(title = "服务地址", description = "服务地址")
-    @NotBlank(message = "服务地址不能为空")
     private String url;
 
     /**
-     * 环境变量
+     * 请求头（JSON 对象），HTTP / SSE / Streamable 传输使用
      */
-    @Schema(title = "环境变量", description = "环境变量")
+    @Schema(title = "请求头", description = "请求头（JSON 对象）")
     private String headers;
 
     /**
-     * 参数
+     * 启动命令（stdio 传输必填）
      */
-    @Schema(title = "参数", description = "参数")
+    @Schema(title = "启动命令", description = "启动命令（仅 stdio）")
+    private String command;
+
+    /**
+     * 命令参数（JSON 数组），仅 stdio 使用
+     */
+    @Schema(title = "命令参数", description = "命令参数（JSON 数组，仅 stdio）")
     private String args;
+
+    /**
+     * 环境变量（JSON 对象），仅 stdio 使用
+     */
+    @Schema(title = "环境变量", description = "环境变量（JSON 对象，仅 stdio）")
+    private String env;
 
     /**
      * 备注说明

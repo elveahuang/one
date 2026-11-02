@@ -21,8 +21,8 @@ public class AiMcpServerSearchRequest extends PageRequest {
     @Schema(title = "编号", description = "编号")
     private String code;
     /**
-     * url
+     * url（与实体列同类型，原声明为 Integer 导致无法按地址过滤）
      */
     @Schema(title = "url", description = "url")
-    private Integer url;
+    private String url;
 }

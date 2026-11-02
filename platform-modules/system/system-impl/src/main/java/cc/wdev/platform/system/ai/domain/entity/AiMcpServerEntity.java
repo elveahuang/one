@@ -36,14 +36,24 @@ public class AiMcpServerEntity extends BaseTenantEntity {
     private String url;
 
     /**
-     * 请求头
+     * 请求头（JSON 对象，如 {"Authorization":"Bearer xxx"}），HTTP / SSE / Streamable 传输使用
      */
     private String headers;
 
     /**
-     * 参数
+     * 启动命令，仅 stdio 传输使用
+     */
+    private String command;
+
+    /**
+     * 命令参数（JSON 数组），仅 stdio 传输使用
      */
     private String args;
+
+    /**
+     * 环境变量（JSON 对象），仅 stdio 传输使用
+     */
+    private String env;
 
     /**
      * 备注说明

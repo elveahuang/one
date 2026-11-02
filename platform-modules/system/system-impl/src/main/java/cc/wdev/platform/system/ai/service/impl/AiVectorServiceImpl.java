@@ -5,6 +5,7 @@ import cc.wdev.platform.commons.concurrent.AsyncExecutor;
 import cc.wdev.platform.commons.core.tenant.TenantContext;
 import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.enums.BooleanTypeEnum;
+import cc.wdev.platform.commons.exception.ServiceException;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.JacksonUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +46,11 @@ import static cc.wdev.platform.system.ai.constants.SystemAiConstants.VECTOR_TASK
 @Service
 @RequiredArgsConstructor
 public class AiVectorServiceImpl implements AiVectorService {
+
+    /**
+     * 向量化任务最大自动重试次数，超过后标记失败等待人工重试
+     */
+    private static final int MAX_VECTOR_RETRY = 3;
 
     private final AiHelper aiHelper;
 
@@ -199,7 +206,12 @@ public class AiVectorServiceImpl implements AiVectorService {
                 // 向量化切片
                 this.aiHelper.vectorize(vectorStore, documents);
             } catch (Exception e) {
+                // 失败时中断回写与完成标记，把异常上抛给调用方走任务失败/退避重试流程
                 log.error("KB [{}] Item [{}] Vectorization failed", kbId, kbItemId, e);
+                if (e instanceof RuntimeException runtimeException) {
+                    throw runtimeException;
+                }
+                throw new ServiceException(e.getMessage(), e);
             }
         }
 
@@ -246,11 +258,31 @@ public class AiVectorServiceImpl implements AiVectorService {
     }
 
     /**
-     * 失败处理：重试退避（nextRetryAt），超过重试上限标记失败并回写条目状态
+     * 失败处理：重试退避（nextRetryAt 指数退避 5/10/20 分钟），超过重试上限标记失败并回写条目状态
      */
     private void handleFailure(Long taskId, Long kbItemId, Exception e) {
-        this.aiKbTaskService.markFailed(taskId, e.getMessage());
-        this.aiKbItemService.markFailed(kbItemId, e.getMessage());
+        AiKbTaskVo task = this.aiKbTaskService.getKbTask(GetRequest.builder().id(taskId).build());
+        int retryCount = task.getRetryCount() == null ? 0 : task.getRetryCount();
+        long backoffMinutes = resolveBackoffMinutes(retryCount);
+        if (backoffMinutes > 0) {
+            this.aiKbTaskService.markPendingForRetry(taskId, LocalDateTime.now().plusMinutes(backoffMinutes));
+            log.warn("Vectorization task [{}] failed, retry scheduled in {} minutes, retryCount={}", taskId, backoffMinutes, retryCount + 1);
+        } else {
+            this.aiKbTaskService.markFailed(taskId, e.getMessage());
+            if (kbItemId != null) {
+                this.aiKbItemService.markFailed(kbItemId, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 计算下次重试的退避分钟数（5 / 10 / 20 分钟）；已用尽重试次数时返回 -1，表示应标记失败。
+     */
+    static long resolveBackoffMinutes(int retryCount) {
+        if (retryCount < 0 || retryCount >= MAX_VECTOR_RETRY) {
+            return -1L;
+        }
+        return (long) Math.pow(2, retryCount) * 5;
     }
 
     // ------------------------------------------------------------------------------

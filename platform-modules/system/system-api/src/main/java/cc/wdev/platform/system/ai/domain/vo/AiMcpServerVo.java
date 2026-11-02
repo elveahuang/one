@@ -41,14 +41,24 @@ public class AiMcpServerVo implements Serializable {
     private String url;
 
     /**
-     * 环境变量
+     * 请求头（JSON 对象）
      */
     private String headers;
 
     /**
-     * 参数
+     * 启动命令（仅 stdio）
+     */
+    private String command;
+
+    /**
+     * 命令参数（JSON 数组，仅 stdio）
      */
     private String args;
+
+    /**
+     * 环境变量（JSON 对象，仅 stdio）
+     */
+    private String env;
 
     /**
      * 备注说明

@@ -186,6 +186,7 @@ public class AiKbPltController extends AbstractController {
     }
 
     @PreAuthorize("hasAnyAuthority('dev:ai:config:kb')")
+    @OperationLog("知识库检索评估")
     @Operation(summary = "知识库检索评估")
     @ApiResponse(description = "知识库检索评估")
     @PostMapping(API_V1_SYS_PREFIX + "/ai/kb/eval")

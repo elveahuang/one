@@ -9,6 +9,7 @@ import tools.jackson.databind.annotation.JsonSerialize;
 import tools.jackson.databind.ser.std.ToStringSerializer;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * @author elvea
@@ -58,5 +59,17 @@ public class AiKbTaskVo implements Serializable {
      */
     @Schema(title = "异常信息")
     private String exception;
+
+    /**
+     * 已重试次数
+     */
+    @Schema(title = "已重试次数")
+    private Integer retryCount;
+
+    /**
+     * 下次重试时间
+     */
+    @Schema(title = "下次重试时间")
+    private LocalDateTime nextRetryAt;
 
 }
