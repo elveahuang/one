@@ -74,11 +74,19 @@ public class ChatSessionServiceImpl extends BaseCachingEntityService<ChatSession
      */
     @Override
     public List<ChatSessionEntity> list(ChatSearchRequest request) {
-        return this.lambdaQueryWrapper()
+        LambdaQueryChainWrapper<ChatSessionEntity> wrapper = this.lambdaQueryWrapper()
             .eq(ChatSessionEntity::getBizType, request.getBizType())
-            .in(ChatSessionEntity::getBizId, request.getBizIds())
-            .in(CollectionUtils.isNotEmpty(request.getUserIds()), ChatSessionEntity::getUserId, request.getUserIds())
-            .list();
+            .in(CollectionUtils.isNotEmpty(request.getBizIds()), ChatSessionEntity::getBizId, request.getBizIds())
+            .eq(ChatSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue());
+        // 会话只存一条（收发共用），因此「我的会话」= 我发起的 或 别人发给我的
+        Collection<Long> userIds = request.getUserIds();
+        if (CollectionUtils.isNotEmpty(userIds)) {
+            wrapper.and(w -> w
+                .in(ChatSessionEntity::getUserId, userIds)
+                .or()
+                .in(ChatSessionEntity::getTargetUserId, userIds));
+        }
+        return wrapper.list();
     }
 
     /**
@@ -105,6 +113,39 @@ public class ChatSessionServiceImpl extends BaseCachingEntityService<ChatSession
         // 保存会话实体
         entity = this.save(entity);
         return ChatSessionConverter.INSTANCE.entityToVo(entity);
+    }
+
+    @Override
+    public ChatSessionEntity findByPair(String bizType, Long bizId, Long userId, Long targetUserId) {
+        // 不分收发方向：A->B 与 B->A 视为同一会话，避免一次对话被拆成两条互不相通的线程
+        return this.lambdaQueryWrapper()
+            .eq(ChatSessionEntity::getBizType, bizType)
+            .eq(ChatSessionEntity::getBizId, bizId)
+            .eq(ChatSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .and(w -> w
+                .nested(n -> n.eq(ChatSessionEntity::getUserId, userId)
+                    .eq(ChatSessionEntity::getTargetUserId, targetUserId))
+                .or()
+                .nested(n -> n.eq(ChatSessionEntity::getUserId, targetUserId)
+                    .eq(ChatSessionEntity::getTargetUserId, userId)))
+            .last("LIMIT 1")
+            .one();
+    }
+
+    @Override
+    public List<ChatSessionEntity> findByMember(String bizType, Collection<Long> bizIds, Long userId) {
+        if (ObjectUtils.isInvalidId(userId)) {
+            return List.of();
+        }
+        return this.lambdaQueryWrapper()
+            .eq(ChatSessionEntity::getBizType, bizType)
+            .in(CollectionUtils.isNotEmpty(bizIds), ChatSessionEntity::getBizId, bizIds)
+            .eq(ChatSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            // 既包含自己发起的会话，也包含别人发给自己的会话
+            .and(w -> w.eq(ChatSessionEntity::getUserId, userId)
+                .or()
+                .eq(ChatSessionEntity::getTargetUserId, userId))
+            .list();
     }
 
     @Override
@@ -156,18 +197,25 @@ public class ChatSessionServiceImpl extends BaseCachingEntityService<ChatSession
         if (StringUtils.isBlank(request.getBizType()) || !ObjectUtils.isValidId(request.getUserId())) {
             return Collections.emptyList();
         }
+        // 会话只存一条（收发共用），「某用户的会话」= 他发起或别人发给他的
         return lambdaQueryWrapper()
             .eq(ChatSessionEntity::getBizType, request.getBizType())
-            .eq(ChatSessionEntity::getUserId, request.getUserId())
+            .and(w -> w.eq(ChatSessionEntity::getUserId, request.getUserId())
+                .or()
+                .eq(ChatSessionEntity::getTargetUserId, request.getUserId()))
             .list();
     }
 
     @Override
     public long getChatSessionCount(ChatSessionRequest request) {
+        Long currentUserId = SecurityUtils.getUid();
         return lambdaQueryWrapper()
             .eq(ChatSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
             .eq(ChatSessionEntity::getBizType, request.getBizType())
-            .eq(ChatSessionEntity::getTargetUserId, SecurityUtils.getUid())
+            // 会话只存一条，当前用户既可能是发起方也可能是接收方，只按 target_user_id 计会漏掉自己发起的
+            .and(w -> w.eq(ChatSessionEntity::getUserId, currentUserId)
+                .or()
+                .eq(ChatSessionEntity::getTargetUserId, currentUserId))
             .ge(!ObjectUtils.isEmpty(request.getStartTime()), ChatSessionEntity::getUpdatedAt, request.getStartTime())
             .le(!ObjectUtils.isEmpty(request.getEndTime()), ChatSessionEntity::getUpdatedAt, request.getEndTime())
             .count();

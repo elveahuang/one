@@ -47,12 +47,13 @@ public class ChatEntitySessionServiceImpl extends BaseCachingEntityService<ChatE
     public ChatEntitySessionEntity getChatEntitySession(ChatEntitySessionRequest request) {
         ChatEntitySessionEntity entity = this.findChatEntitySessionCache(request);
         if (entity == null) {
+            // clearAt 刻意不设默认值：未清空会话时应为 null（表示不按时间水位过滤）。
+            // 曾用 LocalDateTime.MIN 占位，但该值超出 PostgreSQL timestamp 范围，会让消息查询结果异常。
             entity = ChatEntitySessionEntity.builder()
                 .chatSessionId(request.getChatSessionId())
                 .userId(request.getUserId())
                 .topInd(BooleanTypeEnum.getFalseValue())
                 .clearInd(BooleanTypeEnum.getFalseValue())
-                .clearAt(LocalDateTime.MIN)
                 .lastReadMessageId(0L)
                 .build();
         }

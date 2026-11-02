@@ -55,6 +55,14 @@ public class ChatSessionVo implements Serializable {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long targetUserId;
     /**
+     * 对端用户ID。
+     *
+     * <p>会话只存一条记录（收发共用），因此从任一方的视角看，「对方」都可能是 userId 或 targetUserId。
+     * 该字段由服务端按当前用户解析后直接给出，前端不需要自己做方向判断。</p>
+     */
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long oppositeUserId;
+    /**
      * 最近一条已读消息的ID
      */
     @Schema(description = "最近一条已读消息的ID")

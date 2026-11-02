@@ -49,7 +49,9 @@ public class ChatMessageServiceImpl extends BaseEntityService<ChatMessageEntity,
             .le(ObjectUtils.isValidId(request.getLastMessageId()), ChatMessageEntity::getId, request.getLastMessageId())
             .eq(ChatMessageEntity::getChatSessionId, request.getChatSessionId())
             .eq(ChatMessageEntity::getStatus, StatusTypeEnum.ON.getValue())
-            .gt(ChatMessageEntity::getCreatedAt, request.getClearAt())
+            // clearAt 是「清空会话」的时间水位，未清空时必须不参与过滤：
+            // 直接 gt(createdAt, null) 会生成 created_at > NULL（恒为假），导致历史消息永远查不出来
+            .gt(request.getClearAt() != null, ChatMessageEntity::getCreatedAt, request.getClearAt())
             .orderByDesc(ChatMessageEntity::getCreatedAt);
         IPage<ChatMessageEntity> page = this.findPage(getMyBatisPlusPage(request.getPageable()), wrapper);
         if (CollectionUtils.isNotEmpty(page.getRecords())) {
@@ -145,8 +147,11 @@ public class ChatMessageServiceImpl extends BaseEntityService<ChatMessageEntity,
     public long getChatSessionMessageCount(ChatSessionMessageCountRequest request) {
         return this.lambdaQueryWrapper()
             .eq(ChatMessageEntity::getChatSessionId, request.getChatSessionId())
-            .gt(ChatMessageEntity::getCreatedAt, request.getClearAt())
-            .gt(ChatMessageEntity::getId, request.getLastReadMessageId())
+            // 未读只算「对方发来的」：否则自己发的消息会一直显示为未读
+            .ne(request.getUserId() != null, ChatMessageEntity::getSenderUserId, request.getUserId())
+            // 同 findChatMessages：未清空时 clearAt 为空，不能参与过滤
+            .gt(request.getClearAt() != null, ChatMessageEntity::getCreatedAt, request.getClearAt())
+            .gt(request.getLastReadMessageId() != null, ChatMessageEntity::getId, request.getLastReadMessageId())
             .count();
     }
 

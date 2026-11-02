@@ -30,7 +30,8 @@ public class ChatEntityMessageServiceImpl
         return this.lambdaQueryWrapper()
             .eq(ChatEntityMessageEntity::getChatSessionId, request.getChatSessionId())
             .eq(ChatEntityMessageEntity::getUserId, request.getUserId())
-            .in(CollectionUtils.isNotEmpty(idList), ChatEntityMessageEntity::getId, idList)
+            // 入参是业务消息 ID，必须匹配 chat_message_id（此前误用主键 id，导致永远查不到、反复插入重复行）
+            .in(CollectionUtils.isNotEmpty(idList), ChatEntityMessageEntity::getChatMessageId, idList)
             .list();
     }
 

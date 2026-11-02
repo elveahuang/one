@@ -49,4 +49,14 @@ public interface ChatSessionService extends CachingEntityService<ChatSessionEnti
      * 获取会话数量
      */
     long getChatSessionCount(ChatSessionRequest request);
+
+    /**
+     * 按业务类型 / 业务实体 / 用户对（不分收发方向）查找已存在的会话（不存在返回 null）
+     */
+    ChatSessionEntity findByPair(String bizType, Long bizId, Long userId, Long targetUserId);
+
+    /**
+     * 查询与指定用户相关的全部会话：既包含自己发起的，也包含别人发给自己的
+     */
+    List<ChatSessionEntity> findByMember(String bizType, Collection<Long> bizIds, Long userId);
 }

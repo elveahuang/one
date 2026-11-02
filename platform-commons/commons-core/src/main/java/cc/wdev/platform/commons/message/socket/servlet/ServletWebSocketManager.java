@@ -214,6 +214,9 @@ public class ServletWebSocketManager implements WebSocketManager<String, WebSock
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        } else {
+            // 既不是文本也不是 JSON：不要静默发空串，留痕便于排查消息类型配置错误
+            log.warn("WebSocket message content is neither text nor json, sending empty payload. type - [{}].", message.getType());
         }
         return content;
     }
