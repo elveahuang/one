@@ -112,28 +112,9 @@ public class AiSessionEventServiceImpl
 
     @Override
     public Page<AiSessionEventVo> findHistory(AiSessionEventRequest request) {
-        List<String> sessionIds = findHistorySessionIds(request);
-        if (sessionIds != null && sessionIds.isEmpty()) {
-            return SpringDataUtils.emptyPage(request.getPageable());
-        }
-
-        LambdaQueryChainWrapper<AiSessionEventEntity> wrapper = this.lambdaQueryWrapper()
-            .eq(AiSessionEventEntity::getEventType, EventType.MESSAGE.name())
-            .eq(AiSessionEventEntity::getActive, ActiveTypeEnum.ENABLED.getValue());
-        if (sessionIds != null) {
-            wrapper.in(AiSessionEventEntity::getSessionId, sessionIds);
-        }
-        IPage<AiSessionEventEntity> entityPage = wrapper
-            .orderByDesc(AiSessionEventEntity::getCreatedAt)
-            .orderByDesc(AiSessionEventEntity::getId)
-            .page(getMyBatisPlusPage(request));
-        if (!MyBatisPlusUtils.isNotEmpty(entityPage)) {
-            return SpringDataUtils.emptyPage(request.getPageable());
-        }
-        List<AiSessionEventVo> eventVos = entityPage.getRecords().stream()
-            .map(AiSessionEventConverter.INSTANCE::entity2Vo)
-            .toList();
-        return MyBatisPlusUtils.toSpringDataPage(request.getPageable(), eventVos, entityPage.getTotal());
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<AiSessionEventVo> page =
+            this.mapper.findTurnHead(getMyBatisPlusPage(request), request.getUserId(), request.getAiSessionId());
+        return MyBatisPlusUtils.toSpringDataPage(request.getPageable(), page.getRecords(), page.getTotal());
     }
 
     private List<String> findHistorySessionIds(AiSessionEventRequest request) {
