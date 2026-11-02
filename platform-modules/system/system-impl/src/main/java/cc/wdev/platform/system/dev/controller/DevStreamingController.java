@@ -41,8 +41,7 @@ public class DevStreamingController extends AbstractController {
         SseEmitter emitter = new SseEmitter();
         executor.execute(() -> {
             try {
-                emitter.send(sse());
-                emitter.send("/sse" + " @ " + LocalDateTime.now());
+                emitter.send(SseEmitter.event().data("/sse" + " @ " + LocalDateTime.now()));
                 emitter.complete();
             } catch (Exception ex) {
                 emitter.completeWithError(ex);

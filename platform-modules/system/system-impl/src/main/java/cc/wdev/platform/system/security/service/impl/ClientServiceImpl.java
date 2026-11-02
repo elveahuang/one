@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static cc.wdev.platform.commons.data.mybatis.utils.MyBatisPlusUtils.getMyBatisPlusPage;
 import static cc.wdev.platform.system.commons.constants.SystemCacheConstants.CLIENT;
 
@@ -92,6 +94,8 @@ public class ClientServiceImpl extends BaseCachingEntityService<ClientEntity, Lo
      */
     @Override
     public Page<ClientEntity> findClientList(ClientRequest request) {
+        // 排序字段仅允许白名单内的列，非法列置空后走默认排序
+        request.check(List.of("id", "client_id", "clientId", "client_name", "clientName", "created_at", "createdAt"));
         IPage<ClientEntity> page = StringUtils.isNotEmpty(request.getQ()) ?
             this.lambdaQueryWrapper().eq(ClientEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
                 .like(ClientEntity::getClientId, request.getQ())

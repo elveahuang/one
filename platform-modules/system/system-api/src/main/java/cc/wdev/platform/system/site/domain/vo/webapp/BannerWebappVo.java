@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import tools.jackson.databind.annotation.JsonSerialize;
 import tools.jackson.databind.ser.std.ToStringSerializer;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -31,6 +33,36 @@ public class BannerWebappVo {
      */
     @Schema(title = "序号", description = "序号")
     private Integer idx;
+    /**
+     * 备注
+     */
+    @Schema(title = "备注", description = "备注")
+    private String description;
+    /**
+     * 链接类型
+     */
+    @Schema(title = "链接类型", description = "链接类型")
+    private String linkType;
+    /**
+     * 链接参数
+     */
+    @Schema(title = "链接参数", description = "链接参数")
+    private String linkParams;
+    /**
+     * 外部链接地址
+     */
+    @Schema(title = "外部链接地址", description = "外部链接地址")
+    private String linkExternalUrl;
+    /**
+     * 开始时间
+     */
+    @Schema(title = "开始时间", description = "开始时间")
+    private LocalDateTime startDatetime;
+    /**
+     * 结束时间
+     */
+    @Schema(title = "结束时间", description = "结束时间")
+    private LocalDateTime endDatetime;
     /**
      * 电脑端封面
      */

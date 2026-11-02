@@ -179,8 +179,11 @@ one (Gradle root, group cc.wdev)
 | AI 配置管理 | `GET /api/v1/sys/ai/{agent,model,tool,mcp,kb}/list` + `GET .../details` + `POST .../{save,delete,initialize}`（tool 为 initialize/save/details/list/delete 五端点，delete 为 JSON 体 `DeleteRequest`）；权限码 `dev:ai:config:*`；聊天页依赖 `GET /api/v1/ai/chat/{list,start,agents,models}` | webapp `modules/ai/views/platform/**`（config-* 五页 + chat-* 三页，会话列表正常加载）；API 在 `commons/src/modules/ai/api/` |
 | 数据仪表盘 | 复用工作台端点：`GET /api/v1/sys/get-system-info`（注册/在线统计）与 `GET /api/v1/sys/login-platform-line-chart?type=&date=&goHeavy=`（活跃/登录双图）；数据报表 `/platform/data/report` 与平台首页 `/platform` 仍为「建设中」占位 | webapp `modules/data/views/platform/dashboard.vue`（统计卡片 + 双 tab 折线图）；平台参数页复用 `modules/config/views/system/index.vue` |
 | 权限码来源 | 方法级 `hasAnyAuthority('x:y')` 的字符串必须存在于 `sys_authority.code`，否则非 admin 用户一律 403（JWT 权限由 `CustomJwtGrantedAuthoritiesConverter` 查库拼装，不做前缀推导）。用户权限 = **角色权限∩租户权限**（`sys_entity_authority` 的 ROLE 与 TENANT 两类关联求交集，见 `AuthorityServiceImpl#findByUserId`），且只在当前身份端对应的角色类型范围内取角色；admin 的 `*:*:*` 根权限短路**以「生效端不是 MEMBER」为判据**（不要用 `IdentitySideContext.isPresent()`——双端用户首次访问就会被写入 ADMIN 记录，该判据会永久失效），切到会员端即按普通用户过滤。**仓库种子 SQL 无 `sys_authority` 数据，本地库数据为手工/工具维护**——新菜单上线须同时补权限行与角色/租户关联（参考 `system:tag` 行样式），见「已知问题」。**权限管理接口 `GET /api/v1/sys/authority/list` 用 `platform:authority`**（原为 `system:authority`，已与前端菜单对齐） | 前端菜单/路由的 `authorities` 同样按字符串精确匹配 `sys_authority.code`（组级菜单用 `group:xxx`，模块级用 `module:xxx`），缺失即菜单不可见与路由 401（曾致附件管理页不可达） |
-| AI 流式 | `POST /api/v1/ai/chat/stream`，`text/event-stream`，`Flux<String>`；请求体自定义 `SimpleChatRequest`（prompt/conversationId/modelCode/agentCode/kbId/chatType/withRag），非 OpenAI 格式；同前缀还有 `/text`、`/list`、`/details`、`/start`、`/delete` | `utils/ai.ts` `TextStreamChatTransport` 直连 `/api/v1/ai/chat/stream`，不走 axios（需自带 `Authorization` 与 `x-tenant-id`） |
+| AI 流式 | `POST /api/v1/ai/chat/stream`，`text/event-stream`，`Flux<String>`；请求体自定义 `SimpleChatRequest`（prompt/conversationId/modelCode/agentCode/kbId/chatType/withRag），非 OpenAI 格式；同前缀还有 `/text`、`/list`、`/details`、`/start`、`/delete`、`/completion`（2026-11 新增，`text/plain` 裸文本流供 ai-sdk `useCompletion` 消费，chatType 缺省 STATIC）。AI 聊天端点仅要求登录（`@Authenticated`），**不做会员端模型白名单或调用配额限制** | `utils/ai.ts` `TextStreamChatTransport` 直连 `/api/v1/ai/chat/stream`，不走 axios（需自带 `Authorization` 与 `x-tenant-id`）；`defaultUseCompletionOptions.api` 指向 `/completion` |
+| 宣传栏 Banner | sys `POST /api/v1/sys/banner/{list,details,save,delete}`（save 走 JSON 体 `BannerForm`）；C 端 `POST /api/v1/web/banner/{list,details}`（`@Anonymous`，返回 `BannerWebappVo`：id/title/idx/description/linkType/linkParams/linkExternalUrl/startDatetime/endDatetime/webappCover/mobileCover——2026-11 补齐 link 与时间窗列）；封面为附件关系关联填充 | sys 页 `modules/banner/views/system/index.vue` 用 `Banner` 类型（`cover`/`mobileCover`）；mobile 列表渲染 `title`/`description`；类型在 `commons/src/modules/banner/types`（已补 `webappCover`） |
+| 站内信通知 | `POST /api/v1/notice/{list,details,unread-count,read,read-all}`（均 `@Authenticated`；`details` 查看即已读；`read` 体为通知 ID 数组、仅限本人；未读数按 `read_ind != 1` 统计）。新通知落库后经 WebSocket 点对点推送标题（启用 WS 才有实时推送，离线靠落库兜底） | mobile `modules/massage/components/notice-list.vue` 以 `readInd === 1` 判已读；`list`/`details` 已接入，`unread-count`/`read`/`read-all` 为 2026-11 新增、前端待接入 |
 | WebSocket | 两条通道：主服务（8181）servlet 注册 `/ws/message`（`WebSocketHandlerConfiguration` + `SystemWebSocketHandler`，握手走 Spring Security；`DefaultBearerTokenResolver.setAllowUriQueryParameter(true)` 使 query `access_token` 可用）——前端实际使用这条；另有 Netty 独立端口 8686 路径 `/ws`（query 参数名为 `authorization`，`NettyUtils.getAuthorization`） | `store/socket.ts` 连 `${server}/ws/message?access_token=...`，server 优先 initialize 返回的 `app.webSocketServer` |
+| 即时通讯 IM | `POST /api/v1/web/im/{session/list,session/save,session/top,session/untop,session/collect,session/uncollect,session/clear,session/details}` 与 `{message/list,message/unread,message/send,message/read}`（均 `@Authenticated`）。**身份一律取自 `SecurityUtils`，入参 userId 会被覆盖**。**会话模型：同一对用户只存一条记录（收发共用）**——消息按 `chat_session_id` 归属，若为收发双方各建一条会把一次对话拆成两条互不相通的线程（B 看不到 A 的消息、未读数恒 0），这是必须避免的坑；因此「我的会话」= 我是 `user_id` 或 `target_user_id`，`ChatSessionVo.oppositeUserId` 由服务端按当前用户解析对端，前端不要自己做方向判断。`session/save` 幂等（`LEAST/GREATEST` 归一的 `ux_sys_chat_session__pair` 唯一索引兜住并发）；`message/send` 校验我是会话任一方并自动解析真实收件人（反向用户发消息不会把收件人算成自己），提交后推 `MESSAGE`；`message/read` 标记后向对端推 `READ`。IM 无群聊与成员表 | 前端暂无 IM 页面（`commons/src/modules` 下无 im 模块）；WebSocket 客户端已就绪（`store/socket.ts` 的 `emitter.on('newMessage')`），按 `content.type` 分发 `MESSAGE`/`READ`/`SESSION` |
 | 前缀消费现状 | `/api/v1/sys\|plt\|web` 常量齐备；前端目前只调用 sys、web（banner/announcement/address）与无前缀端点，`/api/v1/plt/**` 尚无消费者 | `modules/*/api/*.ts`（注意 `api/platform.ts` 实际也调 `/api/v1/sys/**`） |
 
 ### 6.2 本地联调环境（Nginx + wdev.cc）
@@ -203,6 +206,7 @@ one (Gradle root, group cc.wdev)
    - Linux/macOS：`tools/database/bin/reset_admin_password.sh`
 
    脚本会生成 BCrypt 哈希写库，并清理 Redis（db 11）用户缓存；**手工改库必须同步清缓存，否则旧凭据仍生效**。该约定只适用于 local/development，禁止用于 sit/pro。登录前先按 6.2 核对客户端密钥，否则 401 与口令无关。
+6. 种子库中同一租户内各演示用户的手机号唯一（`13500000001`/`13500000002`，2026-11 调整），配合 `sys_user (tenant_id, mobile_country_code, mobile_number)` 软删部分唯一索引——**新增种子用户不要与同租户其他用户共用手机号**，否则唯一索引创建失败。
 6. 登录验证必须用真实输入事件（合成 `click()`/`requestSubmit()` 不触发 Vue 提交）。成功后网络序列 `POST /oauth/token` 200 → `GET /api/v1/user` 200 → `/webapp/home`，并出现 WebSocket 连接成功日志；未登录访问受保护页跳 `/login?redirect=...`。
 7. 后端重启使旧 JWT 失效，验证前重新取 token。无法真实输入时，可在页面上下文 `fetch('/oauth/token')` 换 token，并同步写 `localStorage` 的 `ACCESS_TOKEN`/`REFRESH_TOKEN` 与持久化 user store（**三处独立，都要更新**）。
 8. 停止后 Windows 常残留子进程继续监听端口，用 `netstat -ano` 找 PID 后 `taskkill /F /T`。
@@ -265,19 +269,20 @@ one (Gradle root, group cc.wdev)
 
 ### 7.4 安全（红线，改动前必读）
 
-`system-security` 的 `WebSecurityConfiguration`（`cc.wdev.platform.security.configuration`）用 `@EnableMethodSecurity(jsr250Enabled = true, securedEnabled = true)` 开启方法级安全，共四条链：
+`system-security` 的 `WebSecurityConfiguration`（`cc.wdev.platform.security.configuration`）用 `@EnableMethodSecurity(jsr250Enabled = true, securedEnabled = true)` 开启方法级安全，共五条链：
 
 | 优先级 | 匹配 | 放行规则 |
 | --- | --- | --- |
 | `HIGHEST_PRECEDENCE` | 授权服务器 endpoints | `anyRequest().authenticated()` |
 | 1 | `/api/mcp/**` | `anyRequest().authenticated()` + `mcpServerApiKey()`（`CustomApiKeyRepository`） |
-| 2 | `/api/**` | `GLOBAL_API_EXCLUDE_URLS` 放行 + `anyRequest().permitAll()`；配了 JWT 解码与 `CustomJwtGrantedAuthoritiesConverter`，但**解码不改变放行结果** |
-| 3 | 其余（无 matcher 兜底） | `GLOBAL_WEB_EXCLUDE_URLS` 放行 + `anyRequest().permitAll()`，会话策略 `IF_REQUIRED` |
+| 2 | `/exchange/**` | `anyRequest().authenticated()`（2026-11 新增认证链：JWT 资源服务器解码 + `CustomJwtGrantedAuthoritiesConverter`；同进程 `XxxApiImpl` 直注不走 HTTP 不受影响，外部 HTTP 调用必须带有效令牌） |
+| 3 | `/api/**` | `GLOBAL_API_EXCLUDE_URLS` 放行 + `anyRequest().permitAll()`；配了 JWT 解码与 `CustomJwtGrantedAuthoritiesConverter`，但**解码不改变放行结果** |
+| 4 | 其余（无 matcher 兜底） | `GLOBAL_WEB_EXCLUDE_URLS` 放行 + `anyRequest().permitAll()`，会话策略 `IF_REQUIRED` |
 
 关键事实：
 
 - **`GLOBAL_API_EXCLUDE_URLS` 是空数组**，即整条 `/api/**` 链实际全放行，鉴权**完全依赖方法级注解**；`GLOBAL_WEB_EXCLUDE_URLS` 才是非空的。
-- **`/exchange/**` 不匹配链 1、链 2**（matcher 是 `/api/mcp/**`、`/api/**`），落到无 matcher 的兜底链 3，而链 3 同样 `anyRequest().permitAll()`。
+- **`/exchange/**` 已有独立认证链**（链 2），10 个 `*ExchangeController` 无方法级注解但整体要求认证；`AuthorizationDto` 的四个 token 值字段已加 `@JsonProperty(WRITE_ONLY)` 双保险（2026-11）。
 - 可用注解：`@PreAuthorize("hasAnyAuthority('x:y')")`、`@Authenticated`（`isAuthenticated()`）、`@Anonymous`（`permitAll()`）、`@Super`（要求 `*:*:*`）。**`@PermitAll` 是 JSR-250 的 `jakarta.annotation.security.PermitAll`**（因 `jsr250Enabled=true` 生效），不要与 `@PreAuthorize` 混挂同一方法。
 - `@RateLimiter`（`RateLimitAspect`，Redis/Lua，键 `RateLimiter:<requestURI>:<ip|clientId>:<spelKey>`）、`@OperationLog`（`OperationLogAspect`，是 `record`）**都不是元注解驱动**，各自独立切面。
 - 权限串示例 `system:user`/`system:config`/`dev:ai:config:model`；角色前缀 `ROLE_`，数据范围前缀 `DATA_SCOPE_`。
@@ -286,10 +291,11 @@ one (Gradle root, group cc.wdev)
 由此：
 
 - **新增任何端点必须显式加 `@PreAuthorize` 或 `@Authenticated`**；只有确需匿名才用 `@Anonymous` / `@PermitAll`。
-- 10 个 `*ExchangeController` 都无方法级鉴权注解。**禁止向 exchange 接口新增更敏感的数据**；新增内部接口前先与维护者确认鉴权方案。
+- 10 个 `*ExchangeController` 都无方法级鉴权注解，但 `/exchange/**` 安全链整体要求认证（见上表链 2）。**禁止向 exchange 接口新增更敏感的数据**；新增内部接口前先与维护者确认鉴权方案。
 - 租户上下文 `TenantContext` 基于 MDC：Servlet 侧 `ServletWebFilter`（响应式 `ReactiveWebFilter`）调 `handleServletRequest` 初始化，解析顺序 `x-tenant-id` → `x-tenant-code` → 域名（`DefaultTenantResolver`），用后清理。**请求头未与 JWT `tid` 做一致性校验**（`SecurityConstants.JWT_KEY_TID` 只被写、读，没有一处比对），且条件判定有缺陷（见 10）。服务层不能信任「请求头 = 当前用户所属租户」；`SecurityUtils#getTid` 仅**未认证**时回退 `TenantContext`，已认证但 JWT 无 `tid` claim 时返回 `null`。
 - 密码必须经 `SecurityUtils.encode()` 落库，**返回 `{bcrypt}$2a$…`（`DelegatingPasswordEncoder` + BCrypt），不是裸 BCrypt 串**。
 - 身份端上下文 `IdentitySideContext`（`cc.wdev.platform.commons.core.identity`，替代已删除的 `RoleTypeContext`）同样基于 MDC：`ServletWebFilter` 从请求头 `x-identity-side` 写入、用后清理。**它只是「客户端期望值」，不是授权依据**——`UserApiImpl#getUserAuthority` 会调用 `UserIdentitySideService#resolveEffectiveIdentitySide` 用服务端记录覆盖它（服务端记录优先），未拥有该端则丢弃。新增按身份端过滤的逻辑必须走该解析，不要直接读 `IdentitySideContext`。
+- **开放平台回调（2026-11 已实现验签+解密）**：`/api/v1/oapis/wecom/callback`（GET 校验 + POST 消息，`WxCpService.checkSignature` + `WxCpCryptUtil`）、`/api/v1/oapis/dingtalk/callback`（HmacSHA256 签名 + AES 解密）、`/api/v1/oapis/lark/callback`（SHA-256 签名 + AES 解密，`challenge` 直接回显）。这些端点用 `@PermitAll`——回调由平台服务器发起、无法携带本系统令牌，**安全性完全由签名校验保证**；钉钉/飞书密钥取自 `platform.oapis.{dingtalk,lark}.encrypt-key`，为空时跳过验签（仅本地未接入时如此，生产必须配置）。加解密实现在 `commons/util/CallbackCryptoUtils`（不依赖 event 专用 SDK），明文分发是 `dispatch(...)` 扩展点，**当前只记日志未接业务处理**。
 
 ### 7.5 数据层
 
@@ -303,11 +309,11 @@ one (Gradle root, group cc.wdev)
 
 - `BaseCachingEntityService` 的失效只按 `byId`/`byCode` 注册；**直接调 mapper/wrapper 写库会完全绕过失效**（详见 6.2 的 `sys_client` 案例）。`getCacheKeyGenerator()` 是 default 方法；租户级用 `SimpleTenantCacheKeyGenerator`（键总拼当前租户）。
 - `insert` 后 `setCache` 回填；`save`/`updateById` 只 `deleteCache`（下次读回填）。
-- JWT 权限转换（`CustomJwtGrantedAuthoritiesConverter`）**无缓存，每次查库**；两个同名 `JwtAuthenticationConverter` Bean（`PlatformSecurityConfiguration`/`CommonSecurityConfiguration`，实现相同），靠 `allow-bean-definition-overriding` 生效。
+- JWT 权限转换链路（`CustomJwtGrantedAuthoritiesConverter` → `UserApiImpl#getUserAuthority`）**各层均已走 Redis 缓存**：用户实体（byId）、生效身份端（15 天）、authorityIds（`UserAuthorityCacheKeyGenerator` 按 uid+身份端）、roleIds（`UserRoleCacheKeyGenerator`）、角色/权限实体（byId）；失效点覆盖角色/关联/租户套餐变更与身份切换（2026-11 核实，原「无缓存每次查库」说法已过时）。两个同名 `JwtAuthenticationConverter` Bean（`PlatformSecurityConfiguration`/`CommonSecurityConfiguration`，实现相同），靠 `allow-bean-definition-overriding` 生效。
 
 ### 7.7 序列化
 
-- `CoreAutoConfiguration#jsonMapperBuilderCustomizer` 挂 `CommonModule`，全局 NON_NULL + **全局 `INDENT_OUTPUT`（pretty-print 无条件开）**。
+- `CoreAutoConfiguration#jsonMapperBuilderCustomizer` 挂 `CommonModule`，全局 NON_NULL；**全局 `INDENT_OUTPUT` 已于 2026-11 移除**（响应不再 pretty-print，压缩体积）。
 - `long`/`Long`/`BigInteger` → `ToStringSerializer`（**只序列化，不影响反序列化**），故分页 `totalElements` 等是字符串；`Date`/`LocalDateTime` 各有自定义 serializer。
 
 ### 7.8 i18n
@@ -320,10 +326,13 @@ one (Gradle root, group cc.wdev)
 
 - 模板在 `commons-core/src/main/resources/cc/wdev/logging/logback/`（base/console/file/loki appender，**无分 profile 模板文件**）。
 - `@OperationLog` → `OperationLogAspect` → `LogStore` → RabbitMQ → `sys_operation_log`。
+- **事务内发 MQ 用 `RabbitService#sendAfterCommit`**（2026-11 新增）：存在活动事务时延迟到提交后发送，避免消费者读到未提交数据；无事务时等同 `send`。`MessageApiImpl` 的 `createMessage`/`sendMessage` 已改用它（这两个方法带 `@Transactional`）。新增带事务的写方法若还要发消息，必须走 `sendAfterCommit`。
+- 消费失败的消息由 `AbstractRabbitService#handler` 捕获后转入公共 fanout 死信交换机 `COMMON_DEAD_LETTER_EXCHANGE`（应用级兜底，不改既有队列 broker 参数）。
 
 ### 7.10 测试
 
 - 三处测试根：`commons-webapp/src/test`（主宿主）、`app-server/src/test`（API 级，`BizTypeApiTests`/`AttachmentApiTests`）、`commons-console`；命名 `*Tests`（JUnit5）。
+- **不依赖中间件的纯单元测试**（2026-11 新增，优先补这类）：`MyBatisPlusUtilsSortTests`（排序白名单 + 敏感列黑名单）、`AiVectorRetryBackoffTests`（KB 退避指数/上限）、`ClientApiImplTests`（客户端 save 的 upsert 与密钥保留）、`OrganizationBuildTreeTests`（部门/岗位树）。运行方式：`./gradlew :platform-services:app-server:test --tests "*XxxTests*"`。
 - 构建排除 `integration` 标签，但**没有任何测试打该标签**，故 `./gradlew test` 会实跑依赖中间件的 `SpringBootTest`；基类 `@Transactional + @Rollback(false)` **会污染本地库**。**新测试优先 mock/H2**。
 - CI 只 `build`、不 `test`。
 
@@ -353,6 +362,8 @@ one (Gradle root, group cc.wdev)
 - **RAG**：全局 `RetrievalAugmentationAdvisor(allowEmptyContext(false))`；KB 级经 `AiHelper.applyRagAdvisors`（租户 `Filter` + 可选重排）。向量化 `AiVectorServiceImpl` 为提交后异步 + 分批；**重试退避在 `AiKbJob`/`AiKbApi`，不在该 Service**。VectorStore 支持 ES/MariaDB/PgVector（默认 ES）。
 - **索引命名**：`AiRagUtils` 统一处理 ES `t{tenantId}-{prefix}-{collection}`、SQL `t{tenantId}_{prefix}_{collection}`（截断 63）；生效名以 store 专属 `index-name`/`table-name` 为准，`rag.store.index-prefix` 绑定后从不读取（死配置）。
 - **MCP 与密钥**：`AiMcpServerEntity` 登记表（权限 `dev:ai:config:mcp`），Server 端走 `mcpServerApiKey()` + `CustomApiKeyRepository`；模型密钥落库 `enc:` + AES，读取时无前缀按历史明文放行，更新 `****` 掩码不覆盖旧值。
+- **MCP Server 端已实测可用（2026-11）**：`mcp.server` 在 `application-local.yml` 开启；**客户端必须带 `X-API-Key: <app_id>.<app_secret>`**（库的 `ApiKeyImpl.from` 强制 `<id>.<secret>` 点号格式，只给其中一段会 401）；streamable-http 下 `tools/list`、`tools/call` 需先 `initialize` 并回传响应头 `Mcp-Session-Id`。实测暴露工具 `getCurrentDateTime`、`getVersion`（来自 `CoreTools` 的 `@Tool`），`tools/call` 正常返回。
+- **MCP Client 端已实现（2026-11）**：`McpClientManager`（`ai/support`）按 `sys_ai_mcp_server` 登记**编程式**建连（yml 静态配置无法覆盖库里动态增删），支持 `STREAMABLE`（默认）/`SSE`/`STDIO` 三种传输。传输参数：`url`（HTTP/SSE/Streamable 必填）、`command`（stdio 必填）、`headers`/`env` 为 JSON 对象、`args` 为 JSON 数组（也兼容逗号分隔）；**保存时按 protocol 条件校验**（stdio 必填 command，其余必填 url），不能靠请求类上的 `@NotBlank` 统一约束。连接缓存键含 protocol/url/command/headers/env/args，配置任一变更即重建；`saveAiMcpServer`/`deleteAiMcpServer` 会 `evict` 旧连接，`@PreDestroy` 关闭全部连接。`AiMcpServerConverter` 设为 `unmappedTargetPolicy = ERROR`——该实体此前新增字段时转换器静默漏映射导致保存后字段永远为空，改严格模式让漏映射在编译期暴露。**Agent 对话挂载位置在 `AiChatApiImpl#applyMcpTools`**：外部 MCP 工具必须走 `builder.defaultTools(provider)`，不能登记为 `toolNames`——Spring AI 的 `ToolCallbackResolver` 会显式过滤 `SyncMcpToolCallbackProvider`。单个 MCP Server 连不上只跳过并记日志，不阻断对话。
 - **扩展入口**：新增厂商 → `AiModelProvider` 加枚举 + `ai_model` 或 `platform.ai.providers.*`；新增引擎 → 实现 `*ModelFactory`/`*ModelService` 并在对应 `Ai*AutoConfiguration` 注册；新增 UI 组件 → 实现 `UiComponentDefinition` Bean（`propsSchema()` 必须内联，禁止 `$ref`），`UiComponentRegistry.register` 为 synchronized + 缓存失效重建。
 - **Embabel**：仅依赖与空测试，零 Java 源码引用。
 
@@ -369,12 +380,13 @@ one (Gradle root, group cc.wdev)
 
 当前源码事实，非待办清单；动到相关区域前先读，已闭环的直接删除。
 
-- **安全**：`/exchange/**` 无鉴权（10 个 controller 无注解，部分回传密码哈希/密钥，仅靠 `@JsonProperty(WRITE_ONLY)` 挡序列化）；租户上下文信任请求头、未与 JWT `tid` 校验（`handleServletRequest` 条件用「或」，tenantId 被丢弃且不读 `x-tenant-code`）；`SecurityUtils#getTid` 无 `tid` 时返回 null。请求头 `Authorization`/`Cookie` 与请求参数中的凭据类键（password/secret 等）已在 `WebServletUtils` 统一脱敏，未预期异常消息已在 `GlobalExceptionHandler` 掩蔽（2026-10 修复）。
-- **数据/配置**：`TenantServiceImpl` 物理删主表（`RoleServiceImpl` 已改软删）；`sys_user.username` 无唯一索引（登录查询依赖应用层查重，创建/改名已强制）；`sys_authority` 种子 SQL 无数据（本地库为手工/工具维护的 100+ 行；新菜单须补权限行 + 角色/租户关联，`AuthorityTreeEnum` 仍是死代码但作为权限树参考已与前端菜单对齐；client 模块权限行已于 2026-10 补齐）；`db_pgsql_schema_core.sql` 含 `DROP TABLE`（仅本地）。（`sys_catalog_relation.idx` 列型已于 2026-10 对齐为 INT；剩余列型不匹配仅 `sys_config.source` 与 `sys_identity.uid`（varchar vs Long）两处，链路核心且有数据，改动牵连大，暂保持。`sys_tag`/`sys_dict` 的 sys 管理端点（/tag/save 写当前租户、/tag/search 固定查 tenant 0）与租户拦截器三方语义矛盾——租户上下文下 sys 全局行不可见，修复方向（@InterceptorIgnore 或改查询语义）需维护者决策，2026-10 未动。`sys_entity_authority.authority_id`/`sys_login_session.client_id`/`sys_operation_log.request_id` 索引已于 2026-10 补齐；其余 20 个空表外键列缺索引为低优先。）
+- **安全**：租户上下文信任请求头、未与 JWT `tid` 校验（`handleServletRequest` 条件用「或」，tenantId 被丢弃且不读 `x-tenant-code`）；`SecurityUtils#getTid` 无 `tid` 时返回 null。请求头 `Authorization`/`Cookie` 与请求参数中的凭据类键（password/secret 等）已在 `WebServletUtils` 统一脱敏，未预期异常消息已在 `GlobalExceptionHandler` 掩蔽（2026-10 修复）。`/exchange/**` 无鉴权与 `AuthorizationDto` token 字段泄露已于 2026-11 闭环（新增认证链 + WRITE_ONLY），从本清单移除。
+- **数据/配置**：`TenantServiceImpl` 物理删主表（`RoleServiceImpl` 已改软删）；`sys_authority` 种子 SQL 无数据（本地库为手工/工具维护的 100+ 行；新菜单须补权限行 + 角色/租户关联，`AuthorityTreeEnum` 仍是死代码但作为权限树参考已与前端菜单对齐；client 模块权限行已于 2026-10 补齐）；`db_pgsql_schema_core.sql` 含 `DROP TABLE`（仅本地）。（`sys_catalog_relation.idx` 列型已于 2026-10 对齐为 INT；剩余列型不匹配仅 `sys_config.source` 与 `sys_identity.uid`（varchar vs Long）两处，链路核心且有数据，改动牵连大，暂保持。`sys_tag`/`sys_dict` 的 sys 管理端点（/tag/save 写当前租户、/tag/search 固定查 tenant 0）与租户拦截器三方语义矛盾——租户上下文下 sys 全局行不可见，修复方向（@InterceptorIgnore 或改查询语义）需维护者决策，2026-10 未动。`sys_user.username`/`sys_role.code`/`sys_config.config_key` 的软删部分唯一索引与 `sys_user_role`/`sys_entity_authority` 唯一索引，以及 `sys_notice.recipient_id`、`sys_authorization` token/state/principal、`sys_message_channel/type/template.tenant_id`、`sys_dict/tag.reference_id`、`sys_entity_label.lang_id` 等索引已于 2026-11 补进 `db_pgsql_schema_core.sql`——**存量库需手工执行 ALTER/CREATE INDEX**（见评审报告），且 `CREATE UNIQUE INDEX` 前先清重。`ClientApiImpl.save`/`AuthorizationConsentApiImpl`/`batchDeleteTenant` 空实现已于 2026-11 补全，`ACCOUNT_SYNC`/`ADDRESS_SYNC` 空监听器与队列已删除。）
 - **死配置/死代码**：jwt authorization-code/device-code TTL、`ai.rag.store.index-prefix`、`ai.agent.prompts`、local/development 的 anthropic/embabel 配置；`AiServiceProvider.CUSTOM`、`BaseEntityRepository` 的 `K` 幽灵参数、`platform.rate-limit`、commons-webapp logback-spring 未 include base.xml（`AbstractEntityController`、`MongoCustomProperties`、app-server orphan `messages_*.properties`、`BizTypeListRequest` 已删除，`TenantContext` 死 ThreadLocal 已删除；`@SuperBuilder` 缺 `@NoArgsConstructor` 会使 @ModelAttribute 绑定 500——`ClientCheckRequest` 已修复，新增请求类时注意）。
-- **行为/运行时**：全局 `INDENT_OUTPUT`（响应膨胀）；登录主体构造器把账户状态置 true；`allow-circular-references` + `allow-bean-definition-overriding` 同开；`DataSourceCustomAutoConfiguration` 的 `@Primary` 直接返回 master（无读写路由）；LoginSession pie chart 无消费方；`softDeleteBatch` 对裸 `AbstractEntity` 静默空操作（已加 warn 日志，见 7.2）。（`MyBatisPlusUtils.getMyBatisPlusPage` 已于 2026-10 加排序列名标识符校验，封死 ORDER BY 拼接注入面——新增排序白名单前先依赖此兜底。登出关闭会话链路已于 2026-10 实现：logout 按 userId 关闭未结束会话，会话经 RabbitMQ 异步落库。`ClientPltController` 前缀已于 2026-10 修正为 plt 前缀——前端 client api 已同步。MP 3.5.18 + jsqlparser 5.4 下 `uuid` 列名与关键字冲突，已于 2026-10 将四实体列统一改名 `uid`（UserEntity/IdentityEntity/AuthorizationEntity/AuthorizationConsentEntity，DB 列与实体同步 RENAME，种子 SQL 已更新）；新增实体列名避免 SQL 关键字。bootRun 长驻进程在模块重编译后会出现类加载混杂（NoClassDefFoundError），重启进程即可。）
-- **构建/CI**：`.github/workflows/build.yml` 只 `build` 不 `test`；`libs.versions.toml` 的 `jacksonVersion` 被 Boot BOM 遮蔽（实际 3.1.5）。（`tools/actions/build-native.yml`/`deploy.yml` 的过期路径与 Java 21 版本已于 2026-10 修复。）
-- 前端调用但后端不存在的端点（`/ai/chat/completion`、`/oapis/wecom/signature`）属产品决策，明细见前端 `AGENTS.md` §11。
+- **行为/运行时**：登录主体构造器把账户状态置 true；`allow-circular-references` + `allow-bean-definition-overriding` 同开；`DataSourceCustomAutoConfiguration` 的 `@Primary` 直接返回 master（无读写路由）；LoginSession pie chart 无消费方；`softDeleteBatch` 对裸 `AbstractEntity` 静默空操作（已加 warn 日志，见 7.2）。（全局 `INDENT_OUTPUT` 已于 2026-11 移除，见 7.7。）（`MyBatisPlusUtils.getMyBatisPlusPage` 已于 2026-10 加排序列名标识符校验，封死 ORDER BY 拼接注入面，2026-11 又加敏感列黑名单（password/secret/token 等）并在 Role/Organization/Position/Attachment 四个 list 服务强制 `PageRequest.check(白名单)`——新增排序白名单前先依赖此兜底。登出关闭会话链路已于 2026-10 实现：logout 按 userId 关闭未结束会话，会话经 RabbitMQ 异步落库。`ClientPltController` 前缀已于 2026-10 修正为 plt 前缀——前端 client api 已同步。MP 3.5.18 + jsqlparser 5.4 下 `uuid` 列名与关键字冲突，已于 2026-10 将四实体列统一改名 `uid`（UserEntity/IdentityEntity/AuthorizationEntity/AuthorizationConsentEntity，DB 列与实体同步 RENAME，种子 SQL 已更新）；新增实体列名避免 SQL 关键字。bootRun 长驻进程在模块重编译后会出现类加载混杂（NoClassDefFoundError），重启进程即可。）
+- **构建/CI**：`.github/workflows/build.yml` 只 `build` 不 `test`（产物打包）；**新增 `.github/workflows/quality.yml`（2026-11）在 PR/main push 上跑「编译 + 不依赖中间件的单元测试」**——刻意不跑 `./gradlew test`，因为它会实跑依赖 PG/Redis/RabbitMQ 的 SpringBootTest。前端仓 `one-ui-vue` 侧同样新增 `quality.yml` 跑三包 typecheck（本仓不跨仓 checkout 前端，避免依赖额外的 vars/secrets）。`libs.versions.toml` 的 `jacksonVersion` 被 Boot BOM 遮蔽（实际 3.1.5）。（`tools/actions/build-native.yml`/`deploy.yml` 的过期路径与 Java 21 版本已于 2026-10 修复。）
+- 前端调用但后端不存在的端点（`/ai/chat/completion`、`/oapis/wecom/signature`）已于 2026-11 在后端补齐（completion 走 chatStream、wecom signature 走 `WxCpService.createJsapiSignature`），不再是缺口；前端侧遗留死代码 `wecom/login`、`wechat/mp/login` 见前端 `AGENTS.md` §11。**企微/钉钉/飞书回调的验签与解密已于 2026-11 实现**（见 7.4），钉钉/飞书 signature 也可真实工作（`oapis.*` 开关开启后）——**但回调明文尚未接业务处理**（`dispatch(...)` 只记日志），接入具体事件仍需各平台应用密钥与事件订阅配置。
+- IM 域已接入 HTTP 入口与实时推送（见契约速查），仍缺：群聊/成员表（当前仅点对点）、前端 IM 页面。
 
 ## 11. 禁止事项
 
@@ -419,7 +431,7 @@ one (Gradle root, group cc.wdev)
 | 审计日志 | `platform.log` | logback 模板 `commons-core/src/main/resources/cc/wdev/logging/logback/`；切面 `commons.core.log.aspect`；`@OperationLog` → RabbitMQ → `sys_operation_log` |
 | 国际化 | `i18n/system/{label,validation}/messages*.properties` | `MessageSourceUtils`、`sys_label`/`sys_entity_label`、`CustomLocaleResolver`（当前忽略请求语言） |
 | 序列化 | — | `commons-core/utils/jackson/CommonModule`（Long→String、日期）+ `CoreAutoConfiguration`（`NON_NULL` + 全局 `INDENT_OUTPUT`） |
-| 开放平台 | `platform.oapis.*`、`platform.sms`、`platform.translator`、`platform.face-body` | commons-core `oapis`（微信/钉钉/飞书/Telegram/短信/翻译/人脸），默认全关 |
+| 开放平台 | `platform.oapis.*`、`platform.sms`、`platform.translator`、`platform.face-body` | commons-core `oapis`（微信/钉钉/飞书/Telegram/短信/翻译/人脸），默认全关；**回调验签解密见 7.4 下方说明** |
 | 数据源/分库 | `platform.data.datasource.*` | `DataSourceCustomAutoConfiguration`（master/slave/job；`@Primary` 直接返回 master，无自动读写路由） |
 | 验证码/IP/敏感词 | `platform.captcha/http/keyword/sensitive` | commons-core `extensions`（注意 `platform.parser` 默认开） |
 | 业务类型注册 | — | `BizTypeApi` / `sys_biz_type`，启动时由 `CoreApiImpl` 触发扫描入库 |

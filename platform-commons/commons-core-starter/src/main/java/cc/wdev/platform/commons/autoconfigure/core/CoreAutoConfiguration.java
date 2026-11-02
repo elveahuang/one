@@ -29,7 +29,6 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.RestClient;
-import tools.jackson.databind.SerializationFeature;
 
 /**
  * @author elvea
@@ -158,7 +157,7 @@ public class CoreAutoConfiguration {
     public JsonMapperBuilderCustomizer jsonMapperBuilderCustomizer() {
         return builder -> {
             builder.addModule(new CommonModule());
-            builder.enable(SerializationFeature.INDENT_OUTPUT);
+            // 不再全局开启 INDENT_OUTPUT：pretty-print 会显著膨胀响应体（AGENTS 已知问题），需要人工查看时用日志或工具格式化
             builder.changeDefaultPropertyInclusion(v -> v.withValueInclusion(JsonInclude.Include.NON_NULL));
             builder.changeDefaultPropertyInclusion(v -> v.withContentInclusion(JsonInclude.Include.NON_NULL));
         };

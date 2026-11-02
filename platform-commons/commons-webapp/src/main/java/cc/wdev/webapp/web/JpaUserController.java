@@ -1,5 +1,6 @@
 package cc.wdev.webapp.web;
 
+import cc.wdev.platform.commons.annotations.Authenticated;
 import cc.wdev.platform.commons.web.request.PageRequest;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
 import cc.wdev.webapp.jpa.service.JpaUserService;
@@ -18,6 +19,7 @@ public class JpaUserController extends AbstractController {
 
     private final JpaUserService jpaUserService;
 
+    @Authenticated
     @GetMapping(API_V1_JPA_USER_LIST)
     public Page<?> index(PageRequest request) {
         return this.jpaUserService.findByPage(request.getPageable());

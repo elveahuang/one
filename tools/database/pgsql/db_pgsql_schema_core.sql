@@ -374,6 +374,7 @@ CREATE TABLE sys_entity_authority
 
 CREATE INDEX ix_sys_entity_authority__entity ON sys_entity_authority (tenant_id, biz_type, entity_id);
 CREATE INDEX ix_sys_entity_authority__authority_id ON sys_entity_authority (authority_id);
+CREATE UNIQUE INDEX ux_sys_entity_authority__entity_authority ON sys_entity_authority (tenant_id, biz_type, entity_id, authority_id);
 
 COMMENT ON TABLE sys_entity_authority IS '实体-权限关联表';
 COMMENT ON COLUMN sys_entity_authority.id IS 'ID';
@@ -576,6 +577,7 @@ CREATE TABLE sys_role
 
 CREATE INDEX ix_sys_role__tenant_id ON sys_role (tenant_id);
 CREATE INDEX ix_sys_role__code ON sys_role (code);
+CREATE UNIQUE INDEX ux_sys_role__tenant_code ON sys_role (tenant_id, code) WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE sys_role IS '角色表';
 COMMENT ON COLUMN sys_role.id IS 'ID';
@@ -761,6 +763,9 @@ CREATE INDEX ix_sys_user__active ON sys_user (active);
 CREATE INDEX ix_sys_user__mobile ON sys_user (mobile_country_code, mobile_number);
 CREATE INDEX ix_sys_user__invite_code ON sys_user (invite_code);
 CREATE INDEX ix_sys_user__invite_by ON sys_user (invite_by);
+CREATE UNIQUE INDEX ux_sys_user__tenant_username ON sys_user (tenant_id, username) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX ux_sys_user__tenant_email ON sys_user (tenant_id, email) WHERE deleted_at IS NULL AND email <> '';
+CREATE UNIQUE INDEX ux_sys_user__tenant_mobile ON sys_user (tenant_id, mobile_country_code, mobile_number) WHERE deleted_at IS NULL AND mobile_number <> '';
 
 COMMENT ON TABLE sys_user IS '用户表';
 COMMENT ON COLUMN sys_user.id IS 'ID';
@@ -902,6 +907,7 @@ CREATE TABLE sys_user_role
 CREATE INDEX ix_sys_user_role__tenant_id ON sys_user_role (tenant_id);
 CREATE INDEX ix_sys_user_role__role_id ON sys_user_role (role_id);
 CREATE INDEX ix_sys_user_role__user_id ON sys_user_role (user_id);
+CREATE UNIQUE INDEX ux_sys_user_role__user_role ON sys_user_role (user_id, role_id);
 
 COMMENT ON TABLE sys_user_role IS '用户-角色关联表';
 COMMENT ON COLUMN sys_user_role.id IS 'ID';
@@ -1072,6 +1078,7 @@ CREATE TABLE sys_config
 CREATE INDEX ix_sys_config__tenant_id ON sys_config (tenant_id);
 CREATE INDEX ix_sys_config__key ON sys_config (config_key);
 CREATE INDEX ix_sys_config__group ON sys_config (config_group_type);
+CREATE UNIQUE INDEX ux_sys_config__tenant_key ON sys_config (tenant_id, config_key) WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE sys_config IS '系统设置表';
 COMMENT ON COLUMN sys_config.id IS 'ID';
@@ -1294,6 +1301,7 @@ CREATE TABLE sys_entity_label
 );
 
 CREATE INDEX ix_sys_entity_label ON sys_entity_label (entity_id, entity_class, entity_property);
+CREATE INDEX ix_sys_entity_label__lang_id ON sys_entity_label (lang_id);
 
 COMMENT ON TABLE sys_entity_label IS '实体多语言文本表';
 COMMENT ON COLUMN sys_entity_label.id IS 'ID';
@@ -1444,6 +1452,7 @@ CREATE TABLE sys_dict
 
 CREATE INDEX ix_sys_dict__biz_type ON sys_dict (biz_type, biz_id);
 CREATE INDEX ix_sys_dict__tenant_id ON sys_dict (tenant_id);
+CREATE INDEX ix_sys_dict__reference_id ON sys_dict (reference_id);
 
 COMMENT ON TABLE sys_dict IS '字典明细表';
 COMMENT ON COLUMN sys_dict.id IS 'ID';
@@ -1579,6 +1588,7 @@ CREATE TABLE sys_tag
 
 CREATE INDEX ix_sys_tag__tenant_id ON sys_tag (tenant_id);
 CREATE INDEX ix_sys_tag__biz_type ON sys_tag (biz_type, biz_id);
+CREATE INDEX ix_sys_tag__reference_id ON sys_tag (reference_id);
 
 COMMENT ON TABLE sys_tag IS '标签表';
 COMMENT ON COLUMN sys_tag.id IS 'ID';
@@ -2039,6 +2049,8 @@ CREATE TABLE sys_message_channel
     deleted_at    TIMESTAMP    NULL
 );
 
+CREATE INDEX ix_sys_message_channel__tenant_id ON sys_message_channel (tenant_id);
+
 COMMENT ON TABLE sys_message_channel IS '消息通道表';
 COMMENT ON COLUMN sys_message_channel.id IS 'ID';
 COMMENT ON COLUMN sys_message_channel.tenant_id IS '租户ID';
@@ -2366,6 +2378,10 @@ CREATE TABLE sys_notice
 CREATE INDEX ix_sys_notice__tenant_id ON sys_notice (tenant_id);
 CREATE INDEX ix_sys_notice__sender ON sys_notice (recipient_type, sender_id);
 CREATE INDEX ix_sys_notice__recipient ON sys_notice (sender_type, recipient_id);
+CREATE INDEX ix_sys_notice__recipient_id ON sys_notice (recipient_id, read_ind);
+CREATE INDEX ix_sys_message_type__tenant_id ON sys_message_type (tenant_id);
+CREATE INDEX ix_sys_message_template__tenant_id ON sys_message_template (tenant_id);
+CREATE INDEX ix_sys_message_user__user_id ON sys_message_user (user_id);
 
 COMMENT ON TABLE sys_notice IS '系统通知表';
 COMMENT ON COLUMN sys_notice.id IS 'ID';
@@ -2395,21 +2411,26 @@ DROP TABLE IF EXISTS sys_banner;
 
 CREATE TABLE sys_banner
 (
-    id          BIGSERIAL    NOT NULL PRIMARY KEY,
-    tenant_id   BIGINT       NOT NULL DEFAULT 0,
-    title       VARCHAR(150) NOT NULL DEFAULT '',
-    details     TEXT         NULL,
-    description TEXT         NULL,
-    idx         INT          NOT NULL DEFAULT 999,
-    status      SMALLINT     NOT NULL DEFAULT 1,
-    version     BIGINT       NOT NULL DEFAULT 0,
-    active      SMALLINT     NOT NULL DEFAULT 1,
-    created_by  BIGINT       NOT NULL DEFAULT 0,
-    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_by  BIGINT       NOT NULL DEFAULT 0,
-    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
-    deleted_by  BIGINT       NOT NULL DEFAULT 0,
-    deleted_at  TIMESTAMP    NULL
+    id                BIGSERIAL    NOT NULL PRIMARY KEY,
+    tenant_id         BIGINT       NOT NULL DEFAULT 0,
+    title             VARCHAR(150) NOT NULL DEFAULT '',
+    details           TEXT         NULL,
+    description       TEXT         NULL,
+    idx               INT          NOT NULL DEFAULT 999,
+    link_type         VARCHAR(50)  NOT NULL DEFAULT '',
+    link_params       VARCHAR(255) NOT NULL DEFAULT '',
+    link_external_url VARCHAR(500) NOT NULL DEFAULT '',
+    start_datetime    TIMESTAMP    NULL,
+    end_datetime      TIMESTAMP    NULL,
+    status            SMALLINT     NOT NULL DEFAULT 1,
+    version           BIGINT       NOT NULL DEFAULT 0,
+    active            SMALLINT     NOT NULL DEFAULT 1,
+    created_by        BIGINT       NOT NULL DEFAULT 0,
+    created_at        TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_by        BIGINT       NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMP    NOT NULL DEFAULT NOW(),
+    deleted_by        BIGINT       NOT NULL DEFAULT 0,
+    deleted_at        TIMESTAMP    NULL
 );
 
 CREATE INDEX ix_sys_banner__tenant_id ON sys_banner (tenant_id);
@@ -2421,6 +2442,11 @@ COMMENT ON COLUMN sys_banner.title IS '标题';
 COMMENT ON COLUMN sys_banner.details IS '详情';
 COMMENT ON COLUMN sys_banner.description IS '备注';
 COMMENT ON COLUMN sys_banner.idx IS '序号';
+COMMENT ON COLUMN sys_banner.link_type IS '链接类型（JOB/EXTERNAL）';
+COMMENT ON COLUMN sys_banner.link_params IS '链接参数（JSON）';
+COMMENT ON COLUMN sys_banner.link_external_url IS '外部链接地址';
+COMMENT ON COLUMN sys_banner.start_datetime IS '开始时间';
+COMMENT ON COLUMN sys_banner.end_datetime IS '结束时间';
 COMMENT ON COLUMN sys_banner.status IS '状态';
 COMMENT ON COLUMN sys_banner.version IS '版本号';
 COMMENT ON COLUMN sys_banner.active IS '启用状态';
@@ -2872,6 +2898,12 @@ CREATE TABLE sys_authorization
 );
 
 CREATE INDEX ix_sys_authorization__client_id ON sys_authorization (client_id);
+CREATE INDEX ix_sys_authorization__uid ON sys_authorization (uid);
+CREATE INDEX ix_sys_authorization__principal_name ON sys_authorization (principal_name);
+CREATE INDEX ix_sys_authorization__state ON sys_authorization (state);
+CREATE INDEX ix_sys_authorization__authorization_code_value ON sys_authorization (authorization_code_value);
+CREATE INDEX ix_sys_authorization__access_token_value ON sys_authorization (access_token_value);
+CREATE INDEX ix_sys_authorization__refresh_token_value ON sys_authorization (refresh_token_value);
 
 COMMENT ON TABLE sys_authorization IS '认证记录';
 COMMENT ON COLUMN sys_authorization.id IS 'ID';
@@ -2964,23 +2996,24 @@ DROP TABLE IF EXISTS sys_chat_session;
 
 CREATE TABLE sys_chat_session
 (
-    id              BIGSERIAL    NOT NULL PRIMARY KEY,
-    tenant_id       BIGINT       NOT NULL DEFAULT 0,
-    biz_type        VARCHAR(50)  NOT NULL DEFAULT '',
-    biz_id          BIGINT       NOT NULL DEFAULT 0,
-    user_id         BIGINT       NOT NULL DEFAULT 0,
-    target_user_id  BIGINT       NOT NULL DEFAULT 0,
-    last_message_id BIGINT       NOT NULL DEFAULT 0,
-    session_id      VARCHAR(100) NOT NULL DEFAULT '',
-    status          SMALLINT     NOT NULL DEFAULT 1,
-    version         BIGINT       NOT NULL DEFAULT 0,
-    active          SMALLINT     NOT NULL DEFAULT 1,
-    created_by      BIGINT       NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_by      BIGINT       NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
-    deleted_by      BIGINT       NOT NULL DEFAULT 0,
-    deleted_at      TIMESTAMP    NULL
+    id                   BIGSERIAL    NOT NULL PRIMARY KEY,
+    tenant_id            BIGINT       NOT NULL DEFAULT 0,
+    biz_type             VARCHAR(50)  NOT NULL DEFAULT '',
+    biz_id               BIGINT       NOT NULL DEFAULT 0,
+    user_id              BIGINT       NOT NULL DEFAULT 0,
+    target_user_id       BIGINT       NOT NULL DEFAULT 0,
+    last_message_id      BIGINT       NOT NULL DEFAULT 0,
+    last_message_send_at TIMESTAMP    NULL,
+    session_id           VARCHAR(100) NOT NULL DEFAULT '',
+    status               SMALLINT     NOT NULL DEFAULT 1,
+    version              BIGINT       NOT NULL DEFAULT 0,
+    active               SMALLINT     NOT NULL DEFAULT 1,
+    created_by           BIGINT       NOT NULL DEFAULT 0,
+    created_at           TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_by           BIGINT       NOT NULL DEFAULT 0,
+    updated_at           TIMESTAMP    NOT NULL DEFAULT NOW(),
+    deleted_by           BIGINT       NOT NULL DEFAULT 0,
+    deleted_at           TIMESTAMP    NULL
 );
 
 CREATE INDEX ix_sys_chat_session__tenant_id ON sys_chat_session (tenant_id);
@@ -2988,6 +3021,11 @@ CREATE INDEX ix_sys_chat_session__biz_type ON sys_chat_session (biz_type, biz_id
 CREATE INDEX ix_sys_chat_session__owner ON sys_chat_session (user_id);
 CREATE INDEX ix_sys_chat_session__target ON sys_chat_session (target_user_id);
 CREATE INDEX ix_sys_chat_session__session_id ON sys_chat_session (session_id);
+-- 同一业务实体下一对用户只应有一条会话（收发共用）；用最小/最大用户 ID 归一，防止并发创建出重复会话
+CREATE UNIQUE INDEX ux_sys_chat_session__pair ON sys_chat_session (
+                                                                   tenant_id, biz_type, biz_id,
+                                                                   LEAST(user_id, target_user_id), GREATEST(user_id, target_user_id)
+    ) WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE sys_chat_session IS '互动会话表';
 COMMENT ON COLUMN sys_chat_session.id IS 'ID';
@@ -2998,6 +3036,7 @@ COMMENT ON COLUMN sys_chat_session.user_id IS '用户ID';
 COMMENT ON COLUMN sys_chat_session.target_user_id IS '目标用户ID';
 COMMENT ON COLUMN sys_chat_session.session_id IS '会话标识';
 COMMENT ON COLUMN sys_chat_session.last_message_id IS '最新消息的ID';
+COMMENT ON COLUMN sys_chat_session.last_message_send_at IS '最新消息发送时间';
 COMMENT ON COLUMN sys_chat_session.status IS '状态';
 COMMENT ON COLUMN sys_chat_session.version IS '版本号';
 COMMENT ON COLUMN sys_chat_session.active IS '启用状态';
@@ -3297,7 +3336,9 @@ CREATE TABLE sys_ai_mcp_server
     protocol    VARCHAR(150) NOT NULL DEFAULT '',
     url         VARCHAR(255) NOT NULL DEFAULT '',
     headers     TEXT         NULL     DEFAULT NULL,
+    command     VARCHAR(255) NOT NULL DEFAULT '',
     args        TEXT         NULL     DEFAULT NULL,
+    env         TEXT         NULL     DEFAULT NULL,
     description VARCHAR(255) NOT NULL DEFAULT '',
     status      SMALLINT     NOT NULL DEFAULT 1,
     version     BIGINT       NOT NULL DEFAULT 0,
@@ -3320,8 +3361,10 @@ COMMENT ON COLUMN sys_ai_mcp_server.code IS '编号';
 COMMENT ON COLUMN sys_ai_mcp_server.title IS '标题';
 COMMENT ON COLUMN sys_ai_mcp_server.protocol IS '协议';
 COMMENT ON COLUMN sys_ai_mcp_server.url IS '服务地址';
-COMMENT ON COLUMN sys_ai_mcp_server.headers IS '请求头';
-COMMENT ON COLUMN sys_ai_mcp_server.args IS '参数';
+COMMENT ON COLUMN sys_ai_mcp_server.headers IS '请求头（JSON 对象）';
+COMMENT ON COLUMN sys_ai_mcp_server.command IS '启动命令（仅 stdio）';
+COMMENT ON COLUMN sys_ai_mcp_server.args IS '命令参数（JSON 数组，仅 stdio）';
+COMMENT ON COLUMN sys_ai_mcp_server.env IS '环境变量（JSON 对象，仅 stdio）';
 COMMENT ON COLUMN sys_ai_mcp_server.description IS '备注说明';
 COMMENT ON COLUMN sys_ai_mcp_server.status IS '状态';
 COMMENT ON COLUMN sys_ai_mcp_server.version IS '版本号';
@@ -3682,24 +3725,26 @@ DROP TABLE IF EXISTS sys_ai_kb_task;
 
 CREATE TABLE sys_ai_kb_task
 (
-    id          BIGSERIAL    NOT NULL PRIMARY KEY,
-    tenant_id   BIGINT       NOT NULL DEFAULT 0,
-    kb_id       BIGINT       NOT NULL DEFAULT 0,
-    kb_item_id  BIGINT       NOT NULL DEFAULT 0,
-    task_id     VARCHAR(150) NOT NULL DEFAULT '',
-    task_type   VARCHAR(50)  NOT NULL DEFAULT '',
-    progress    INT          NOT NULL DEFAULT 0,
-    token_usage BIGINT       NOT NULL DEFAULT 0,
-    exception   TEXT         NULL,
-    status      SMALLINT     NOT NULL DEFAULT 1,
-    version     BIGINT       NOT NULL DEFAULT 0,
-    active      SMALLINT     NOT NULL DEFAULT 1,
-    created_by  BIGINT       NOT NULL DEFAULT 0,
-    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_by  BIGINT       NOT NULL DEFAULT 0,
-    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
-    deleted_by  BIGINT       NOT NULL DEFAULT 0,
-    deleted_at  TIMESTAMP    NULL
+    id            BIGSERIAL    NOT NULL PRIMARY KEY,
+    tenant_id     BIGINT       NOT NULL DEFAULT 0,
+    kb_id         BIGINT       NOT NULL DEFAULT 0,
+    kb_item_id    BIGINT       NOT NULL DEFAULT 0,
+    task_id       VARCHAR(150) NOT NULL DEFAULT '',
+    task_type     VARCHAR(50)  NOT NULL DEFAULT '',
+    progress      INT          NOT NULL DEFAULT 0,
+    token_usage   BIGINT       NOT NULL DEFAULT 0,
+    exception     TEXT         NULL,
+    retry_count   INT          NOT NULL DEFAULT 0,
+    next_retry_at TIMESTAMP    NULL,
+    status        SMALLINT     NOT NULL DEFAULT 1,
+    version       BIGINT       NOT NULL DEFAULT 0,
+    active        SMALLINT     NOT NULL DEFAULT 1,
+    created_by    BIGINT       NOT NULL DEFAULT 0,
+    created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_by    BIGINT       NOT NULL DEFAULT 0,
+    updated_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
+    deleted_by    BIGINT       NOT NULL DEFAULT 0,
+    deleted_at    TIMESTAMP    NULL
 );
 
 CREATE INDEX ix_sys_ai_kb_task__tenant_id ON sys_ai_kb_task (tenant_id);
@@ -3717,6 +3762,8 @@ COMMENT ON COLUMN sys_ai_kb_task.task_type IS '任务类型（ITEM/REBUILD）';
 COMMENT ON COLUMN sys_ai_kb_task.progress IS '进度';
 COMMENT ON COLUMN sys_ai_kb_task.token_usage IS '消耗词元';
 COMMENT ON COLUMN sys_ai_kb_task.exception IS '异常信息';
+COMMENT ON COLUMN sys_ai_kb_task.retry_count IS '已重试次数';
+COMMENT ON COLUMN sys_ai_kb_task.next_retry_at IS '下次重试时间';
 COMMENT ON COLUMN sys_ai_kb_task.status IS '状态';
 COMMENT ON COLUMN sys_ai_kb_task.version IS '版本号';
 COMMENT ON COLUMN sys_ai_kb_task.active IS '启用状态';

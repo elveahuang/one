@@ -49,6 +49,11 @@ public class AuthorizationConsentServiceImpl
      */
     @Override
     public void deleteByKey(String clientId, String principalName) {
+        // 物理删除同意记录（等同关联表语义），并失效对应缓存
+        lambdaUpdateWrapper()
+            .eq(AuthorizationConsentEntity::getClientId, clientId)
+            .eq(AuthorizationConsentEntity::getPrincipalName, principalName)
+            .remove();
         CacheKey cacheKey = getCacheKeyGenerator().key(clientId, principalName);
         this.getCacheService().delete(cacheKey);
     }

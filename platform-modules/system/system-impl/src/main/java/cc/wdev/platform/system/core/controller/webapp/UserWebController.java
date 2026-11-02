@@ -11,8 +11,8 @@ import cc.wdev.platform.system.core.domain.dto.UserInfoDto;
 import cc.wdev.platform.system.core.domain.form.*;
 import cc.wdev.platform.system.core.domain.request.UserChangeInfoRequest;
 import cc.wdev.platform.system.core.domain.request.UserCheckRequest;
-import cc.wdev.platform.system.core.domain.request.UserOriPasswordCheckRequest;
 import cc.wdev.platform.system.core.domain.request.UserIdentitySideSwitchRequest;
+import cc.wdev.platform.system.core.domain.request.UserOriPasswordCheckRequest;
 import cc.wdev.platform.system.core.domain.vo.UserForgetPasswordVo;
 import cc.wdev.platform.system.core.domain.vo.UserIdentitySideVo;
 import cc.wdev.platform.system.core.domain.vo.UserSimpleInfoVo;
@@ -135,6 +135,7 @@ public class UserWebController {
     @Operation(summary = "用户注册")
     @ApiResponse(description = "用户注册")
     @PostMapping(API_V1_PREFIX + "/user/register")
+    @RateLimiter(type = IP)
     public R<?> register(@Parameter(description = "用户注册表单") @Valid UserRegisterForm form) {
         return userApi.register(form);
     }
@@ -153,6 +154,7 @@ public class UserWebController {
     @Operation(summary = "忘记密码")
     @ApiResponse(description = "忘记密码")
     @PostMapping(API_V1_PREFIX + "/user/forgot-password")
+    @RateLimiter(type = IP)
     public R<UserForgetPasswordVo> forgotPassword(@Parameter(description = "忘记密码表单") @Valid ForgotPasswordForm form) {
         return userApi.forgotPassword(form);
     }
@@ -161,6 +163,7 @@ public class UserWebController {
     @Operation(summary = "重置密码")
     @ApiResponse(description = "重置密码")
     @PostMapping(API_V1_PREFIX + "/user/reset-password")
+    @RateLimiter(type = IP)
     public R<?> resetPassword(@Parameter(description = "重置密码表单") @Valid ResetPasswordForm form) {
         return userApi.resetPassword(form);
     }

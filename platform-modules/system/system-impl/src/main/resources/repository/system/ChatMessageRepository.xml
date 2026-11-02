@@ -64,6 +64,7 @@
         on (cm.chat_session_id = cs.id
         and cs.active = 1
         and cs.biz_type = #{bizType}
+        and (cs.user_id = #{userId} or cs.target_user_id = #{userId})
         and cs.biz_id in
         <foreach collection="bizIds" item="bizId" open="(" separator="," close=")">
             #{bizId}
@@ -92,11 +93,15 @@
             select
             #{request.chatSessionId} as targetChatsessionId,
             #{request.lastReadMessageId} as targetLastMessageId,
-            #{request.clearAt} as targetClearAt
+            #{request.clearAt} as targetClearAt,
+            #{request.userId} as targetUserId
         </foreach>) t
         where cm.chat_session_id = t.targetChatsessionId
         and cm.id > t.targetLastMessageId
-        and cm.created_at > t.targetClearAt)
+        <!-- 未读只算对方发来的：排除自己发的消息 -->
+        and (t.targetUserId is null or cm.sender_user_id &lt;&gt; t.targetUserId)
+        <!-- clearAt 为空表示未清空过会话，不按时间水位过滤（NULL 比较恒为假会漏掉全部消息） -->
+        and (t.targetClearAt is null or cm.created_at > t.targetClearAt))
         group by cm.chat_session_id
     </select>
 

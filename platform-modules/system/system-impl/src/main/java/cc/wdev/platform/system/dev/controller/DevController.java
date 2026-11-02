@@ -1,9 +1,6 @@
 package cc.wdev.platform.system.dev.controller;
 
-import cc.wdev.platform.commons.annotations.Anonymous;
-import cc.wdev.platform.commons.annotations.DateTimeFormat;
-import cc.wdev.platform.commons.annotations.JsonFormat;
-import cc.wdev.platform.commons.annotations.OperationLog;
+import cc.wdev.platform.commons.annotations.*;
 import cc.wdev.platform.commons.constants.DateTimeConstants;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.message.model.SimpleTextMessage;
@@ -13,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.security.PermitAll;
 import lombok.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,7 +32,7 @@ public class DevController extends AbstractController {
 
     private final SystemWebSocketService systemWebSocketService;
 
-    @PermitAll
+    @Authenticated
     @OperationLog("发送广播消息")
     @Operation(summary = "发送广播消息")
     @ApiResponse(description = "发送广播消息")
@@ -44,7 +40,7 @@ public class DevController extends AbstractController {
     @PostMapping(API_V1_PREFIX + "/dev/message")
     public R<?> send(@Parameter(description = "消息内容") @RequestParam("message") String message) throws Exception {
         SimpleTextMessage simpleTextMessage = new SimpleTextMessage();
-        simpleTextMessage.setContent("Hello World");
+        simpleTextMessage.setContent(message);
         this.systemWebSocketService.publish(simpleTextMessage);
         return R.success(message);
     }

@@ -39,15 +39,15 @@ values (1001001, '1001001', 1),
 truncate sys_user;
 
 insert into sys_user (id, tenant_id, uid, username, email, mobile_country_code, mobile_number, display_name, password, source)
-values (1002001, 1000001, 0, 'admin', 'ee@elvea.cn', '86', '13500000000', 'Administrator',
+values (1002001, 1000001, 0, 'admin', 'ee@elvea.cn', '86', '13500000001', 'Administrator',
         '{bcrypt}$2a$10$z/deaEDovvc7n9q36xGOpun2sOPL75kPEVz9meaxlMoAjJhZdqEci', 1),
-       (1002002, 1000001, 0, 'test', 'me@elvea.cn', '86', '13500000000', 'User',
+       (1002002, 1000001, 0, 'test', 'me@elvea.cn', '86', '13500000002', 'User',
         '{bcrypt}$2a$10$0KT8RoEjGUhs9aatKjMniOh6DrkF4nhZRLUd5Sl8tHiXwZqr3CMtW', 1);
 
 insert into sys_user (id, tenant_id, uid, username, email, mobile_country_code, mobile_number, display_name, password, source)
-values (1002003, 1000002, 0, 'admin', 'ee@elvea.cn', '86', '13500000000', 'Administrator',
+values (1002003, 1000002, 0, 'admin', 'ee@elvea.cn', '86', '13500000001', 'Administrator',
         '{bcrypt}$2a$10$z/deaEDovvc7n9q36xGOpun2sOPL75kPEVz9meaxlMoAjJhZdqEci', 1),
-       (1002004, 1000002, 0, 'test', 'me@elvea.cn', '86', '13500000000', 'User',
+       (1002004, 1000002, 0, 'test', 'me@elvea.cn', '86', '13500000002', 'User',
         '{bcrypt}$2a$10$0KT8RoEjGUhs9aatKjMniOh6DrkF4nhZRLUd5Sl8tHiXwZqr3CMtW', 1);
 
 --

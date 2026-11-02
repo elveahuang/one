@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -36,6 +38,31 @@ public class BannerEntity extends BaseEntity {
      */
     @Schema(description = "序号")
     private Integer idx;
+    /**
+     * 链接类型（JOB/EXTERNAL）
+     */
+    @Schema(description = "链接类型")
+    private String linkType;
+    /**
+     * 链接参数（JSON）
+     */
+    @Schema(description = "链接参数")
+    private String linkParams;
+    /**
+     * 外部链接地址
+     */
+    @Schema(description = "外部链接地址")
+    private String linkExternalUrl;
+    /**
+     * 开始时间
+     */
+    @Schema(description = "开始时间")
+    private LocalDateTime startDatetime;
+    /**
+     * 结束时间
+     */
+    @Schema(description = "结束时间")
+    private LocalDateTime endDatetime;
     /**
      * 类型
      */

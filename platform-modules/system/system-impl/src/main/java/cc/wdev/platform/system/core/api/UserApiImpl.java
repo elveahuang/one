@@ -306,6 +306,7 @@ public class UserApiImpl implements UserApi {
      * @see UserApi#register(UserRegisterForm)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public R<?> register(UserRegisterForm form) {
         // 检测验证码
         CaptchaCheckRequest captchaCheckRequest = CaptchaCheckRequest.builder()

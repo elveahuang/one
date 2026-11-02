@@ -257,6 +257,12 @@ public class BannerServiceImpl extends BaseCachingEntityService<BannerEntity, Lo
             .id(entity.getId())
             .title(entity.getTitle())
             .idx(entity.getIdx())
+            .description(entity.getDescription())
+            .linkType(entity.getLinkType())
+            .linkParams(entity.getLinkParams())
+            .linkExternalUrl(entity.getLinkExternalUrl())
+            .startDatetime(entity.getStartDatetime())
+            .endDatetime(entity.getEndDatetime())
             .build();
         if (!ObjectUtils.isEmpty(entity.getCover())) {
             vo.setWebappCover(AttachmentVo.builder()

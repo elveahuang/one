@@ -51,6 +51,7 @@ public class CaptchaController extends AbstractController {
     @Operation(summary = "校验验证码")
     @ApiResponse(description = "校验验证码")
     @PostMapping(value = {API_V1_PREFIX + "/captcha/code/check", EXCHANGE_PREFIX + "/captcha/generate"})
+    @RateLimiter(type = IP)
     public R<Boolean> captchaCodeCheck(@Parameter(description = "验证码key") @RequestParam("captchaKey") String captchaKey,
                                        @Parameter(description = "验证码") @RequestParam("captchaValue") String captchaValue) {
         CaptchaCheckRequest request = CaptchaCheckRequest.builder()
@@ -77,6 +78,7 @@ public class CaptchaController extends AbstractController {
     @Operation(summary = "校验邮件验证码")
     @ApiResponse(description = "校验邮件验证码")
     @PostMapping(API_V1_PREFIX + "/captcha/mail/check")
+    @RateLimiter(type = IP)
     public R<Boolean> captchaEmailCheck(@Parameter(description = "邮箱") @RequestParam("email") String email,
                                         @Parameter(description = "验证码key") @RequestParam("captchaKey") String captchaKey,
                                         @Parameter(description = "验证码") @RequestParam("captchaValue") String captchaValue) {
@@ -111,6 +113,7 @@ public class CaptchaController extends AbstractController {
     @Operation(summary = "校验手机验证码")
     @ApiResponse(description = "校验手机验证码")
     @PostMapping(API_V1_PREFIX + "/captcha/sms/check")
+    @RateLimiter(type = IP)
     public R<Boolean> captchaMobileCheck(@Parameter(description = "国家区号") @RequestParam("mobileCountryCode") String mobileCountryCode,
                                          @Parameter(description = "手机号") @RequestParam("mobileNumber") String mobileNumber,
                                          @Parameter(description = "验证码key") @RequestParam("captchaKey") String captchaKey,

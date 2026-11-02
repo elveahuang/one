@@ -3,6 +3,8 @@ package cc.wdev.webapp.web;
 import cc.wdev.platform.commons.ai.domain.chat.SimpleChatResponse;
 import cc.wdev.platform.commons.ai.domain.request.SimpleChatRequest;
 import cc.wdev.platform.commons.annotations.Anonymous;
+import cc.wdev.platform.commons.annotations.Authenticated;
+import cc.wdev.platform.commons.annotations.RateLimiter;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.webapp.ai.service.AiService;
@@ -12,6 +14,8 @@ import org.apache.commons.compress.utils.Lists;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+
+import static cc.wdev.platform.commons.enums.RateLimitTypeEnum.IP;
 
 /**
  * @author elvea
@@ -34,13 +38,15 @@ public class ChatController {
         return R.success(response);
     }
 
-    @Anonymous
+    @Authenticated
+    @RateLimiter(type = IP)
     @PostMapping("/chat/text")
     public String chatCompletionText(@RequestBody SimpleChatRequest request) {
         return this.aiService.chatText(request);
     }
 
-    @Anonymous
+    @Authenticated
+    @RateLimiter(type = IP)
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chatCompletionStream(@RequestBody SimpleChatRequest request) {
         return this.aiService.chatStream(request);

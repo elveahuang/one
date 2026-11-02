@@ -1,0 +1,39 @@
+name: Quality
+
+on:
+    pull_request:
+        branches: [ main ]
+    push:
+        branches: [ main ]
+    workflow_dispatch:
+
+concurrency:
+    group: quality-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    # 后端：编译 + 不依赖外部中间件的纯单元测试。
+    # 注意：不要在这里跑 ./gradlew test —— 它会实跑依赖 PG/Redis/RabbitMQ 的 SpringBootTest。
+    backend:
+        runs-on: ubuntu-26.04
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v7
+            -   name: Setup Java
+                uses: actions/setup-java@v6
+                with:
+                    distribution: "liberica"
+                    java-version: "25"
+            -   name: Setup Gradle
+                uses: gradle/actions/setup-gradle@v4
+            -   name: Compile
+                run: |
+                    chmod a+x ./gradlew
+                    ./gradlew :platform-services:app-server:compileJava :platform-commons:commons-webapp:compileJava
+            -   name: Unit tests (no middleware)
+                run: |
+                    ./gradlew :platform-services:app-server:test \
+                        --tests "*AiVectorRetryBackoffTests*" \
+                        --tests "*ClientApiImplTests*" \
+                        --tests "*OrganizationBuildTreeTests*"
+                    ./gradlew :platform-commons:commons-webapp:test --tests "*MyBatisPlusUtilsSortTests*"
