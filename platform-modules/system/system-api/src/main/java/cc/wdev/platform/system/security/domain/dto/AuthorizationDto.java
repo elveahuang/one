@@ -3,6 +3,7 @@ package cc.wdev.platform.system.security.domain.dto;
 import cc.wdev.platform.commons.annotations.DateTimeFormat;
 import cc.wdev.platform.commons.annotations.JsonFormat;
 import cc.wdev.platform.commons.constants.DateTimeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -46,6 +47,7 @@ public class AuthorizationDto implements Serializable {
      * -----------------------------------------------------------------------------------------------------------------
      */
     @Schema(description = "授权码值")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String authorizationCodeValue;
     @Schema(description = "授权码元数据")
     private String authorizationCodeMetadata;
@@ -64,6 +66,7 @@ public class AuthorizationDto implements Serializable {
      * -----------------------------------------------------------------------------------------------------------------
      */
     @Schema(description = "访问令牌值")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String accessTokenValue;
     @Schema(description = "访问令牌元数据")
     private String accessTokenMetadata;
@@ -86,6 +89,7 @@ public class AuthorizationDto implements Serializable {
      * -----------------------------------------------------------------------------------------------------------------
      */
     @Schema(description = "OIDC ID令牌值")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String oidcIdTokenValue;
     @Schema(description = "OIDC ID令牌元数据")
     private String oidcIdTokenMetadata;
@@ -106,6 +110,7 @@ public class AuthorizationDto implements Serializable {
      * -----------------------------------------------------------------------------------------------------------------
      */
     @Schema(description = "刷新令牌值")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String refreshTokenValue;
     @Schema(description = "刷新令牌元数据")
     private String refreshTokenMetadata;

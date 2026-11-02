@@ -67,6 +67,8 @@ public interface SecurityConstants {
 
     String API_MCP_REQUEST_PATH = "/api/mcp/**";
 
+    String EXCHANGE_REQUEST_PATH = "/exchange/**";
+
     String ADMIN_API_REQUEST_PATH = "/api/admin/**";
 
     String ADMIN_REQUEST_PATH = "/admin/**";

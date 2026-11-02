@@ -65,10 +65,32 @@ public class WebSecurityConfiguration {
     }
 
     /**
-     * 接口安全设置
+     * 内部服务间调用安全设置：/exchange/** 不再落入兜底放行链，需携带有效令牌
      */
     @Bean
     @Order(2)
+    public SecurityFilterChain exchangeSecurityFilterChain(HttpSecurity http) throws Exception {
+        log.info("Creating exchangeSecurityFilterChain for App Server...");
+
+        http.securityMatcher(EXCHANGE_REQUEST_PATH)
+            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(authz -> authz.anyRequest().authenticated())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .oauth2ResourceServer((resourceServerConfigurer) -> resourceServerConfigurer.jwt(jwtConfigurer -> {
+                jwtConfigurer.decoder(jwtDecoder);
+                jwtConfigurer.jwtAuthenticationConverter(this.jwtAuthenticationConverter);
+            }));
+        return http.build();
+    }
+
+    /**
+     * 接口安全设置
+     */
+    @Bean
+    @Order(3)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         log.info("Creating apiSecurityFilterChain for App Server...");
         log.info("Whitelist [api] : [{}].", JacksonUtils.toJson(GLOBAL_WEB_EXCLUDE_URLS));
@@ -93,7 +115,7 @@ public class WebSecurityConfiguration {
      * 默认安全设置
      */
     @Bean
-    @Order(3)
+    @Order(4)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         log.info("Creating defaultSecurityFilterChain for App Server...");
         log.info("Whitelist [default] : [{}].", JacksonUtils.toJson(GLOBAL_WEB_EXCLUDE_URLS));
