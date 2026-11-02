@@ -89,6 +89,8 @@ public class PositionServiceImpl extends BaseCachingEntityService<PositionEntity
             .eq(ObjectUtils.isValidId(request.getParentId()), PositionEntity::getParentId, request.getParentId())
             .eq(request.getStatus() != null, PositionEntity::getStatus, request.getStatus())
             .eq(PositionEntity::getActive, ActiveTypeEnum.ENABLED.getValue());
+        // 排序字段仅允许白名单内的列，非法列置空后走默认排序
+        request.check(List.of("id", "code", "title", "created_at", "createdAt", "updated_at", "updatedAt"));
         applySort(request.getSort(), request.getOrder(), wrapper);
         IPage<PositionEntity> page = wrapper.page(getMyBatisPlusPage(request.getPageable()));
 

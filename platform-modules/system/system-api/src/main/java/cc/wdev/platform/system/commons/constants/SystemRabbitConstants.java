@@ -13,6 +13,8 @@ public interface SystemRabbitConstants {
 
     String COMMON_DEAD_LETTER_PREFIX = "dead-letter.";
 
+    String COMMON_DEAD_LETTER_QUEUE = COMMON_DEAD_LETTER_PREFIX + "QUEUE";
+
     String ARG_MESSAGE_TTL = "x-message-ttl";
 
     // --------------------------------------------------------------------------------
@@ -28,10 +30,6 @@ public interface SystemRabbitConstants {
     String OPERATION_LOG_QUEUE = "OPERATION_LOG_QUEUE";
 
     String MESSAGE_QUEUE = "MESSAGE_QUEUE";
-
-    String ACCOUNT_SYNC_QUEUE = "ACCOUNT_SYNC_QUEUE";
-
-    String ADDRESS_SYNC_QUEUE = "ADDRESS_SYNC_QUEUE";
 
     String MULTIPLE_LOGIN_QUEUE = "MULTIPLE_LOGIN_QUEUE";
 

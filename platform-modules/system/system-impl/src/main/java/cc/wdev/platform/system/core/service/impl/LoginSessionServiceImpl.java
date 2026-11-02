@@ -75,6 +75,8 @@ public class LoginSessionServiceImpl extends BaseCachingEntityService<LoginSessi
     @Override
     public Page<LoginSessionEntity> findLoginSessionList(LoginSessionSearchRequest request) {
         request.setUserId(SecurityUtils.getUid());
+        // 排序字段仅允许白名单内的列，非法列置空后走默认排序
+        request.check(List.of("id", "username", "session_id", "sessionId", "created_at", "createdAt", "updated_at", "updatedAt"));
         IPage<LoginSessionEntity> page = this.lambdaQueryWrapper()
             .and(StringUtils.isNotEmpty(request.getQ()), wrapper -> {
                 wrapper.like(LoginSessionEntity::getUsername, request.getQ());

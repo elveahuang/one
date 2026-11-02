@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -74,6 +75,7 @@ public class TagRelationServiceImpl
      * @see TagRelationService#saveRelation(RelationSaveRequest)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void saveRelation(RelationSaveRequest request) {
         String relationType = StringUtils.nvl(request.getRelationBizType(), request.getBizType());
         if (!ObjectUtils.isValidId(request.getBizId()) || StringUtils.isEmpty(relationType)) {

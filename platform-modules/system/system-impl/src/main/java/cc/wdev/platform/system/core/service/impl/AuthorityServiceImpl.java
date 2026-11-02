@@ -2,6 +2,7 @@ package cc.wdev.platform.system.core.service.impl;
 
 import cc.wdev.platform.commons.core.cache.CacheKeyGenerator;
 import cc.wdev.platform.commons.core.cache.SimpleCacheKeyGenerator;
+import cc.wdev.platform.commons.core.identity.IdentitySideContext;
 import cc.wdev.platform.commons.core.tenant.TenantContext;
 import cc.wdev.platform.commons.data.mybatis.service.BaseCachingEntityService;
 import cc.wdev.platform.commons.enums.ActiveTypeEnum;
@@ -13,7 +14,6 @@ import cc.wdev.platform.system.commons.enums.BizScopeTypeEnum;
 import cc.wdev.platform.system.commons.enums.EntityAuthorityBizTypeEnum;
 import cc.wdev.platform.system.commons.enums.IdentitySideEnum;
 import cc.wdev.platform.system.core.cache.UserAuthorityCacheKeyGenerator;
-import cc.wdev.platform.commons.core.identity.IdentitySideContext;
 import cc.wdev.platform.system.core.domain.converter.AuthorityConverter;
 import cc.wdev.platform.system.core.domain.entity.AuthorityEntity;
 import cc.wdev.platform.system.core.domain.vo.AuthorityVo;

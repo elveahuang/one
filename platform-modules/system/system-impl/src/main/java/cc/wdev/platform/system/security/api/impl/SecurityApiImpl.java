@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
@@ -57,6 +58,7 @@ public class SecurityApiImpl implements SecurityApi {
      * @see SecurityApi#initialize()
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void initialize() {
         // 初始化权限
         this.initializeAuthority();

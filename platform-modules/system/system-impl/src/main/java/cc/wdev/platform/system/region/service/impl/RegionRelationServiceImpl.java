@@ -12,6 +12,7 @@ import cc.wdev.platform.system.region.service.RegionRelationService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,6 +46,7 @@ public class RegionRelationServiceImpl extends BaseEntityService<RegionRelationE
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void saveRelation(RelationSaveRequest request) {
         String relationType = StringUtils.nvl(request.getRelationBizType(), request.getBizType());
         if (!ObjectUtils.isValidId(request.getBizId()) || StringUtils.isEmpty(relationType)) {

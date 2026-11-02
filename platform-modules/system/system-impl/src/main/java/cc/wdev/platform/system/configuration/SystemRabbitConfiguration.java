@@ -39,14 +39,23 @@ public class SystemRabbitConfiguration {
         return new Queue(MESSAGE_QUEUE);
     }
 
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // 公共死信：消费失败的消息在应用层转入死信交换机留存，便于人工排查（不改动既有队列参数）
+    // --------------------------------------------------------------------------------------------------------------------------------
+
     @Bean
-    public Queue accountSyncQueue() {
-        return new Queue(ACCOUNT_SYNC_QUEUE);
+    public FanoutExchange commonDeadLetterExchange() {
+        return ExchangeBuilder.fanoutExchange(COMMON_DEAD_LETTER_EXCHANGE).durable(true).build();
     }
 
     @Bean
-    public Queue addressSyncQueue() {
-        return new Queue(ADDRESS_SYNC_QUEUE);
+    public Queue commonDeadLetterQueue() {
+        return QueueBuilder.durable(COMMON_DEAD_LETTER_QUEUE).build();
+    }
+
+    @Bean
+    public Binding commonDeadLetterBinding() {
+        return BindingBuilder.bind(commonDeadLetterQueue()).to(commonDeadLetterExchange());
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------

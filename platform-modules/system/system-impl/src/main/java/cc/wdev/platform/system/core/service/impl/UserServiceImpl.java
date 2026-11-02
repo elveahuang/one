@@ -82,6 +82,9 @@ public class UserServiceImpl extends BaseCachingEntityService<UserEntity, Long, 
      */
     @Override
     public Page<UserEntity> search(UserSearchRequest request) {
+        // 排序字段仅允许白名单内的列，非法列置空后走默认排序
+        request.check(List.of("id", "username", "name", "display_name", "displayName", "email",
+            "created_at", "createdAt", "updated_at", "updatedAt"));
         IPage<UserEntity> page = this.lambdaQueryWrapper()
             .and(isNotEmpty(request.getQ()), wrapper -> wrapper
                 .like(UserEntity::getUsername, request.getQ())

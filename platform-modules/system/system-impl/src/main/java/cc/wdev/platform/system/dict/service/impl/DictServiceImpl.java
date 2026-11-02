@@ -328,6 +328,7 @@ public class DictServiceImpl extends BaseCachingEntityService<DictEntity, Long, 
      * @see EntityService#deleteById(Serializable)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteById(Long id) {
         DictEntity entity = findById(id);
 
@@ -342,6 +343,7 @@ public class DictServiceImpl extends BaseCachingEntityService<DictEntity, Long, 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteByCode(DictRequest request) {
         DictEntity entity = findByCode(request);
         if (ObjectUtils.isEmpty(entity)) {

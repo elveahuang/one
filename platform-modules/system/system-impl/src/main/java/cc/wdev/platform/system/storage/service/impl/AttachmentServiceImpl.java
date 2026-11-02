@@ -47,6 +47,8 @@ public class AttachmentServiceImpl
                 .or().like(AttachmentEntity::getFilename, request.getQ()))
             .eq(StringUtils.isNotEmpty(request.getBizType()), AttachmentEntity::getBizType, request.getBizType())
             .eq(AttachmentEntity::getActive, ActiveTypeEnum.ENABLED.getValue());
+        // 排序字段仅允许白名单内的列，非法列置空后走默认排序
+        request.check(List.of("id", "original_filename", "originalFilename", "size", "created_at", "createdAt"));
         applySort(request.getSort(), request.getOrder(), wrapper);
         IPage<AttachmentEntity> page = wrapper.page(getMyBatisPlusPage(request.getPageable()));
         if (CollectionUtils.isNotEmpty(page.getRecords())) {

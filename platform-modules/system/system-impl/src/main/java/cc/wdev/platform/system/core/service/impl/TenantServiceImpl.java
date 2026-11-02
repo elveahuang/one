@@ -88,6 +88,9 @@ public class TenantServiceImpl extends BaseCachingEntityService<TenantEntity, Lo
      */
     @Override
     public Page<TenantVo> findTenantPage(TenantSearchRequest request) {
+        // 排序字段仅允许白名单内的列，非法列置空后走默认排序
+        request.check(List.of("id", "code", "title", "expiration_date", "expirationDate",
+            "registration_date", "registrationDate", "created_at", "createdAt", "updated_at", "updatedAt"));
         IPage<TenantEntity> page = this.lambdaQueryWrapper()
             .and(StringUtils.isNotEmpty(request.getQ()), wrapper -> wrapper
                 .like(TenantEntity::getCode, request.getQ())
@@ -148,6 +151,7 @@ public class TenantServiceImpl extends BaseCachingEntityService<TenantEntity, Lo
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void editTenant(EditTenantForm form) {
         TenantEntity entity = this.checkExist(form.getId());
 
@@ -203,6 +207,7 @@ public class TenantServiceImpl extends BaseCachingEntityService<TenantEntity, Lo
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteTenant(Long tenantId) {
         TenantEntity entity = this.checkExist(tenantId);
         // 删除租户
@@ -214,7 +219,17 @@ public class TenantServiceImpl extends BaseCachingEntityService<TenantEntity, Lo
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void batchDeleteTenant(List<Long> tenantIds) {
+        if (CollectionUtils.isEmpty(tenantIds)) {
+            return;
+        }
+        for (Long tenantId : tenantIds) {
+            TenantEntity entity = this.checkExist(tenantId);
+            this.delete(entity);
+            entityPackageService.deletePackage(EntityPackageBizTypeEnum.TENANT, tenantId);
+            entityAuthorityService.deleteAuthority(EntityAuthorityBizTypeEnum.TENANT, tenantId);
+        }
     }
 
     @Override
@@ -225,6 +240,7 @@ public class TenantServiceImpl extends BaseCachingEntityService<TenantEntity, Lo
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void syncPackage(Long tenantId) {
         TenantEntity entity = this.checkExist(tenantId);
 

@@ -17,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Arrays;
@@ -83,6 +84,7 @@ public class DictRelationServiceImpl extends BaseCachingEntityService<DictRelati
      * @see DictRelationService#saveRelation(RelationSaveRequest)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void saveRelation(RelationSaveRequest request) {
         String relationType = StringUtils.nvl(request.getRelationBizType(), request.getBizType());
         if (!ObjectUtils.isValidId(request.getBizId()) || StringUtils.isEmpty(relationType)) {

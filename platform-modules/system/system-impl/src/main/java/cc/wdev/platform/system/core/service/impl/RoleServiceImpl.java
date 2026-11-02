@@ -227,6 +227,7 @@ public class RoleServiceImpl extends BaseCachingEntityService<RoleEntity, Long, 
                 w.like(RoleEntity::getCode, req.getQ()).or().like(RoleEntity::getTitle, req.getQ()))
             .eq(RoleEntity::getActive, ActiveTypeEnum.ENABLED.getValue());
         // 排序字段仅允许白名单内的列
+        req.check(List.of("id", "code", "title", "created_at", "createdAt", "updated_at", "updatedAt"));
         boolean asc = !"desc".equalsIgnoreCase(req.getOrder());
         switch (StringUtils.isNotEmpty(req.getSort()) ? req.getSort() : "id") {
             case "code" -> wrapper.orderBy(true, asc, RoleEntity::getCode);

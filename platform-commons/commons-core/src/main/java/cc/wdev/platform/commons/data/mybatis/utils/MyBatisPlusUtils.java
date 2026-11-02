@@ -61,9 +61,22 @@ public abstract class MyBatisPlusUtils {
      */
     private static final Pattern SORT_COLUMN_PATTERN = Pattern.compile("^[a-zA-Z0-9_.]+$");
 
+    /**
+     * 敏感列黑名单：即使列名合法，也不允许作为前端可控排序列（防止借助排序侧信道探测敏感数据）
+     */
+    private static final List<String> SORT_COLUMN_BLOCKLIST = List.of(
+        "password", "secret", "client_secret", "token", "access_token", "refresh_token", "salt", "api_key", "apikey"
+    );
+
     private static String safeSortColumn(String column) {
         if (Strings.isNullOrEmpty(column) || !SORT_COLUMN_PATTERN.matcher(column).matches()) {
             return null;
+        }
+        String normalized = column.toLowerCase();
+        for (String blocked : SORT_COLUMN_BLOCKLIST) {
+            if (normalized.equals(blocked)) {
+                return null;
+            }
         }
         return column;
     }

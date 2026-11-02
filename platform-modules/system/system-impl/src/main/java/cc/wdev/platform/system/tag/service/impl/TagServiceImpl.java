@@ -257,6 +257,7 @@ public class TagServiceImpl extends BaseCachingEntityService<TagEntity, Long, Ta
      * @see EntityService#deleteById(Serializable)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteById(Long id) {
         TagEntity entity = findById(id);
         if (ObjectUtils.isEmpty(entity)) {
@@ -270,6 +271,7 @@ public class TagServiceImpl extends BaseCachingEntityService<TagEntity, Long, Ta
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteByTitle(String title) {
         TagEntity entity = findByTitle(title);
         if (ObjectUtils.isEmpty(entity)) {
@@ -321,6 +323,7 @@ public class TagServiceImpl extends BaseCachingEntityService<TagEntity, Long, Ta
      * @see TagService#deleteByType(String)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteByType(String bizType) {
         lambdaQueryWrapper()
             .eq(TagEntity::getBizType, bizType)
