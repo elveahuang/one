@@ -3,6 +3,7 @@ package cc.wdev.platform.system.message.service.impl;
 import cc.wdev.platform.commons.data.mybatis.service.BaseEntityService;
 import cc.wdev.platform.commons.data.mybatis.utils.MyBatisPlusUtils;
 import cc.wdev.platform.commons.enums.ActiveTypeEnum;
+import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.SecurityUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
 import cc.wdev.platform.system.message.domain.entity.NoticeEntity;
@@ -14,7 +15,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 
 import static cc.wdev.platform.commons.data.mybatis.utils.MyBatisPlusUtils.getMyBatisPlusPage;
@@ -33,6 +36,8 @@ public class NoticeServiceImpl extends BaseEntityService<NoticeEntity, Long, Not
     @Override
     public Page<NoticeEntity> findMyNoticeByUserId(NoticeSearchRequest request) {
         request.setUserId(SecurityUtils.getUid());
+        // 排序字段仅允许白名单内的列，非法列置空后走默认排序
+        request.check(List.of("id", "read_ind", "readInd", "created_at", "createdAt"));
         IPage<NoticeEntity> page = this.lambdaQueryWrapper()
             .eq(NoticeEntity::getRecipientId, request.getUserId())
             .eq(NoticeEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
@@ -73,6 +78,52 @@ public class NoticeServiceImpl extends BaseEntityService<NoticeEntity, Long, Not
             .eq(NoticeEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
             .page(getMyBatisPlusPage(noticeSearchRequest.getPageable()));
         return MyBatisPlusUtils.toSpringDataPage(page);
+    }
+
+    /**
+     * @see NoticeService#countUnread()
+     */
+    @Override
+    public long countUnread() {
+        return this.lambdaQueryWrapper()
+            .eq(NoticeEntity::getRecipientId, SecurityUtils.getUid())
+            .ne(NoticeEntity::getReadInd, 1)
+            .eq(NoticeEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .count();
+    }
+
+    /**
+     * @see NoticeService#markRead(List)
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void markRead(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
+        // 更新条件强制带当前用户，避免越权修改他人已读状态
+        this.lambdaUpdateWrapper()
+            .eq(NoticeEntity::getRecipientId, SecurityUtils.getUid())
+            .ne(NoticeEntity::getReadInd, 1)
+            .in(NoticeEntity::getId, ids)
+            .eq(NoticeEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .set(NoticeEntity::getReadInd, 1)
+            .set(NoticeEntity::getReadDatetime, getCurLocalDateTime())
+            .update();
+    }
+
+    /**
+     * @see NoticeService#markAllRead()
+     */
+    @Override
+    public void markAllRead() {
+        this.lambdaUpdateWrapper()
+            .eq(NoticeEntity::getRecipientId, SecurityUtils.getUid())
+            .ne(NoticeEntity::getReadInd, 1)
+            .eq(NoticeEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .set(NoticeEntity::getReadInd, 1)
+            .set(NoticeEntity::getReadDatetime, getCurLocalDateTime())
+            .update();
     }
 
 }

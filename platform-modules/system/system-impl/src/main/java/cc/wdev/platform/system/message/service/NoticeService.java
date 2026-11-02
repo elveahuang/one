@@ -5,6 +5,8 @@ import cc.wdev.platform.system.message.domain.entity.NoticeEntity;
 import cc.wdev.platform.system.message.request.NoticeSearchRequest;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 /**
  * @author elvea
  */
@@ -24,5 +26,20 @@ public interface NoticeService extends EntityService<NoticeEntity, Long> {
      * 管理端公告分页列表（租户内全量，不按收件人过滤）
      */
     Page<NoticeEntity> findNoticeByPage(NoticeSearchRequest noticeSearchRequest);
+
+    /**
+     * 当前登录用户的未读通知数
+     */
+    long countUnread();
+
+    /**
+     * 把指定通知标记为已读（仅限本人收到的通知）
+     */
+    void markRead(List<Long> ids);
+
+    /**
+     * 把当前登录用户的全部未读通知标记为已读
+     */
+    void markAllRead();
 
 }

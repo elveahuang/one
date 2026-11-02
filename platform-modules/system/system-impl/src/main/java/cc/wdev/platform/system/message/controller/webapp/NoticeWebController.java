@@ -1,6 +1,7 @@
 package cc.wdev.platform.system.message.controller.webapp;
 
 import cc.wdev.platform.commons.annotations.Authenticated;
+import cc.wdev.platform.commons.annotations.OperationLog;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.enums.ResponseCodeEnum;
 import cc.wdev.platform.commons.exception.ServiceException;
@@ -16,8 +17,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_PREFIX;
 
@@ -50,6 +54,34 @@ public class NoticeWebController extends AbstractController {
             throw new ServiceException(ResponseCodeEnum.OPERATION_PERMISSION_ERROR);
         }
         return R.success(entity);
+    }
+
+    @Authenticated
+    @Operation(summary = "获取未读通知数")
+    @ApiResponse(description = "获取未读通知数")
+    @PostMapping(API_V1_PREFIX + "/notice/unread-count")
+    public R<Long> unreadCount() {
+        return R.success(noticeService.countUnread());
+    }
+
+    @Authenticated
+    @OperationLog("标记通知已读")
+    @Operation(summary = "标记通知已读")
+    @ApiResponse(description = "标记通知已读")
+    @PostMapping(API_V1_PREFIX + "/notice/read")
+    public R<?> read(@Parameter(description = "通知ID列表") @RequestBody(required = false) List<Long> ids) {
+        noticeService.markRead(ids);
+        return R.success();
+    }
+
+    @Authenticated
+    @OperationLog("全部通知标记已读")
+    @Operation(summary = "全部通知标记已读")
+    @ApiResponse(description = "全部通知标记已读")
+    @PostMapping(API_V1_PREFIX + "/notice/read-all")
+    public R<?> readAll() {
+        noticeService.markAllRead();
+        return R.success();
     }
 
 }

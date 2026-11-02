@@ -1,5 +1,7 @@
 package cc.wdev.platform.system.open.controller.webapp;
 
+import cc.wdev.platform.commons.annotations.Authenticated;
+import cc.wdev.platform.commons.annotations.RateLimiter;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.enums.BaseEnum;
 import cc.wdev.platform.commons.exception.ServiceException;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 
+import static cc.wdev.platform.commons.enums.RateLimitTypeEnum.IP;
 import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_PREFIX;
 
 /**
@@ -114,6 +117,8 @@ public class WxMpWebController extends AbstractController {
         return outMessage.toXml();
     }
 
+    @Authenticated
+    @RateLimiter(type = IP)
     @PostMapping(API_V1_PREFIX + "/oapis/wechat/mp/upload")
     public R<AttachmentFileVo> uploadMedia(AttachmentRequest request, @RequestParam("mediaId") String mediaId) {
         try {

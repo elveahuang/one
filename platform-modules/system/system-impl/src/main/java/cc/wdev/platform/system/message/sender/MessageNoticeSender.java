@@ -1,6 +1,8 @@
 package cc.wdev.platform.system.message.sender;
 
+import cc.wdev.platform.commons.message.model.SimpleTextMessage;
 import cc.wdev.platform.commons.utils.ExceptionUtils;
+import cc.wdev.platform.system.core.socket.SystemWebSocketService;
 import cc.wdev.platform.system.message.MessageSender;
 import cc.wdev.platform.system.message.domain.dto.MessageRecipientDto;
 import cc.wdev.platform.system.message.domain.dto.SendMessageDto;
@@ -10,6 +12,8 @@ import cc.wdev.platform.system.message.service.NoticeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @author elvea
@@ -21,6 +25,8 @@ public class MessageNoticeSender implements MessageSender {
     private NoticeService noticeService;
 
     private MessageContentService messageContentService;
+
+    private SystemWebSocketService systemWebSocketService;
 
     @Override
     public void send(SendMessageDto message) {
@@ -42,6 +48,9 @@ public class MessageNoticeSender implements MessageSender {
 
                 this.noticeService.save(entity);
 
+                // 在线用户实时推送（未启用 WebSocket 时跳过）
+                this.publishWebSocketNotice(entity);
+
                 // 设置消息内容发送状态
                 this.messageContentService.success(message.getContentId(), "Success");
                 log.info("Send notice message. message id [{}]. message content id [{}]. done", message.getId(), message.getContentId());
@@ -53,6 +62,23 @@ public class MessageNoticeSender implements MessageSender {
         }
     }
 
+    /**
+     * 向收件人的在线会话推送新通知提醒；离线场景由 sys_notice 落库兜底
+     */
+    private void publishWebSocketNotice(NoticeEntity entity) {
+        if (this.systemWebSocketService == null) {
+            return;
+        }
+        try {
+            SimpleTextMessage textMessage = new SimpleTextMessage();
+            textMessage.setContent(entity.getSubject());
+            textMessage.setReceivers(List.of(entity.getRecipientId()));
+            this.systemWebSocketService.publish(textMessage);
+        } catch (Exception e) {
+            log.warn("Publish notice websocket message failed. notice id - [{}].", entity.getId(), e);
+        }
+    }
+
     @Autowired(required = false)
     public void setNoticeService(NoticeService noticeService) {
         this.noticeService = noticeService;
@@ -61,6 +87,11 @@ public class MessageNoticeSender implements MessageSender {
     @Autowired
     public void setMessageContentService(MessageContentService messageContentService) {
         this.messageContentService = messageContentService;
+    }
+
+    @Autowired(required = false)
+    public void setSystemWebSocketService(SystemWebSocketService systemWebSocketService) {
+        this.systemWebSocketService = systemWebSocketService;
     }
 
 }

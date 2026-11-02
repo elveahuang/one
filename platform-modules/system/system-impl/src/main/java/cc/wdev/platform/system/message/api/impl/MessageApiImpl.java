@@ -33,7 +33,6 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
@@ -82,6 +81,7 @@ public class MessageApiImpl implements MessageApi {
      * @see MessageApi#createMessage(CreateMessageDto)
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long createMessage(CreateMessageDto message) throws Exception {
         log.info("Create message. type - [{}]. start.", message.getType());
 
@@ -208,10 +208,10 @@ public class MessageApiImpl implements MessageApi {
 
         log.info("Create message. type - [{}]. id - [{}]. done.", messageTypeCode, messageId);
 
-        // 如果是立刻发送，消息创建完成后，直接推到消息队列
+        // 如果是立刻发送，事务提交后再推到消息队列（消费者需要读到已提交的消息记录）
         if (MessageTargetTypeEnum.IMMEDIATE.equals(message.getTargetType())) {
             log.info("Create message. type - [{}]. id - [{}]. send to message queue.", messageTypeCode, messageId);
-            this.messageRabbitService.send(SystemRabbitConstants.MESSAGE_QUEUE, SendMessageAmqpDto.builder().id(messageId).build());
+            this.messageRabbitService.sendAfterCommit(SystemRabbitConstants.MESSAGE_QUEUE, SendMessageAmqpDto.builder().id(messageId).build());
         }
 
         return messageId;
@@ -221,7 +221,7 @@ public class MessageApiImpl implements MessageApi {
      * @see MessageApi#sendMessage()
      */
     @Override
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
+    @Transactional(rollbackFor = Exception.class)
     public void sendMessage() {
         log.info("Send message. start.");
 
@@ -237,8 +237,8 @@ public class MessageApiImpl implements MessageApi {
                     messageEntity.setStatus(MessageStatusEnum.SENDING.getValue());
                     this.messageService.save(messageEntity);
 
-                    // 推送到消息队列
-                    this.messageRabbitService.send(SystemRabbitConstants.MESSAGE_QUEUE, SendMessageAmqpDto.builder().id(messageEntity.getId()).build());
+                    // 推送到消息队列（提交后再发，消费者随后会再次读取状态，避免读到未提交的 SENDING）
+                    this.messageRabbitService.sendAfterCommit(SystemRabbitConstants.MESSAGE_QUEUE, SendMessageAmqpDto.builder().id(messageEntity.getId()).build());
 
                     log.info("Send message. id - [{}]. done.", messageEntity.getId());
                 } catch (Exception e) {
