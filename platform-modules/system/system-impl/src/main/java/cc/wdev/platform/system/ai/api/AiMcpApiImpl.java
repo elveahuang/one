@@ -1,31 +1,40 @@
-package cc.wdev.platform.system.ai.support;
+package cc.wdev.platform.system.ai.api;
 
+import cc.wdev.platform.commons.domain.DeleteRequest;
+import cc.wdev.platform.commons.domain.GetRequest;
+import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.JacksonUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
+import cc.wdev.platform.system.ai.domain.request.AiMcpServerSaveRequest;
+import cc.wdev.platform.system.ai.domain.request.AiMcpServerSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiMcpServerVo;
+import cc.wdev.platform.system.ai.service.AiMcpServerService;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
-import io.modelcontextprotocol.client.transport.HttpClientSseClientTransport;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
 import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.spec.McpClientTransport;
 import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.tool.ToolCallbackProvider;
-import org.springframework.stereotype.Component;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 外部 MCP Server 客户端管理器。
+ * MCP服务 API 实现。
  *
  * <p>按 {@code sys_ai_mcp_server} 登记的配置**编程式**建立 MCP 连接（yml 静态配置无法覆盖库里动态增删），
  * 并把连接缓存为 {@link McpSyncClient}，供 Agent 对话时挂载外部工具。</p>
@@ -33,38 +42,111 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>支持的传输（由 {@code protocol} 字段决定，大小写不敏感）：</p>
  * <ul>
  *   <li>{@code STREAMABLE} / {@code STREAMABLE_HTTP}（默认）：Streamable HTTP</li>
- *   <li>{@code SSE}：SSE</li>
  *   <li>{@code STDIO}：本地子进程，需配 {@code command} / {@code args} / {@code env}</li>
  * </ul>
+ *
+ * <p>历史 {@code SSE} 传输已在 MCP 规范中废弃，按最新规范统一走 Streamable HTTP。</p>
  *
  * <p>注意：连接失败只记录日志并返回空工具，**不能让 MCP 故障拖垮正常对话**。</p>
  *
  * @author elvea
  */
 @Slf4j
-@Component
-public class McpClientManager {
+@Service
+@RequiredArgsConstructor
+public class AiMcpApiImpl implements AiMcpApi {
 
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
 
     private static final String PROTOCOL_STDIO = "STDIO";
 
-    private static final String PROTOCOL_SSE = "SSE";
+    private final AiMcpServerService aiMcpServerService;
 
     /**
-     * 已建立的连接缓存：key 为 MCP Server 编号（含地址与传输指纹，配置变更后会重建）
+     * 已建立的连接缓存：key 含地址与传输指纹，配置变更后会重建
      */
     private final Map<String, McpSyncClient> clients = new ConcurrentHashMap<>();
 
     /**
-     * 为给定的一组 MCP Server 构建工具回调提供者；无可用 Server 时返回 null。
+     * @see AiMcpApi#findAiMcpServers(AiMcpServerSearchRequest)
      */
-    public ToolCallbackProvider buildToolCallbackProvider(List<AiMcpServerVo> servers) {
-        if (servers == null || servers.isEmpty()) {
+    @Override
+    public Page<AiMcpServerVo> findAiMcpServers(AiMcpServerSearchRequest request) {
+        return this.aiMcpServerService.findByPage(request);
+    }
+
+    /**
+     * @see AiMcpApi#getAiMcpServer(GetRequest)
+     */
+    @Override
+    public AiMcpServerVo getAiMcpServer(GetRequest request) {
+        if (request == null) {
+            return new AiMcpServerVo();
+        }
+        if (request.getId() != null) {
+            return this.aiMcpServerService.getAiMcpServer(request.getId());
+        }
+        if (StringUtils.isNotEmpty(request.getCode())) {
+            return this.aiMcpServerService.getAiMcpServerByCode(request.getCode());
+        }
+        return new AiMcpServerVo();
+    }
+
+    /**
+     * @see AiMcpApi#saveAiMcpServer(AiMcpServerSaveRequest)
+     */
+    @Override
+    public void saveAiMcpServer(AiMcpServerSaveRequest request) {
+        if (request == null) {
+            return;
+        }
+        // 更新场景先记下旧 code：code 可能被改写，旧连接需要一并清理
+        String previousCode = null;
+        if (request.getId() != null && request.getId() > 0) {
+            AiMcpServerVo existing = this.aiMcpServerService.getAiMcpServer(request.getId());
+            if (existing != null) {
+                previousCode = existing.getCode();
+            }
+        }
+        this.aiMcpServerService.saveAiMcpServer(request);
+        // 配置可能已变更（url/headers/env/command 等），清掉旧连接让下次对话按新配置重建
+        this.evict(previousCode);
+        this.evict(request.getCode());
+    }
+
+    /**
+     * @see AiMcpApi#deleteAiMcpServer(DeleteRequest)
+     */
+    @Override
+    public void deleteAiMcpServer(DeleteRequest request) {
+        if (request == null || request.getIds() == null || request.getIds().length == 0) {
+            return;
+        }
+        List<Long> ids = Arrays.asList(request.getIds());
+        // 先按 code 清理已建立的 MCP 连接，避免删除后连接与子进程泄漏
+        ids.stream()
+            .map(this.aiMcpServerService::getAiMcpServer)
+            .filter(Objects::nonNull)
+            .map(AiMcpServerVo::getCode)
+            .filter(StringUtils::isNotEmpty)
+            .forEach(this::evict);
+        this.aiMcpServerService.deleteAiMcpServer(ids);
+    }
+
+    /**
+     * @see AiMcpApi#buildToolCallbackProvider(List)
+     */
+    @Override
+    public ToolCallbackProvider buildToolCallbackProvider(List<Long> mcpServerIds) {
+        if (CollectionUtils.isEmpty(mcpServerIds)) {
             return null;
         }
-        List<McpSyncClient> available = new ArrayList<>(servers.size());
-        for (AiMcpServerVo server : servers) {
+        List<McpSyncClient> available = new ArrayList<>(mcpServerIds.size());
+        for (Long mcpServerId : mcpServerIds) {
+            AiMcpServerVo server = this.aiMcpServerService.getAiMcpServer(mcpServerId);
+            if (server == null || StringUtils.isEmpty(server.getCode())) {
+                continue;
+            }
             McpSyncClient client = this.getOrCreate(server);
             if (client != null) {
                 available.add(client);
@@ -73,16 +155,28 @@ public class McpClientManager {
         if (available.isEmpty()) {
             return null;
         }
-        return new SyncMcpToolCallbackProvider(available);
+        return SyncMcpToolCallbackProvider.builder()
+            .mcpClients(available)
+            .build();
     }
+
+    /**
+     * 关闭全部连接（容器销毁时调用）。
+     */
+    @PreDestroy
+    public void closeAll() {
+        this.clients.values().forEach(this::closeQuietly);
+        this.clients.clear();
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // 私有辅助
+    // -----------------------------------------------------------------------------------------------------------------
 
     /**
      * 获取或创建到指定 MCP Server 的连接。
      */
-    public McpSyncClient getOrCreate(AiMcpServerVo server) {
-        if (server == null || StringUtils.isEmpty(server.getCode())) {
-            return null;
-        }
+    private McpSyncClient getOrCreate(AiMcpServerVo server) {
         String cacheKey = this.cacheKey(server);
         McpSyncClient cached = this.clients.get(cacheKey);
         if (cached != null) {
@@ -112,7 +206,10 @@ public class McpClientManager {
     /**
      * 关闭并移除指定 Server 的连接（配置变更或删除时调用）。
      */
-    public void evict(String code) {
+    private void evict(String code) {
+        if (StringUtils.isEmpty(code)) {
+            return;
+        }
         this.clients.entrySet().removeIf(entry -> {
             if (entry.getKey().startsWith(code + "|")) {
                 this.closeQuietly(entry.getValue());
@@ -121,19 +218,6 @@ public class McpClientManager {
             return false;
         });
     }
-
-    /**
-     * 关闭全部连接（容器销毁时调用）。
-     */
-    @PreDestroy
-    public void closeAll() {
-        this.clients.values().forEach(this::closeQuietly);
-        this.clients.clear();
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------
-    // 私有辅助
-    // -----------------------------------------------------------------------------------------------------------------
 
     private void closeQuietly(McpSyncClient client) {
         try {
@@ -160,18 +244,11 @@ public class McpClientManager {
         if (PROTOCOL_STDIO.equals(protocol)) {
             return this.buildStdioTransport(server);
         }
-        Map<String, String> headers = this.parseHeaders(server);
-        if (PROTOCOL_SSE.equals(protocol)) {
-            HttpClientSseClientTransport.Builder builder = HttpClientSseClientTransport.builder(server.getUrl());
-            if (!headers.isEmpty()) {
-                builder.httpRequestCustomizer((request, method, uri, body, context) -> this.applyHeaders(request, headers));
-            }
-            return builder.build();
-        }
-        // 默认按 Streamable HTTP 处理
+        // SSE 传输已被 MCP 规范废弃，所有 HTTP 型传输统一走 Streamable HTTP
         HttpClientStreamableHttpTransport.Builder builder = HttpClientStreamableHttpTransport.builder(server.getUrl());
+        Map<String, String> headers = this.parseMap(server.getHeaders());
         if (!headers.isEmpty()) {
-            builder.httpRequestCustomizer((request, method, uri, body, context) -> this.applyHeaders(request, headers));
+            builder.addHttpRequestCustomizer((request, method, uri, body, context) -> this.applyHeaders(request, headers));
         }
         return builder.build();
     }
@@ -196,14 +273,6 @@ public class McpClientManager {
         return new StdioClientTransport(builder.build(), McpJsonDefaults.getMapper());
     }
 
-    /**
-     * headers 约定为 JSON 对象，如 {"Authorization":"Bearer xxx"}；解析失败按空处理
-     */
-    private Map<String, String> parseHeaders(AiMcpServerVo server) {
-        return this.parseMap(server.getHeaders());
-    }
-
-    @SuppressWarnings("unchecked")
     private Map<String, String> parseMap(String json) {
         if (StringUtils.isEmpty(json)) {
             return Map.of();
@@ -240,7 +309,7 @@ public class McpClientManager {
                 if (wrapper == null || !(wrapper.get("v") instanceof List<?> raw) || raw.isEmpty()) {
                     return List.of();
                 }
-                return raw.stream().filter(java.util.Objects::nonNull).map(String::valueOf).toList();
+                return raw.stream().filter(Objects::nonNull).map(String::valueOf).toList();
             }
             return List.of(trimmed.split(","));
         } catch (Exception e) {

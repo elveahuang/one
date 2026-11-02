@@ -2,12 +2,13 @@ package cc.wdev.platform.system.ai.controller.platform;
 
 import cc.wdev.platform.commons.annotations.OperationLog;
 import cc.wdev.platform.commons.domain.DeleteRequest;
+import cc.wdev.platform.commons.domain.GetRequest;
 import cc.wdev.platform.commons.domain.R;
 import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
+import cc.wdev.platform.system.ai.api.AiMcpApi;
 import cc.wdev.platform.system.ai.domain.request.AiMcpServerSaveRequest;
 import cc.wdev.platform.system.ai.domain.request.AiMcpServerSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiMcpServerVo;
-import cc.wdev.platform.system.ai.service.AiMcpServerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,8 +18,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.API_V1_SYS_PREFIX;
 
@@ -30,7 +29,7 @@ import static cc.wdev.platform.system.commons.constants.SystemMappingConstants.A
 @Tag(name = "AiMcpAdminController", description = "MCP管理控制器")
 public class AiMcpPltController extends AbstractController {
 
-    private final AiMcpServerService aiMcpServerService;
+    private final AiMcpApi aiMcpApi;
 
     @PreAuthorize("hasAnyAuthority('dev:ai:config:mcp')")
     @OperationLog("保存MCP")
@@ -38,7 +37,7 @@ public class AiMcpPltController extends AbstractController {
     @ApiResponse(description = "保存MCP")
     @PostMapping(API_V1_SYS_PREFIX + "/ai/mcp/save")
     public R<?> save(@RequestBody @Valid AiMcpServerSaveRequest request) {
-        aiMcpServerService.saveAiMcpServer(request);
+        aiMcpApi.saveAiMcpServer(request);
         return R.success();
     }
 
@@ -47,7 +46,7 @@ public class AiMcpPltController extends AbstractController {
     @ApiResponse(description = "查询MCP详情")
     @GetMapping(API_V1_SYS_PREFIX + "/ai/mcp/details")
     public R<AiMcpServerVo> details(@Parameter(description = "MCPID") @RequestParam("id") Long id) {
-        return R.success(aiMcpServerService.getAiMcpServer(id));
+        return R.success(aiMcpApi.getAiMcpServer(GetRequest.of(id)));
     }
 
     @PreAuthorize("hasAnyAuthority('dev:ai:config:mcp')")
@@ -55,7 +54,7 @@ public class AiMcpPltController extends AbstractController {
     @ApiResponse(description = "获取MCP列表")
     @GetMapping(API_V1_SYS_PREFIX + "/ai/mcp/list")
     public R<Page<AiMcpServerVo>> list(AiMcpServerSearchRequest request) {
-        return R.success(aiMcpServerService.findByPage(request));
+        return R.success(aiMcpApi.findAiMcpServers(request));
     }
 
     @PreAuthorize("hasAnyAuthority('dev:ai:config:mcp')")
@@ -64,7 +63,7 @@ public class AiMcpPltController extends AbstractController {
     @ApiResponse(description = "删除MCP")
     @PostMapping(API_V1_SYS_PREFIX + "/ai/mcp/delete")
     public R<?> delete(@RequestBody @Valid DeleteRequest request) {
-        aiMcpServerService.deleteAiMcpServer(List.of(request.getIds()));
+        aiMcpApi.deleteAiMcpServer(request);
         return R.success();
     }
 

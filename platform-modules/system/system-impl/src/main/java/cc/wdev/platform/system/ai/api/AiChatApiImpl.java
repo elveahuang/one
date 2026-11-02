@@ -19,10 +19,8 @@ import cc.wdev.platform.system.ai.domain.request.AiChatGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiChatSearchRequest;
 import cc.wdev.platform.system.ai.domain.vo.*;
 import cc.wdev.platform.system.ai.helpers.AiHelper;
-import cc.wdev.platform.system.ai.service.AiMcpServerService;
 import cc.wdev.platform.system.ai.service.AiSessionEventService;
 import cc.wdev.platform.system.ai.service.AiSessionService;
-import cc.wdev.platform.system.ai.support.McpClientManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -39,7 +37,6 @@ import reactor.core.publisher.Flux;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static cc.wdev.platform.commons.enums.ResponseCodeEnum.*;
 
@@ -65,9 +62,7 @@ public class AiChatApiImpl implements AiChatApi {
 
     private final AiKbApi aiKbApi;
 
-    private final AiMcpServerService aiMcpServerService;
-
-    private final McpClientManager mcpClientManager;
+    private final AiMcpApi aiMcpApi;
 
     private final SessionService sessionService;
 
@@ -264,15 +259,10 @@ public class AiChatApiImpl implements AiChatApi {
             return;
         }
         try {
-            List<AiMcpServerVo> servers = mcpServerIds.stream()
-                .map(id -> this.aiMcpServerService.getAiMcpServer(id))
-                .filter(Objects::nonNull)
-                .filter(server -> StringUtils.isNotEmpty(server.getCode()))
-                .toList();
-            ToolCallbackProvider provider = this.mcpClientManager.buildToolCallbackProvider(servers);
+            ToolCallbackProvider provider = this.aiMcpApi.buildToolCallbackProvider(mcpServerIds);
             if (provider != null) {
                 builder.defaultTools(provider);
-                log.info("Agent MCP tools attached, servers - [{}].", servers.size());
+                log.info("Agent MCP tools attached, servers - [{}].", mcpServerIds.size());
             }
         } catch (Exception e) {
             // MCP 故障不阻断对话
