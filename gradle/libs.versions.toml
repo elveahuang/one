@@ -26,7 +26,7 @@ mybatisVersion = "3.5.19"
 mybatisDynamicSqlVersion = "2.0.0"
 mybatisSpringVersion = "4.1.0"
 mybatisSpringStarterVersion = "4.1.0"
-mybatisPlusVersion = "3.5.18"
+mybatisPlusVersion = "3.5.18.1"
 jsqlparserVersion = "5.4"
 shardingSphereVersion = "5.5.3"
 jacksonVersion = "3.2.4"
@@ -70,6 +70,8 @@ commonsCompressVersion = "1.28.0"
 commonsCollectionsVersion = "4.6.0"
 dashscopeSdkJavaVersion = "2.23.3"
 ognlVersion = "3.4.17"
+openaiJavaVersion = "4.95.0"
+anthropicJavaVersion = "3.4.0"
 
 [plugins]
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "springDependencyManagementVersion" }
@@ -285,8 +287,8 @@ scrimage-webp = { module = "com.sksamuel.scrimage:scrimage-webp", version = "4.6
 imageio-core = { module = "com.twelvemonkeys.imageio:imageio-core", version = "3.15.3" }
 imageio-jpeg = { module = "com.twelvemonkeys.imageio:imageio-jpeg", version = "3.15.3" }
 imageio-webp = { module = "com.twelvemonkeys.imageio:imageio-webp", version = "3.15.3" }
-zxing-core = { module = "com.google.zxing:core", version = "3.5.4" }
-zxing-javase = { module = "com.google.zxing:javase", version = "3.5.4" }
+zxing-core = { module = "com.google.zxing:core", version = "3.5.3" }
+zxing-javase = { module = "com.google.zxing:javase", version = "3.5.3" }
 tika-core = { module = "org.apache.tika:tika-core", version.ref = "tikaVersion" }
 tika-parsers-standard-package = { module = "org.apache.tika:tika-parsers-standard-package", version.ref = "tikaVersion" }
 
@@ -308,7 +310,8 @@ tencentcloud-sdk-java-sms = { module = "com.tencentcloudapi:tencentcloud-sdk-jav
 tencentcloud-sdk-java-hunyuan = { module = "com.tencentcloudapi:tencentcloud-sdk-java-hunyuan", version = "3.2.32" }
 tencentcloud-sdk-java-asr = { module = "com.tencentcloudapi:tencentcloud-sdk-java-asr", version = "3.2.41" }
 oapi-sdk = { module = "com.larksuite.oapi:oapi-sdk", version = "2.8.7" }
-openai-java = { module = "com.openai:openai-java", version = "4.88.0" }
+openai-java = { module = "com.openai:openai-java", version.ref = "openaiJavaVersion" }
+anthropic-java = { module = "com.anthropic:anthropic-java", version.ref = "anthropicJavaVersion" }
 telegrambots-client = { module = "org.telegram:telegrambots-client", version = "10.3.0" }
 telegrambots-abilities = { module = "org.telegram:telegrambots-abilities", version = "10.3.0" }
 
@@ -379,7 +382,7 @@ pinyin4j = { module = "com.belerweb:pinyin4j", version = "2.5.1" }
 ip2region = { module = "org.lionsoul:ip2region", version = "3.3.7" }
 guava = { module = "com.google.guava:guava", version = "33.7.2-jre" }
 annotations = { module = "org.jetbrains:annotations", version = "26.1.0" }
-nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.10" }
+nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
 oauth2-oidc-sdk = { module = "com.nimbusds:oauth2-oidc-sdk", version = "11.38.2" }
 spotbugs-annotations = { module = "com.github.spotbugs:spotbugs-annotations", version = "4.10.5" }
 logback-loki-appender = { module = "com.github.loki4j:loki-logback-appender", version = "2.1.0" }
@@ -440,7 +443,7 @@ http = ["okhttp", "okhttp-sse", "okhttp-jvm", "okhttp-logging-interceptor", "hc"
 json = ["jackson-core", "jackson-databind", "gson", "json"]
 fory = ["fory-core", "fory-format"]
 logging = ["logback-logstash-encoder", "logback-loki-appender"]
-ai = ["openai-java", "dashscope-sdk-java", "tencentcloud-sdk-java-common", "tencentcloud-sdk-java-hunyuan", "tencentcloud-sdk-java-asr"]
+ai = ["openai-java", "anthropic-java", "dashscope-sdk-java", "tencentcloud-sdk-java-common", "tencentcloud-sdk-java-hunyuan", "tencentcloud-sdk-java-asr"]
 webjars = ["webjars-core", "webjars-jquery", "webjars-bootstrap", "webjars-bootstrap-icons", "webjars-popper-js"]
 swagger = ["swagger-annotations-jakarta", "swagger-models-jakarta"]
 

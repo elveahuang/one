@@ -109,6 +109,12 @@ configurations.configureEach {
         if (requested.group == "net.java.dev.jna") {
             useVersion(libs.versions.jnaVersion.get())
         }
+        if (requested.group == "com.anthropic") {
+            useVersion(libs.versions.anthropicJavaVersion.get())
+        }
+        if (requested.group == "com.openai") {
+            useVersion(libs.versions.openaiJavaVersion.get())
+        }
         if (requested.module.toString() == "ognl:ognl") {
             useVersion(libs.versions.ognlVersion.get())
         }
