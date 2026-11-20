@@ -32,11 +32,15 @@ public class AiChatSearchRequest extends PageRequest {
     @Schema(title = "对话类型")
     private String chatType;
     /**
+     * 对话业务类型（XYH：新版首页；DEFAULT：默认对话页），用于业务数据隔离
+     */
+    @Schema(title = "对话业务类型")
+    private String bizType;
+    /**
      * 智能体编号
      */
     @Schema(title = "智能体编号")
     private String agentCode;
-
     /**
      * 游标号
      */

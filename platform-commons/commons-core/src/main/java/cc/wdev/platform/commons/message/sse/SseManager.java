@@ -1,94 +1,75 @@
 package cc.wdev.platform.commons.message.sse;
 
 import cc.wdev.platform.commons.message.session.UserSession;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 /**
+ * 本机 SSE 会话与异步等待句柄管理接口
+ *
  * @author elvea
  */
-@Slf4j
-@AllArgsConstructor
-public class SseManager {
-
-    private final Map<String, SseEmitter> emitterMap = new ConcurrentHashMap<>();
-
-    private final Map<String, Map<String, UserSession>> userSessionMap = new ConcurrentHashMap<>();
+public interface SseManager {
 
     /**
-     * 建立连接
+     * 建立 Servlet SseEmitter 连接
      */
-    public SseEmitter connect(String userId, String sessionId, UserSession UserSession) {
-
-        // 保存会话
-        SseEmitter emitter = new SseEmitter(86400000L);
-        this.emitterMap.put(sessionId, emitter);
-
-        // 保存用户会话
-        this.userSessionMap.putIfAbsent(userId, new ConcurrentHashMap<>());
-        this.userSessionMap.get(userId).put(sessionId, UserSession);
-
-        // 事件处理
-        emitter.onCompletion(() -> {
-            SseEmitter e = this.emitterMap.remove(sessionId);
-            if (e != null) {
-                e.complete();
-            }
-        });
-        emitter.onTimeout(() -> {
-            SseEmitter e = this.emitterMap.remove(sessionId);
-            if (e != null) {
-                e.complete();
-            }
-        });
-        emitter.onError((t) -> {
-            SseEmitter e = this.emitterMap.remove(sessionId);
-            if (e != null) {
-                e.complete();
-            }
-        });
-
-        try {
-            emitter.send(SseEmitter.event().comment("connected"));
-        } catch (IOException e) {
-            this.emitterMap.remove(sessionId);
-        }
-        return emitter;
-    }
+    SseEmitter connect(String userId, String sessionId, UserSession userSession);
 
     /**
-     * 注销会话
+     * 关闭并移除 Servlet SseEmitter 连接
      */
-    public void close(String userId, String sessionId) {
-        if (userId == null || sessionId == null) {
-            return;
-        }
+    void close(String userId, String sessionId);
 
-        try {
-            SseEmitter sseEmitter = emitterMap.remove(sessionId);
-            sseEmitter.send(SseEmitter.event().comment("disconnected"));
-            sseEmitter.complete();
-        } catch (Exception e) {
-            log.info("Close SSE Emitter [{}] failed", userId);
-        }
+    /**
+     * 注册本机 SSE 事件发射器
+     */
+    void registerEmitter(String conversationId, Consumer<ServerSentEvent<String>> emitter);
 
+    /**
+     * 判断本机是否存在活跃 SSE 发射器
+     */
+    boolean hasEmitter(String conversationId);
 
-        Map<String, UserSession> sessions = this.userSessionMap.get(userId);
-        if (MapUtils.isNotEmpty(sessions)) {
-            boolean result = sessions.remove(sessionId) != null;
-            log.info("Close SSE User Session [{}] [{}] - {}", userId, sessionId, result);
+    /**
+     * 向本机 SSE 发射器推送事件
+     */
+    boolean emitLocal(String conversationId, String event, String data);
 
-            if (sessions.isEmpty()) {
-                this.userSessionMap.remove(userId);
-                log.info("Close all SSE User Session [{}]", userId);
-            }
-        }
-    }
+    /**
+     * 注册本机等待中的异步结果句柄
+     *
+     * @return true=注册成功；false=该会话已存在挂起提问（双开窗口场景）
+     */
+    boolean registerFuture(String conversationId, CompletableFuture<Map<String, String>> future);
+
+    /**
+     * 移除本机等待中的异步结果句柄
+     */
+    void removeFuture(String conversationId);
+
+    /**
+     * 按值移除本机等待中的异步结果句柄（仅注册者可移除自己的 future，不误删后来者）
+     */
+    void removeFuture(String conversationId, CompletableFuture<Map<String, String>> future);
+
+    /**
+     * 判断本机是否存在等待中的异步结果句柄
+     */
+    boolean hasPendingFuture(String conversationId);
+
+    /**
+     * 完成本机等待中的异步结果句柄
+     */
+    boolean completeLocalFuture(String conversationId, Map<String, String> answers);
+
+    /**
+     * 关闭并清理本机会话句柄
+     */
+    void closeLocalSession(String conversationId);
 
 }

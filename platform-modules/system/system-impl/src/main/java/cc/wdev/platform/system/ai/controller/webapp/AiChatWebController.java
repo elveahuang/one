@@ -14,14 +14,13 @@ import cc.wdev.platform.commons.web.servlet.controller.AbstractController;
 import cc.wdev.platform.system.ai.api.AiAgentApi;
 import cc.wdev.platform.system.ai.api.AiChatApi;
 import cc.wdev.platform.system.ai.api.AiModelApi;
+import cc.wdev.platform.system.ai.api.AiSessionApi;
 import cc.wdev.platform.system.ai.domain.entity.AiSessionEntity;
 import cc.wdev.platform.system.ai.domain.request.AiChatDeleteRequest;
 import cc.wdev.platform.system.ai.domain.request.AiChatGetRequest;
 import cc.wdev.platform.system.ai.domain.request.AiChatSearchRequest;
-import cc.wdev.platform.system.ai.domain.vo.AiAgentSimpleVo;
-import cc.wdev.platform.system.ai.domain.vo.AiAgentVo;
-import cc.wdev.platform.system.ai.domain.vo.AiChatVo;
-import cc.wdev.platform.system.ai.domain.vo.AiModelSimpleVo;
+import cc.wdev.platform.system.ai.domain.request.AiSessionEventRequest;
+import cc.wdev.platform.system.ai.domain.vo.*;
 import cc.wdev.platform.system.ai.service.AiSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -61,6 +60,8 @@ public class AiChatWebController extends AbstractController {
 
     private final AiSessionService aiSessionService;
 
+    private final AiSessionApi aiSessionApi;
+
     @Authenticated
     @Operation(summary = "分页查询我的对话记录")
     @ApiResponse(description = "分页查询我的对话记录")
@@ -80,6 +81,20 @@ public class AiChatWebController extends AbstractController {
             request.setChatType(AiChatType.CHAT.getValue());
         }
         return R.success(aiChatApi.getChat(request));
+    }
+
+    @Authenticated
+    @Operation(summary = "分页查询对话消息记录")
+    @ApiResponse(description = "分页查询对话消息记录（按时间倒序分页，第 1 页为最新消息）")
+    @GetMapping(API_V1_PREFIX + "/ai/chat/message-list")
+    public R<Page<AiSessionEventVo>> chatMessageList(@Parameter(description = "对话标识") @RequestParam(value = "conversationId", defaultValue = "") String conversationId,
+                                                     @Parameter(description = "页码，从 1 开始（1 为最新消息）") @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+                                                     @Parameter(description = "每页条数") @RequestParam(value = "pageSize", defaultValue = "50") Integer pageSize) {
+        AiSessionEventRequest request = AiSessionEventRequest.builder()
+            .sessionId(conversationId)
+            .userId(SecurityUtils.getUid())
+            .page(pageNum).size(pageSize).build();
+        return R.success(aiSessionApi.findCurrent(request));
     }
 
     @Authenticated
@@ -105,7 +120,7 @@ public class AiChatWebController extends AbstractController {
         if (StringUtils.isNotEmpty(conversationId)) {
             log.debug("Start conversation with id - {}", conversationId);
             // 归属校验：仅能续接本人 + 本租户的会话
-            AiSessionEntity session = this.aiSessionService.findBySessionIdAndUser(
+            AiSessionEntity session = this.aiSessionService.getSession(
                 conversationId, SecurityUtils.getUid(), SecurityUtils.getTid());
             if (session != null) {
                 messages.addAll(this.aiManager.getSessionService().getMessages(conversationId));

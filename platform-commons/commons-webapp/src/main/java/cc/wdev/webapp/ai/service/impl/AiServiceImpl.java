@@ -67,7 +67,7 @@ public class AiServiceImpl implements AiService {
     public ChatClient getChatClient() {
         ChatClient.Builder builder = ChatClient.builder(this.aiManager.getChatModel());
         this.aiManager.applyBaseAdvisors(builder);
-        this.aiManager.applyMemoryAdvisor(builder);
+        this.aiManager.applyMemoryAdvisor(builder, builder.clone());
         this.aiManager.applyAgentTool(builder);
         builder.defaultTools(coreTools);
         builder.defaultSystem(SYSTEM);

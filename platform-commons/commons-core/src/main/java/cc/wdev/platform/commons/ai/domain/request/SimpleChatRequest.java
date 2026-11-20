@@ -71,6 +71,11 @@ public class SimpleChatRequest extends Request {
     @Schema(description = "会话ID")
     private String conversationId;
     /**
+     * 业务类型
+     */
+    @Schema(title = "业务类型")
+    private String bizType;
+    /**
      * 对话类型
      */
     @Schema(title = "对话类型")
@@ -136,4 +141,9 @@ public class SimpleChatRequest extends Request {
     @Builder.Default
     @Schema(description = "是否支持长期记忆")
     private Boolean withMemory = Boolean.TRUE;
+    /**
+     * 交互卡片动作（开场白/UI 组件点击后回传）
+     */
+    @Schema(description = "交互卡片动作")
+    private AiChatAction action;
 }

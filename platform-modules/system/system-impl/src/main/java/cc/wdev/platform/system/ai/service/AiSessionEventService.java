@@ -48,4 +48,9 @@ public interface AiSessionEventService extends CachingEntityService<AiSessionEve
      */
     Page<AiSessionEventVo> findCurrent(AiSessionEventRequest request);
 
+    /**
+     * 判断会话在指定时间之后是否已有事件（包含普通消息和开场白）
+     */
+    boolean hasEventSince(String sessionId, java.time.LocalDateTime since);
+
 }

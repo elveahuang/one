@@ -24,39 +24,60 @@ import java.time.LocalDateTime;
 @TableName("sys_ai_session")
 @EqualsAndHashCode(callSuper = true)
 public class AiSessionEntity extends SimpleTenantEntity {
-
     /**
      * 租户ID
      */
     @Schema(description = "租户ID")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long tenantId;
-
+    /**
+     * 业务类型
+     */
+    @Schema(description = "业务类型")
+    private String bizType;
+    /**
+     * 对话类型
+     */
+    @Schema(description = "对话类型")
+    private String chatType;
+    /**
+     * 智能体编号
+     */
+    @Schema(description = "智能体编号")
+    private String chatAgentCode;
+    /**
+     * 模型编号
+     */
+    @Schema(description = "模型编号")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private String chatModelCode;
+    /**
+     * 知识库编号
+     */
+    @Schema(description = "知识库编号")
+    @JsonSerialize(using = ToStringSerializer.class)
+    private String chatKbCode;
     /**
      * 用户ID
      */
     @Schema(description = "用户ID")
     private String userId;
-
     /**
      * Session ID
      */
     @Schema(description = "Session ID")
     private String sessionId;
-
     /**
      * Metadata
      */
     @Schema(description = "Metadata")
     private String metadata;
-
     /**
      * Event Version
      */
     @Schema(description = "Event Version")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long eventVersion;
-
     /**
      * 过期时间
      */
@@ -64,5 +85,4 @@ public class AiSessionEntity extends SimpleTenantEntity {
     @JsonFormat(pattern = DateTimeConstants.DEFAULT_DATE_TIME_PATTERN)
     @DateTimeFormat(pattern = DateTimeConstants.DEFAULT_DATE_TIME_PATTERN)
     private LocalDateTime expiresAt;
-
 }

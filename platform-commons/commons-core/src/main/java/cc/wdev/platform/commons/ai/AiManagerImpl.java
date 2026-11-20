@@ -12,6 +12,7 @@ import cc.wdev.platform.commons.ai.factory.embedding.EmbeddingModelFactory;
 import cc.wdev.platform.commons.ai.factory.vectorstore.VectorStoreFactory;
 import cc.wdev.platform.commons.ai.model.ModelConfig;
 import cc.wdev.platform.commons.ai.utils.AiUtils;
+import cc.wdev.platform.commons.constants.GlobalConstants;
 import cc.wdev.platform.commons.enums.BaseEnum;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.SecurityUtils;
@@ -40,8 +41,10 @@ import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -140,7 +143,9 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public RetrievalAugmentationAdvisor getRetrievalAugmentationAdvisor() {
-        return AiUtils.getRetrievalAugmentationAdvisor(this.getVectorStore(), this.getConfig().getRag().getRetrieval());
+        // 默认检索链路必须带租户隔离过滤，防止跨租户召回
+        return AiUtils.getRetrievalAugmentationAdvisor(
+            this.getVectorStore(), this.getConfig().getRag().getRetrieval(), AiUtils.buildTenantScopeFilter());
     }
 
     /**
@@ -565,71 +570,52 @@ public class AiManagerImpl implements AiManager {
      */
     @Override
     public void applyAgentTool(ChatClient.Builder builder, AgentConfig config) {
-        List<Resource> skillsResources = Lists.newArrayList();
-        List<Resource> agentsResources = Lists.newArrayList();
+        List<Resource> skillsResources = this.resolveDirectories(config.getSkills(), "skills");
+        List<Resource> agentsResources = this.resolveDirectories(config.getAgents(), "agents");
+
+        // 主智能体加载能力前先克隆，避免主智能体和子智能体重复加载
+        ChatClient.Builder subAgentBuilder = builder.clone();
 
         if (config.isEnabled()) {
             // SkillsTool
-            if (CollectionUtils.isNotEmpty(config.getSkills())) {
-                for (Resource resource : config.getSkills()) {
-                    if (resource.exists()) {
-                        log.info("Add skills directory: {}", resource.getDescription());
-                        skillsResources.add(resource);
-                    } else {
-                        log.info("Skills directory {} not exists", resource.getDescription());
-                    }
-                }
-            }
-
             if (CollectionUtils.isNotEmpty(skillsResources)) {
-                builder.defaultTools(SkillsTool.builder()
-                    .addSkillsResources(skillsResources)
-                    .build()
-                );
+                builder.defaultTools(SkillsTool.builder().addSkillsResources(skillsResources).build());
             }
 
             // TaskTool
-            if (CollectionUtils.isNotEmpty(config.getAgents())) {
-                for (Resource resource : config.getAgents()) {
-                    if (resource.exists()) {
-                        log.info("Add agents directory: {}", resource.getDescription());
-                        agentsResources.add(resource);
-                    } else {
-                        log.info("Agents directory {} not exists", resource.getDescription());
-                    }
+            if (CollectionUtils.isNotEmpty(agentsResources)) {
+                // SubAgent
+                if (CollectionUtils.isNotEmpty(skillsResources)) {
+                    SubagentType claudeType = ClaudeSubagentType.builder()
+                        .chatClientBuilder("default", subAgentBuilder)
+                        .skillsResources(skillsResources)
+                        .build();
+
+                    builder.defaultTools(TaskTool.builder()
+                        .subagentReferences(ClaudeSubagentReferences.fromResources(agentsResources))
+                        .subagentTypes(claudeType)
+                        .build()
+                    );
                 }
-            }
-
-            if (CollectionUtils.isNotEmpty(skillsResources) && CollectionUtils.isNotEmpty(agentsResources)) {
-                SubagentType claudeType = ClaudeSubagentType.builder()
-                    .chatClientBuilder("default", builder.clone())
-                    .skillsResources(skillsResources)
-                    .build();
-
-                builder.defaultTools(TaskTool.builder()
-                    .subagentReferences(ClaudeSubagentReferences.fromResources(agentsResources))
-                    .subagentTypes(claudeType)
-                    .build()
-                );
             }
         }
     }
 
     /**
-     * @see AiManager#applyMemoryAdvisor(ChatClient.Builder)
+     * @see AiManager#applyMemoryAdvisor(ChatClient.Builder, ChatClient.Builder)
      */
     @Override
-    public void applyMemoryAdvisor(ChatClient.Builder builder) {
-        this.applyMemoryAdvisor(builder, this.getConfig().getMemory());
+    public void applyMemoryAdvisor(ChatClient.Builder builder, ChatClient.Builder dreamBuilder) {
+        this.applyMemoryAdvisor(builder, dreamBuilder, this.getConfig().getMemory());
     }
 
     /**
-     * @see AiManager#applyMemoryAdvisor(ChatClient.Builder, MemoryConfig)
+     * @see AiManager#applyMemoryAdvisor(ChatClient.Builder, ChatClient.Builder, MemoryConfig)
      */
     @Override
-    public void applyMemoryAdvisor(ChatClient.Builder builder, MemoryConfig config) {
+    public void applyMemoryAdvisor(ChatClient.Builder builder, ChatClient.Builder dreamBuilder, MemoryConfig config) {
         if (config.isEnabled() && StringUtils.isNotEmpty(config.getPath())) {
-            // 长期记忆需要按租户和用户进行隔离
+            // AutoMemoryToolsAdvisor
             String path = Paths.get(config.getPath())
                 .resolve(String.valueOf(SecurityUtils.getTid()))
                 .resolve(String.valueOf(SecurityUtils.getUid()))
@@ -637,19 +623,17 @@ public class AiManagerImpl implements AiManager {
                 .toString();
             log.info("Apply memory directory: {}", path);
 
-            // AutoMemoryToolsAdvisor
-            AutoMemoryToolsAdvisor autoMemoryToolsAdvisor = AutoMemoryToolsAdvisor.builder()
+            builder.defaultAdvisors(AutoMemoryToolsAdvisor.builder()
                 .memoriesRootDirectory(path)
-                .build();
-            builder.defaultAdvisors(autoMemoryToolsAdvisor);
+                .build());
 
             // AutoDreamAdvisor
-            AutoDreamService autoDreamService = AutoDreamService.builder(builder.clone()).build();
-            AutoDreamAdvisor autoDreamAdvisor = AutoDreamAdvisor.builder()
+            // 长期记忆整理只需要一个干净的模型总结，无需带上工具和能力，减少词元消耗
+            AutoDreamService autoDreamService = AutoDreamService.builder(dreamBuilder).build();
+            builder.defaultAdvisors(AutoDreamAdvisor.builder()
                 .memoriesRootDirectory(path)
                 .dreamService(autoDreamService)
-                .build();
-            builder.defaultAdvisors(autoDreamAdvisor);
+                .build());
         }
     }
 
@@ -688,6 +672,73 @@ public class AiManagerImpl implements AiManager {
     @Override
     public void applyRagAdvisors(ChatClient.Builder builder) {
         builder.defaultAdvisors(this.getRetrievalAugmentationAdvisor());
+    }
+
+    /**
+     * @see AiManager#loadDefaultPrompt()
+     */
+    @Override
+    public String loadDefaultPrompt() {
+        return this.loadDefaultPrompt(AiConstants.DEFAULT_PROMPT_NAME, AiConstants.DEFAULT_PROMPT);
+    }
+
+    /**
+     * @see AiManager#loadDefaultPrompt(String, String)
+     */
+    @Override
+    public String loadDefaultPrompt(String name, String fallbackPrompt) {
+        Resource directory = this.getConfig().getAgent().getPrompts();
+        if (directory != null && directory.exists()) {
+            try {
+                Path directoryPath = Paths.get(directory.getFile().getAbsolutePath()).normalize();
+                Path promptPath = directoryPath.resolve(this.resolvePromptFileName(name)).normalize();
+                Resource resource = new FileSystemResource(promptPath.toFile());
+                if (resource.exists() && resource.isReadable()) {
+                    String content = resource.getContentAsString(GlobalConstants.UTF8);
+                    if (StringUtils.isNotEmpty(content)) {
+                        return content;
+                    }
+                    log.warn("Prompt file [{}] is empty, fallback to default prompt.", name);
+                } else {
+                    log.warn("Prompt file [{}] not found under [{}], fallback to default prompt.", name, directoryPath);
+                }
+            } catch (Exception e) {
+                log.error("Fail to load prompt file [{}] from [{}].", name, directory.getDescription(), e);
+            }
+        }
+        return fallbackPrompt;
+    }
+
+    // -----------------------------------------------------------------------------------------------
+    // 私有辅助方法
+    // -----------------------------------------------------------------------------------------------
+
+    /**
+     * 规范提示词文件名：仅保留最后一段文件名（禁止携带路径），缺省补 .md 扩展名
+     */
+    private String resolvePromptFileName(String name) {
+        String fileName = StringUtils.nvl(name, "").trim().replace("\\", "/");
+        fileName = fileName.substring(fileName.lastIndexOf('/') + 1);
+        if (StringUtils.isEmpty(fileName) || ".".equals(fileName)) {
+            return "";
+        }
+        return fileName.endsWith(".md") ? fileName : fileName + ".md";
+    }
+
+    /**
+     * 解析技能和子智能体目录资源
+     */
+    private List<Resource> resolveDirectories(List<Resource> resources, String dirName) {
+        List<Resource> resolved = Lists.newArrayList();
+        for (Resource resource : CollectionUtils.nvl(resources)) {
+            if (resource.exists()) {
+                log.info("Add {} directory: {}", dirName, resource.getDescription());
+                resolved.add(resource);
+                continue;
+            }
+            log.info("{} directory {} not exists, fallback to working directory", dirName, resource.getDescription());
+        }
+        return resolved;
     }
 
 }

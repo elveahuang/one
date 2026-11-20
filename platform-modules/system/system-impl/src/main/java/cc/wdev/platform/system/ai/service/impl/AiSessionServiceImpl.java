@@ -68,10 +68,10 @@ public class AiSessionServiceImpl
     }
 
     /**
-     * @see AiSessionService#findBySessionIdAndUser(String, Long, Long)
+     * @see AiSessionService#getSession(String, Long, Long)
      */
     @Override
-    public AiSessionEntity findBySessionIdAndUser(String sessionId, Long userId, Long tenantId) {
+    public AiSessionEntity getSession(String sessionId, Long userId, Long tenantId) {
         if (StringUtils.isEmpty(sessionId)) {
             return null;
         }
@@ -80,6 +80,20 @@ public class AiSessionServiceImpl
             .eq(AiSessionEntity::getUserId, String.valueOf(userId))
             .eq(ObjectUtils.isValidId(tenantId), AiSessionEntity::getTenantId, tenantId)
             .eq(AiSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue()));
+    }
+
+    /**
+     * @see AiSessionService#existsBySessionId(String)
+     */
+    @Override
+    public boolean existsBySessionId(String sessionId) {
+        if (StringUtils.isEmpty(sessionId)) {
+            return false;
+        }
+        return this.findOne(lambdaQueryWrapper()
+            .eq(AiSessionEntity::getSessionId, sessionId)
+            .eq(AiSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .last("LIMIT 1")) != null;
     }
 
     /**
@@ -131,13 +145,14 @@ public class AiSessionServiceImpl
     }
 
     /**
-     * @see AiSessionService#findPageByUserId(String, Long, Pageable)
+     * @see AiSessionService#findPageByUserId(String, Long, String, Pageable)
      */
     @Override
-    public Page<AiSessionEntity> findPageByUserId(String userId, Long tenantId, Pageable pageable) {
+    public Page<AiSessionEntity> findPageByUserId(String userId, Long tenantId, String bizType, Pageable pageable) {
         IPage<AiSessionEntity> page = this.lambdaQueryWrapper()
             .eq(StringUtils.isNotEmpty(userId), AiSessionEntity::getUserId, userId)
             .eq(ObjectUtils.isValidId(tenantId), AiSessionEntity::getTenantId, tenantId)
+            .eq(StringUtils.isNotEmpty(bizType), AiSessionEntity::getBizType, bizType)
             .eq(AiSessionEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
             .orderByDesc(AiSessionEntity::getCreatedAt)
             .page(MyBatisPlusUtils.getMyBatisPlusPage(pageable));

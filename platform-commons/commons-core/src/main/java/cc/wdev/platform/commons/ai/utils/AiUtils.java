@@ -15,6 +15,7 @@ import cc.wdev.platform.commons.ai.ui.UiBlock;
 import cc.wdev.platform.commons.ai.ui.UiComponentManager;
 import cc.wdev.platform.commons.ai.ui.UiOutputConverter;
 import cc.wdev.platform.commons.ai.ui.UiResponse;
+import cc.wdev.platform.commons.core.tenant.TenantContext;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.GsonUtils;
 import cc.wdev.platform.commons.utils.SecurityUtils;
@@ -48,6 +49,7 @@ import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -108,11 +110,24 @@ public abstract class AiUtils {
      * 2. 其他参数，前端没传参数过来，那么按预设的复制
      */
     public static void processChatRequest(SimpleChatRequest request) {
-        request.setTenantId(SecurityUtils.getTid());
+        request.setTenantId(null != request.getTenantId() && request.getTenantId() > 0 ? request.getTenantId() : SecurityUtils.getTid());
         request.setUserId(null != request.getUserId() && request.getUserId() > 0 ? request.getUserId() : SecurityUtils.getUid());
         request.setConversationId(StringUtils.nvl(request.getConversationId(), StringUtils.uuid()));
         request.setResponseType(StringUtils.nvl(request.getResponseType(), AiResponseType.TEXT.getValue()));
         request.setChatType(StringUtils.nvl(request.getChatType(), AiChatType.STATIC.getValue()));
+        if (request.getAction() != null && StringUtils.isNotEmpty(request.getAction().getCode())) {
+            String actionType = request.getAction().getType();
+            String actionCode = request.getAction().getCode();
+            if ("tool".equalsIgnoreCase(actionType)) {
+                List<String> tools = request.getToolNames() != null ? new ArrayList<>(request.getToolNames()) : new ArrayList<>();
+                if (!tools.contains(actionCode)) {
+                    tools.add(actionCode);
+                }
+                request.setToolNames(tools);
+            } else if ("agent".equalsIgnoreCase(actionType) && StringUtils.isEmpty(request.getAgentCode())) {
+                request.setAgentCode(actionCode);
+            }
+        }
     }
 
     /**
@@ -122,13 +137,19 @@ public abstract class AiUtils {
      * 3. 提示词
      */
     public static ChatClient.ChatClientRequestSpec processChatSpec(ChatClient chatClient, SimpleChatRequest request) {
-        Map<String, Object> params = Map.of(
-            CHAT_CONTEXT_SESSION, request.getConversationId(),
-            CHAT_CONTEXT_USER_ID, nvl(String.valueOf(SecurityUtils.getUid()), String.valueOf(request.getUserId())),
-            CHAT_CONTEXT_TENANT_ID, request.getTenantId(),
-            CHAT_CONTEXT_CHAT_TYPE, request.getChatType(),
-            CHAT_CONTEXT_AGENT_CODE, StringUtils.nvl(request.getAgentCode())
-        );
+        Map<String, Object> params = new HashMap<>();
+        params.put(CHAT_CONTEXT_SESSION, request.getConversationId());
+        params.put(CHAT_CONTEXT_USER_ID, StringUtils.nvl(String.valueOf(SecurityUtils.getUid()), String.valueOf(request.getUserId())));
+        params.put(CHAT_CONTEXT_TENANT_ID, request.getTenantId());
+        params.put(CHAT_CONTEXT_CHAT_BIZ_TYPE, StringUtils.nvl(request.getBizType()));
+        params.put(CHAT_CONTEXT_CHAT_TYPE, StringUtils.nvl(request.getChatType()));
+        params.put(CHAT_CONTEXT_AGENT_CODE, StringUtils.nvl(request.getAgentCode()));
+        params.put(CHAT_CONTEXT_MODEL_CODE, StringUtils.nvl(request.getModelCode()));
+        params.put(CHAT_CONTEXT_KB_CODE, StringUtils.nvl(request.getKbCode()));
+        // 合入业务扩展参数（如 externalInd）；固定上下文 key 优先，防止外部参数覆盖安全字段
+        if (request.getParams() != null) {
+            request.getParams().forEach(params::putIfAbsent);
+        }
 
         ChatClient.ChatClientRequestSpec spec = chatClient.prompt().toolContext(params).advisors(a -> {
             a.params(params);
@@ -231,7 +252,7 @@ public abstract class AiUtils {
      * Json Render Block
      */
     public static String getJsonRenderContent(String text) {
-        String builder = JSON_RENDER_START_TAG + END_LINE + text + END_LINE + JSON_RENDER_END_TAG + END_LINE;
+        String builder = END_LINE + JSON_RENDER_START_TAG + END_LINE + text + END_LINE + JSON_RENDER_END_TAG + END_LINE;
         return GsonUtils.toJson(SimpleChatContent.builder().type(AiContentType.TEXT.getValue()).content(builder).build());
     }
 
@@ -276,9 +297,11 @@ public abstract class AiUtils {
                             interaction.set(true);
                             // 开启交互模式后继续循环，检查当前缓冲区是否已包含结束标记
                         } else {
-                            if (remaining.length() > (JSON_RENDER_START_TAG.length() + 10)) {
-                                // 保留一个安全区域，防止开始标记被截断，影响页面渲染效果
-                                int safeIdx = remaining.length() - JSON_RENDER_START_TAG.length();
+                            // 仅保留可能是开始标记前缀的尾部，普通正文立即下发，
+                            // 避免正文末尾被扣到工具提问卡片之后才发送
+                            int keep = markerPrefixSuffixLength(remaining);
+                            int safeIdx = remaining.length() - keep;
+                            if (safeIdx > 0) {
                                 outputs.add(getTextContent(remaining.substring(0, safeIdx)));
                                 buffer.delete(0, safeIdx);
                             }
@@ -320,6 +343,20 @@ public abstract class AiUtils {
                 return Flux.empty();
             }));
         });
+    }
+
+    /**
+     * 返回文本尾部最长、且恰好是 JSON_RENDER_START_TAG 前缀的长度。
+     * 普通文本返回 0，可立即下发；只在开始标记可能被拆包时才保留少量字符。
+     */
+    private static int markerPrefixSuffixLength(String text) {
+        int max = Math.min(text.length(), JSON_RENDER_START_TAG.length() - 1);
+        for (int len = max; len > 0; len--) {
+            if (text.regionMatches(text.length() - len, JSON_RENDER_START_TAG, 0, len)) {
+                return len;
+            }
+        }
+        return 0;
     }
 
     // ------------------------------------------------------------------------------
@@ -371,14 +408,14 @@ public abstract class AiUtils {
             用户问题：{query}
             """);
 
-        return RetrievalAugmentationAdvisor.builder().documentRetriever(VectorStoreDocumentRetriever.builder()
+        return RetrievalAugmentationAdvisor.builder().documentRetriever(resilientDocumentRetriever(VectorStoreDocumentRetriever.builder()
             .vectorStore(vectorStore)
             .similarityThreshold(config.getSimilarityThreshold())
             .topK(config.getTopK())
             .build()
-        ).queryAugmenter(ContextualQueryAugmenter.builder()
+        )).queryAugmenter(ContextualQueryAugmenter.builder()
             .promptTemplate(promptTemplate)
-            .allowEmptyContext(Boolean.FALSE)
+            .allowEmptyContext(Boolean.TRUE)
             .emptyContextPromptTemplate(PromptTemplate.builder().template("找不到相关的内容。").build())
             .documentFormatter(documents -> documents.stream().map(document -> {
                     String metadata = document.getMetadata().entrySet().stream()
@@ -388,6 +425,70 @@ public abstract class AiUtils {
                 }).collect(Collectors.joining(System.lineSeparator()))
             ).build()
         ).build();
+    }
+
+    /**
+     * 获取检索增强 Advisor（带过滤条件，租户隔离检索必须使用本重载）
+     */
+    public static RetrievalAugmentationAdvisor getRetrievalAugmentationAdvisor(VectorStore vectorStore,
+                                                                               RetrievalConfig config,
+                                                                               Filter.Expression filterExpression) {
+        PromptTemplate promptTemplate = new PromptTemplate("""
+            以下是检索到的参考资料（供参考）：
+            ---------------------
+            {context}
+            ---------------------
+            回答规则：
+            1. 如果上述参考资料中包含直接答案，请优先依据资料准确回答；
+            2. 如果参考资料中未提供答案或不完整，或者用户提出的是操作、查询、调用工具等任务型指令，
+               请结合你的通用能力、上下文，并**主动检查并调用可用的工具**来完成用户的请求；
+            3. 不要生硬回复“我不知道”，请尽最大努力协助用户。
+            用户问题：{query}
+            """);
+
+        return RetrievalAugmentationAdvisor.builder().documentRetriever(resilientDocumentRetriever(VectorStoreDocumentRetriever.builder()
+            .vectorStore(vectorStore)
+            .similarityThreshold(config.getSimilarityThreshold())
+            .topK(config.getTopK())
+            .filterExpression(filterExpression)
+            .build()
+        )).queryAugmenter(ContextualQueryAugmenter.builder()
+            .promptTemplate(promptTemplate)
+            .allowEmptyContext(Boolean.TRUE)
+            .emptyContextPromptTemplate(PromptTemplate.builder().template("找不到相关的内容。").build())
+            .documentFormatter(documents -> documents.stream().map(document -> {
+                    String metadata = document.getMetadata().entrySet().stream()
+                        .map(entry -> entry.getKey() + ": " + entry.getValue())
+                        .collect(Collectors.joining(", "));
+                    return metadata + "\n" + document.getText();
+                }).collect(Collectors.joining(System.lineSeparator()))
+            ).build()
+        ).build();
+    }
+
+    /**
+     * 检索失败降级：向量库/embedding 等外部依赖瞬时异常（如 ES 超时、模型供应商 400/403）时，
+     * 记录告警并返回空上下文继续生成，避免整条对话流被 RAG 故障打断。
+     */
+    public static DocumentRetriever resilientDocumentRetriever(DocumentRetriever delegate) {
+        return query -> {
+            try {
+                return delegate.retrieve(query);
+            } catch (Exception e) {
+                log.warn("RAG retrieval failed, continue without retrieved context. query={}", query, e);
+                return List.of();
+            }
+        };
+    }
+
+    /**
+     * 构建租户隔离过滤条件（tenant_id == 当前租户）
+     * 当前租户优先取 TenantContext，兜底 SecurityUtils
+     */
+    public static Filter.Expression buildTenantScopeFilter() {
+        Long tenantId = TenantContext.getTenantId() != null ? TenantContext.getTenantId() : SecurityUtils.getTid();
+        FilterExpressionBuilder builder = new FilterExpressionBuilder();
+        return builder.eq(METADATA_TENANT_ID, tenantId).build();
     }
 
     public static TextSplitter getDocumentTransformer(SplittingConfig config) {

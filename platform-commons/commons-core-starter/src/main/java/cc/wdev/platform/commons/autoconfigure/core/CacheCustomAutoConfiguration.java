@@ -36,6 +36,7 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.RedisClient;
+import redis.clients.jedis.SslOptions;
 
 import java.util.function.Consumer;
 
@@ -70,7 +71,7 @@ public class CacheCustomAutoConfiguration {
         log.info("Creating RedisClient");
 
         DefaultJedisClientConfig.Builder builder = DefaultJedisClientConfig.builder();
-        builder.ssl(redisProperties.getSsl().isEnabled());
+        builder.sslOptions(SslOptions.defaults());
         if (StringUtils.hasText(redisProperties.getClientName())) {
             builder.clientName(redisProperties.getClientName());
         }

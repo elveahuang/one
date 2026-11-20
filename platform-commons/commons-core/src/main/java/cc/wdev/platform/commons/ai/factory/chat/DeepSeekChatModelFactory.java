@@ -15,7 +15,6 @@ import org.springframework.ai.deepseek.api.DeepSeekApi;
 import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.retry.RetryTemplate;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -61,8 +60,7 @@ public class DeepSeekChatModelFactory extends AbstractChatModelFactory {
         if (StringUtils.isNotEmpty(config.getBaseUrl())) {
             apiBuilder.baseUrl(config.getBaseUrl());
         }
-
-        apiBuilder.restClientBuilder(RestClient.builder().requestFactory(new JdkClientHttpRequestFactory()));
+        apiBuilder.restClientBuilder(RestClient.builder());
         apiBuilder.webClientBuilder(WebClient.builder());
         apiBuilder.responseErrorHandler(RetryUtils.DEFAULT_RESPONSE_ERROR_HANDLER);
 

@@ -12,11 +12,10 @@ import org.apache.ibatis.annotations.Param;
  */
 @Mapper
 public interface AiSessionEventRepository extends BaseEntityRepository<AiSessionEventEntity, Long> {
+
     /**
      * 获取会话历史记录
      */
-    Page<AiSessionEventVo> findTurnHead(Page<?> page,
-                                        @Param("userId") Long userId,
-                                        @Param("sessionId") Long aiSessionId);
+    Page<AiSessionEventVo> findTurnHead(Page<?> page, @Param("userId") Long userId, @Param("sessionId") Long aiSessionId);
 
 }

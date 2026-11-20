@@ -250,12 +250,12 @@ public interface AiManager {
     /**
      * 增加长期记忆存储支持
      */
-    void applyMemoryAdvisor(ChatClient.Builder builder);
+    void applyMemoryAdvisor(ChatClient.Builder builder, ChatClient.Builder dreamBuilder);
 
     /**
      * 增加长期记忆存储支持
      */
-    void applyMemoryAdvisor(ChatClient.Builder builder, MemoryConfig config);
+    void applyMemoryAdvisor(ChatClient.Builder builder, ChatClient.Builder dreamBuilder, MemoryConfig config);
 
     /**
      * 对话增加会话存储和日志的支持
@@ -271,5 +271,18 @@ public interface AiManager {
      * 静态对话增加知识检索支持
      */
     void applyRagAdvisors(ChatClient.Builder builder);
+
+    /**
+     * 加载系统默认提示词
+     */
+    String loadDefaultPrompt();
+
+    /**
+     * 按名称加载提示词目录下的提示词文件
+     *
+     * @param name           提示词文件名（位于提示词目录下，缺省补 .md 扩展名）
+     * @param fallbackPrompt 文件缺失或读取失败时的回退提示词
+     */
+    String loadDefaultPrompt(String name, String fallbackPrompt);
 
 }

@@ -1,5 +1,6 @@
 package cc.wdev.platform.system.ai.support;
 
+import cc.wdev.platform.commons.ai.enums.AiChatType;
 import cc.wdev.platform.commons.core.tenant.TenantContext;
 import cc.wdev.platform.commons.enums.ActiveTypeEnum;
 import cc.wdev.platform.system.ai.domain.entity.AiSessionEntity;
@@ -25,7 +26,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
-import static cc.wdev.platform.commons.ai.AiConstants.CHAT_CONTEXT_TENANT_ID;
+import static cc.wdev.platform.commons.ai.AiConstants.*;
 
 /**
  * 基于 MyBatis-Plus 的 {@link SessionRepository} 实现，会话落在 {@code sys_ai_session}，事件落在 {@code sys_ai_session_event}。
@@ -285,6 +286,26 @@ public class CustomSessionRepository implements SessionRepository {
         return MapUtils.getLong(session.metadata(), CHAT_CONTEXT_TENANT_ID, TenantContext.getTenantId());
     }
 
+    private String resolveChatType(Session session) {
+        return MapUtils.getString(session.metadata(), CHAT_CONTEXT_CHAT_TYPE, AiChatType.STATIC.getValue());
+    }
+
+    private String resolveBizType(Session session) {
+        return MapUtils.getString(session.metadata(), CHAT_CONTEXT_CHAT_BIZ_TYPE, "");
+    }
+
+    private String resolveAgentCode(Session session) {
+        return MapUtils.getString(session.metadata(), CHAT_CONTEXT_AGENT_CODE, "");
+    }
+
+    private String resolveModelCode(Session session) {
+        return MapUtils.getString(session.metadata(), CHAT_CONTEXT_MODEL_CODE, "");
+    }
+
+    private String resolveKbCode(Session session) {
+        return MapUtils.getString(session.metadata(), CHAT_CONTEXT_KB_CODE, "");
+    }
+
     private String resolvePrincipalName(Session session) {
         String principalName = SessionAttributes.principalName(session);
         return principalName != null ? principalName : "";
@@ -301,6 +322,11 @@ public class CustomSessionRepository implements SessionRepository {
         entity.setEventVersion(0L);
         entity.setActive(ActiveTypeEnum.ENABLED.getValue());
         entity.setTenantId(resolveTenantId(session));
+        entity.setBizType(resolveBizType(session));
+        entity.setChatType(resolveChatType(session));
+        entity.setChatAgentCode(resolveAgentCode(session));
+        entity.setChatModelCode(resolveModelCode(session));
+        entity.setChatKbCode(resolveKbCode(session));
         entity.setSessionId(session.id());
         entity.setUserId(resolvePrincipalName(session));
         entity.setMetadata(this.codec.toJson(session.metadata()));

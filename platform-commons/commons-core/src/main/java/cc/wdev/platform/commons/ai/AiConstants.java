@@ -18,9 +18,20 @@ public interface AiConstants {
 
     String CHAT_CONTEXT_TENANT_ID = "chat_memory_tenant_id";
 
+    String CHAT_CONTEXT_CHAT_BIZ_TYPE = "chat_memory_chat_biz_type";
+
     String CHAT_CONTEXT_CHAT_TYPE = "chat_memory_chat_type";
 
     String CHAT_CONTEXT_AGENT_CODE = "chat_memory_agent_code";
+
+    String CHAT_CONTEXT_MODEL_CODE = "chat_memory_model_code";
+
+    String CHAT_CONTEXT_KB_CODE = "chat_memory_kb_code";
+
+    /**
+     * 向量文档元数据 - 租户ID（租户隔离过滤字段）
+     */
+    String METADATA_TENANT_ID = "tenant_id";
 
     /**
      * 默认对话标识，只能用于单元测试，禁止在业务流程中使用
@@ -56,6 +67,11 @@ public interface AiConstants {
      * 默认重试次数
      */
     int DEFAULT_MAX_RETRIES = 3;
+
+    /**
+     * 系统默认提示词
+     */
+    String DEFAULT_PROMPT_NAME = "default";
 
     /**
      * 系统默认提示词

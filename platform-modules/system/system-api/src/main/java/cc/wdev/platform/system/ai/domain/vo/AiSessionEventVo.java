@@ -39,6 +39,12 @@ public class AiSessionEventVo extends SimpleTenantEntity {
     private String sessionId;
 
     /**
+     * Session Event ID
+     */
+    @Schema(description = "Session Event ID")
+    private String sessionEventId;
+
+    /**
      * 事件类型
      */
     @Schema(description = "事件类型")

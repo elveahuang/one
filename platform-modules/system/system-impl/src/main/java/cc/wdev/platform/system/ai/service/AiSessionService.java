@@ -29,7 +29,12 @@ public interface AiSessionService extends CachingEntityService<AiSessionEntity, 
      */
     List<AiSessionEntity> findByUserId(String userId);
 
-    AiSessionEntity findBySessionIdAndUser(String sessionId, Long userId, Long tenantId);
+    AiSessionEntity getSession(String sessionId, Long userId, Long tenantId);
+
+    /**
+     * 按会话ID判断会话是否存在（不含归属条件，仅用于存在性探查）
+     */
+    boolean existsBySessionId(String sessionId);
 
     /**
      * 删除指定的会话
@@ -53,8 +58,10 @@ public interface AiSessionService extends CachingEntityService<AiSessionEntity, 
 
     /**
      * 分页查询用户会话（租户隔离）
+     *
+     * @param bizType 对话业务类型（XYH：新版首页；DEFAULT：默认对话页），为空时不过滤
      */
-    Page<AiSessionEntity> findPageByUserId(String userId, Long tenantId, Pageable pageable);
+    Page<AiSessionEntity> findPageByUserId(String userId, Long tenantId, String bizType, Pageable pageable);
 
     int incrementEventVersion(String sessionId);
 

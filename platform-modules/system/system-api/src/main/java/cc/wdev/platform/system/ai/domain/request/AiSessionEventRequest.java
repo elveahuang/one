@@ -18,19 +18,38 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class AiSessionEventRequest extends PageRequest {
     /**
-     * userId
+     * 租户ID
      */
+    @Schema(title = "租户ID")
+    private Long tenantId;
+    /**
+     * 用户ID
+     */
+    @Schema(title = "用户ID")
     private Long userId;
-
+    /**
+     * 业务类型
+     */
+    @Schema(title = "业务类型")
+    private String bizType;
+    /**
+     * 对话类型
+     */
+    @Schema(title = "对话类型")
+    private String chatType;
+    /**
+     * 对话ID
+     */
+    @Schema(title = "对话ID")
+    private String conversationId;
     /**
      * Session ID
      */
     @Schema(description = "Session ID")
     private String sessionId;
-
     /**
-     * 会话id
+     * ID
      */
-    @Schema(description = "会话id")
-    private Long aiSessionId;
+    @Schema(description = "ID")
+    private Long id;
 }

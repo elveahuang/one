@@ -2,9 +2,13 @@ package cc.wdev.platform.commons.utils;
 
 import cc.wdev.platform.commons.constants.DateTimeConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -112,6 +116,12 @@ public abstract class DateUtils {
             case DATE -> DateTimeConstants.DEFAULT_DATE_PATTERN;
             default -> throw new IllegalStateException("Unsupported pattern: " + pattern);
         };
+    }
+
+    public static long getDaysBetween(@NonNull Date startDate, @NonNull Date endDate) {
+        LocalDate startLocalDate = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate endLocalDate = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return ChronoUnit.DAYS.between(startLocalDate, endLocalDate);
     }
 
 }

@@ -60,7 +60,7 @@ import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 @RequiredArgsConstructor
 public class AiHelper {
 
-    public static final String METADATA_TENANT_ID = "tenant_id";
+    public static final String METADATA_TENANT_ID = cc.wdev.platform.commons.ai.AiConstants.METADATA_TENANT_ID;
 
     public static final String METADATA_KB_ID = "kb_id";
 
@@ -162,7 +162,7 @@ public class AiHelper {
     public RetrievalAugmentationAdvisor resolveRetrievalAugmentationAdvisor(AiKbVo kb) {
         DocumentRetriever retriever = this.resolveDocumentRetriever(kb);
         return RetrievalAugmentationAdvisor.builder()
-            .documentRetriever(retriever)
+            .documentRetriever(AiUtils.resilientDocumentRetriever(retriever))
             .queryAugmenter(ContextualQueryAugmenter.builder()
                 .allowEmptyContext(true)
                 .build()
@@ -176,9 +176,9 @@ public class AiHelper {
         DocumentRetriever retriever = this.resolveDocumentRetriever(kb);
 
         RetrievalAugmentationAdvisor advisor = RetrievalAugmentationAdvisor.builder()
-            .documentRetriever(retriever)
+            .documentRetriever(AiUtils.resilientDocumentRetriever(retriever))
             .queryAugmenter(ContextualQueryAugmenter.builder()
-                .allowEmptyContext(Boolean.FALSE)
+                .allowEmptyContext(Boolean.TRUE)
                 .emptyContextPromptTemplate(PromptTemplate.builder().template("找不到相关的内容。").build())
                 .documentFormatter(documents -> documents.stream()
                     .map(document -> {

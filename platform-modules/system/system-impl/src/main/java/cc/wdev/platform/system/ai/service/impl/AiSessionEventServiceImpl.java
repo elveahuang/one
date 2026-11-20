@@ -6,10 +6,10 @@ import cc.wdev.platform.commons.data.mybatis.utils.MyBatisPlusUtils;
 import cc.wdev.platform.commons.enums.ActiveTypeEnum;
 import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.system.ai.domain.converter.AiSessionEventConverter;
-import cc.wdev.platform.system.ai.domain.entity.AiSessionEntity;
 import cc.wdev.platform.system.ai.domain.entity.AiSessionEventEntity;
 import cc.wdev.platform.system.ai.domain.request.AiSessionEventRequest;
 import cc.wdev.platform.system.ai.domain.vo.AiSessionEventVo;
+import cc.wdev.platform.system.ai.domain.entity.AiSessionEntity;
 import cc.wdev.platform.system.ai.repository.AiSessionEventRepository;
 import cc.wdev.platform.system.ai.service.AiSessionEventService;
 import cc.wdev.platform.system.ai.service.AiSessionService;
@@ -55,10 +55,9 @@ public class AiSessionEventServiceImpl
         if (ObjectUtils.isEmpty(sessionId)) {
             return List.of();
         }
-
-        // 新 SessionRepository 契约要求读取完整日志，activeView 由 CompactionBoundary 投影。
         return this.lambdaQueryWrapper()
             .eq(AiSessionEventEntity::getSessionId, sessionId)
+            .ne(AiSessionEventEntity::getEventType, "GREETING")
             .eq(AiSessionEventEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
             .orderByAsc(AiSessionEventEntity::getId)
             .list();
@@ -72,7 +71,6 @@ public class AiSessionEventServiceImpl
         if (ObjectUtils.isEmpty(sessionIds)) {
             return List.of();
         }
-        // 会话归属已在上层按用户+租户过滤，这里按事件顺序批量取用户消息用于生成标题
         return this.lambdaQueryWrapper()
             .in(AiSessionEventEntity::getSessionId, sessionIds)
             .eq(AiSessionEventEntity::getEventType, EventType.MESSAGE.name())
@@ -103,51 +101,66 @@ public class AiSessionEventServiceImpl
         if (ObjectUtils.isEmpty(sessionEventIds)) {
             return List.of();
         }
-
         return this.lambdaQueryWrapper()
             .in(AiSessionEventEntity::getSessionEventId, sessionEventIds)
             .list();
     }
 
+    /**
+     * @see AiSessionEventService#findHistory(AiSessionEventRequest)
+     */
     @Override
     public Page<AiSessionEventVo> findHistory(AiSessionEventRequest request) {
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<AiSessionEventVo> page =
-            this.mapper.findTurnHead(getMyBatisPlusPage(request), request.getUserId(), request.getAiSessionId());
+        IPage<AiSessionEventVo> page = this.mapper.findTurnHead(getMyBatisPlusPage(request), request.getUserId(), request.getId());
         return MyBatisPlusUtils.toSpringDataPage(request.getPageable(), page.getRecords(), page.getTotal());
     }
 
-    private List<String> findHistorySessionIds(AiSessionEventRequest request) {
-        if (request.getAiSessionId() != null) {
-            AiSessionEntity session = this.aiSessionService.findById(request.getAiSessionId());
-            if (session == null || request.getUserId() != null
-                && !String.valueOf(request.getUserId()).equals(session.getUserId())) {
-                return List.of();
-            }
-            return List.of(session.getSessionId());
-        }
-        if (request.getUserId() != null) {
-            return this.aiSessionService.findByUserId(String.valueOf(request.getUserId())).stream()
-                .map(AiSessionEntity::getSessionId)
-                .toList();
-        }
-        return null;
-    }
-
+    /**
+     * @see AiSessionEventService#findCurrent(AiSessionEventRequest)
+     */
     @Override
     public Page<AiSessionEventVo> findCurrent(AiSessionEventRequest request) {
-        IPage<AiSessionEventEntity> entityPage =
-            lambdaQueryWrapper()
-                .eq(AiSessionEventEntity::getSessionId, request.getSessionId())
-                .eq(AiSessionEventEntity::getEventType, EventType.MESSAGE.name())
-                .eq(AiSessionEventEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
-                .orderByDesc(AiSessionEventEntity::getCreatedAt)
-                .page(getMyBatisPlusPage(request));
-        List<AiSessionEventEntity> records = entityPage.getRecords();
-        if (!MyBatisPlusUtils.isNotEmpty(entityPage)) {
+        if (ObjectUtils.isEmpty(request.getSessionId())) {
             return SpringDataUtils.emptyPage(request.getPageable());
         }
-        List<AiSessionEventVo> eventVos = records.stream().map(AiSessionEventConverter.INSTANCE::entity2Vo).toList();
-        return MyBatisPlusUtils.toSpringDataPage(request.getPageable(), eventVos, entityPage.getTotal());
+        // 归属校验：带用户条件时会话必须是本人的，否则返回空页（不暴露他人会话内容）
+        if (ObjectUtils.isValidId(request.getUserId())) {
+            AiSessionEntity session = this.aiSessionService.getSession(
+                request.getSessionId(), request.getUserId(),
+                ObjectUtils.isValidId(request.getTenantId()) ? request.getTenantId() : null);
+            if (session == null) {
+                log.warn("findCurrent ownership mismatch: sessionId={}, userId={}", request.getSessionId(), request.getUserId());
+                return SpringDataUtils.emptyPage(request.getPageable());
+            }
+        }
+        IPage<AiSessionEventEntity> page = lambdaQueryWrapper()
+            .eq(AiSessionEventEntity::getSessionId, request.getSessionId())
+            .in(AiSessionEventEntity::getEventType, List.of(EventType.MESSAGE.name(), "GREETING"))
+            .eq(AiSessionEventEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .orderByDesc(List.of(AiSessionEventEntity::getCreatedAt, AiSessionEventEntity::getId))
+            .page(getMyBatisPlusPage(request));
+
+        if (!MyBatisPlusUtils.isNotEmpty(page)) {
+            return SpringDataUtils.emptyPage(request.getPageable());
+        }
+        return MyBatisPlusUtils.toSpringDataPage(request.getPageable(),
+            page.getRecords().stream().map(AiSessionEventConverter.INSTANCE::entity2Vo).toList(),
+            page.getTotal());
+    }
+
+    /**
+     * @see AiSessionEventService#hasEventSince(String, java.time.LocalDateTime)
+     */
+    @Override
+    public boolean hasEventSince(String sessionId, java.time.LocalDateTime since) {
+        if (ObjectUtils.isEmpty(sessionId) || since == null) {
+            return false;
+        }
+        return this.lambdaQueryWrapper()
+            .eq(AiSessionEventEntity::getSessionId, sessionId)
+            .ge(AiSessionEventEntity::getCreatedAt, since)
+            .eq(AiSessionEventEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
+            .exists();
     }
 
 }

@@ -29,45 +29,38 @@ public class AiChatVo implements Serializable {
     @JsonSerialize(using = ToStringSerializer.class)
     @Schema(description = "ID")
     private Long id;
-
     /**
      * 租户ID
      */
     @JsonSerialize(using = ToStringSerializer.class)
     @Schema(description = "租户ID")
     private Long tenantId;
-
     /**
      * 用户ID
      */
     @JsonSerialize(using = ToStringSerializer.class)
     @Schema(description = "用户ID")
     private Long userId;
-
     /**
      * 对话类型
      */
     @Schema(description = "对话类型")
     private String type;
-
     /**
      * 对话标识
      */
     @Schema(description = "对话标识")
     private String conversationId;
-
     /**
      * 对话标题
      */
     @Schema(description = "对话标题")
     private String title;
-
     /**
      * 消息列表
      */
     @Schema(description = "消息列表")
     private List<Message> messages;
-
     /**
      * 创建时间
      */
@@ -75,5 +68,4 @@ public class AiChatVo implements Serializable {
     @JsonFormat(pattern = DateTimeConstants.DEFAULT_DATE_TIME_PATTERN)
     @DateTimeFormat(pattern = DateTimeConstants.DEFAULT_DATE_TIME_PATTERN)
     private LocalDateTime createdAt;
-
 }
