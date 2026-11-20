@@ -246,4 +246,7 @@ configurations.configureEach {
     exclude(module = "selenium-ie-driver")
     exclude(module = "kotlin-stdlib-jdk7")
     exclude(module = "kotlin-stdlib-jdk8")
+    exclude(module = "swagger-annotations-jakarta")
+    exclude(module = "swagger-core-jakarta")
+    exclude(module = "swagger-models-jakarta")
 }

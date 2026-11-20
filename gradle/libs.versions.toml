@@ -7,7 +7,7 @@ springDependencyManagementVersion = "1.1.7"
 springDocVersion = "3.2.0"
 springBootAdminVersion = "4.1.5"
 springAiVersion = "2.1.0"
-springAiAgentUtilsVersion = "0.13.0"
+springAiAgentUtilsVersion = "0.14.0"
 springAiMcpSecurityVersion = "0.1.14"
 embabelAgentVersion = "1.5.4"
 grpcVersion = "1.85.1"
@@ -40,7 +40,7 @@ asmVersion = "9.11.1"
 objenesisVersion = "3.6"
 antlr3Runtime = "3.5.3"
 antlr4Runtime = "4.13.2"
-swaggerVersion = "2.2.56"
+swaggerVersion = "3.0.0"
 bouncycastleVersion = "1.87"
 openTelemetryVersion = "1.68.0"
 openTelemetryIncubatorVersion = "1.68.0-alpha"
@@ -370,7 +370,6 @@ quartz-jobs = { module = "org.quartz-scheduler:quartz-jobs" }
 slf4j-api = { module = "org.slf4j:slf4j-api" }
 aspectjweaver = { module = "org.aspectj:aspectjweaver" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoupVersion" }
-
 yasson = { module = "org.eclipse:yasson", version = "3.0.5" }
 dom4j = { module = "org.dom4j:dom4j", version = "2.2.0" }
 okio = { module = "com.squareup.okio:okio", version = "3.18.2" }
@@ -399,8 +398,8 @@ mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version = 
 lombok-mapstruct-binding = { module = "org.projectlombok:lombok-mapstruct-binding", version = "0.2.0" }
 
 # Swagger
-swagger-annotations-jakarta = { module = "io.swagger.core.v3:swagger-annotations-jakarta", version.ref = "swaggerVersion" }
-swagger-models-jakarta = { module = "io.swagger.core.v3:swagger-models-jakarta", version.ref = "swaggerVersion" }
+swagger-annotations = { module = "io.swagger.core.v3:swagger-annotations", version.ref = "swaggerVersion" }
+swagger-models = { module = "io.swagger.core.v3:swagger-models", version.ref = "swaggerVersion" }
 springdoc-openapi-starter-webmvc-api = { module = "org.springdoc:springdoc-openapi-starter-webmvc-api" }
 springdoc-openapi-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui" }
 springdoc-openapi-starter-webflux-api = { module = "org.springdoc:springdoc-openapi-starter-webflux-api" }
@@ -443,7 +442,7 @@ fory = ["fory-core", "fory-format"]
 logging = ["logback-logstash-encoder", "logback-loki-appender"]
 ai = ["openai-java", "anthropic-java", "dashscope-sdk-java", "tencentcloud-sdk-java-common", "tencentcloud-sdk-java-hunyuan", "tencentcloud-sdk-java-asr"]
 webjars = ["webjars-core", "webjars-jquery", "webjars-bootstrap", "webjars-bootstrap-icons", "webjars-popper-js"]
-swagger = ["swagger-annotations-jakarta", "swagger-models-jakarta"]
+swagger = ["swagger-annotations", "swagger-models"]
 
 # Spring Boot
 springCore = ["spring-aop", "spring-context", "spring-tx", "spring-web", "spring-webmvc", "spring-webflux", "spring-data-commons", "spring-data-jpa", "spring-data-relational", "spring-cloud-commons", "spring-ai-model", "spring-ai-client-chat"]
@@ -456,8 +455,8 @@ springBootReactiveStarter = ["spring-boot-starter-aspectj", "spring-boot-starter
 springBootShellStarter = ["spring-boot-starter", "spring-boot-starter-shell"]
 springBootAdminClientStarter = ["spring-boot-admin-starter-client"]
 springBootAdminServerStarter = ["spring-boot-admin-starter-server"]
-springDocServletStarter = ["swagger-annotations-jakarta", "swagger-models-jakarta", "springdoc-openapi-starter-webmvc-api", "springdoc-openapi-starter-webmvc-ui"]
-springDocReactiveStarter = ["swagger-annotations-jakarta", "swagger-models-jakarta", "springdoc-openapi-starter-webflux-api", "springdoc-openapi-starter-webflux-ui"]
+springDocServletStarter = ["swagger-annotations", "swagger-models", "springdoc-openapi-starter-webmvc-api", "springdoc-openapi-starter-webmvc-ui"]
+springDocReactiveStarter = ["swagger-annotations", "swagger-models", "springdoc-openapi-starter-webflux-api", "springdoc-openapi-starter-webflux-ui"]
 
 # Spring Security
 springSecurityCore = ["spring-security-core", "spring-security-messaging", "spring-security-web", "spring-security-oauth2-jose", "spring-security-oauth2-core", "spring-security-oauth2-resource-server", "spring-security-oauth2-authorization-server"]
