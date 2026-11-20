@@ -14,7 +14,6 @@ import cc.wdev.platform.system.ai.repository.AiSessionEventRepository;
 import cc.wdev.platform.system.ai.service.AiSessionEventService;
 import cc.wdev.platform.system.ai.service.AiSessionService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.session.EventType;

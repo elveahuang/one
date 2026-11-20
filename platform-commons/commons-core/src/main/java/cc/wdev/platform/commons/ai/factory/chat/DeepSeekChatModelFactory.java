@@ -16,7 +16,6 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
-import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -30,20 +29,17 @@ import static cc.wdev.platform.commons.utils.ObjectUtils.nvl;
 public class DeepSeekChatModelFactory extends AbstractChatModelFactory {
 
     private final ObjectProvider<RetryTemplate> retryTemplate;
-    private final ObjectProvider<ResponseErrorHandler> responseErrorHandler;
     private final ObjectProvider<ObservationRegistry> observationRegistry;
     private final ObjectProvider<ChatModelObservationConvention> observationConvention;
 
     public DeepSeekChatModelFactory(ModelCommonsConfig commonsConfig, ModelChatConfig modelConfig,
                                     ObjectProvider<RetryTemplate> retryTemplate,
-                                    ObjectProvider<ResponseErrorHandler> responseErrorHandler,
                                     ObjectProvider<ObservationRegistry> observationRegistry,
                                     ObjectProvider<ChatModelObservationConvention> observationConvention
     ) {
         super(resolveChatModelConfig(commonsConfig, modelConfig));
 
         this.retryTemplate = retryTemplate;
-        this.responseErrorHandler = responseErrorHandler;
         this.observationRegistry = observationRegistry;
         this.observationConvention = observationConvention;
     }
@@ -65,11 +61,10 @@ public class DeepSeekChatModelFactory extends AbstractChatModelFactory {
         if (StringUtils.isNotEmpty(config.getBaseUrl())) {
             apiBuilder.baseUrl(config.getBaseUrl());
         }
-        // 当前依赖组合下 RestClient 会自动选择 HttpComponents，读取 DeepSeek 分块响应时会截断为单字节。
-        apiBuilder.restClientBuilder(RestClient.builder()
-            .requestFactory(new JdkClientHttpRequestFactory()));
+
+        apiBuilder.restClientBuilder(RestClient.builder().requestFactory(new JdkClientHttpRequestFactory()));
         apiBuilder.webClientBuilder(WebClient.builder());
-        apiBuilder.responseErrorHandler(this.responseErrorHandler.getIfAvailable(() -> RetryUtils.DEFAULT_RESPONSE_ERROR_HANDLER));
+        apiBuilder.responseErrorHandler(RetryUtils.DEFAULT_RESPONSE_ERROR_HANDLER);
 
         DeepSeekChatOptions.Builder optionsBuilder = DeepSeekChatOptions.builder();
         optionsBuilder.model(nvl(config.getName(), DeepSeekApi.ChatModel.DEEPSEEK_V4_FLASH.getValue()));

@@ -71,7 +71,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.client.ResponseErrorHandler;
 
 import java.util.List;
 import java.util.Map;
@@ -131,7 +130,6 @@ public class AiAutoConfiguration {
     public DeepSeekChatModelFactory deepSeekChatModelFactory(
         AiConfig config,
         ObjectProvider<RetryTemplate> retryTemplate,
-        ObjectProvider<ResponseErrorHandler> responseErrorHandler,
         ObjectProvider<ObservationRegistry> observationRegistry,
         ObjectProvider<ChatModelObservationConvention> observationConvention
     ) {
@@ -139,7 +137,7 @@ public class AiAutoConfiguration {
             config.getFactory().getChatModelProvider(), AiModelProvider.DEEPSEEK.name()
         ).toLowerCase());
         return new DeepSeekChatModelFactory(providerConfig.getCommons(), providerConfig.getChat(),
-            retryTemplate, responseErrorHandler, observationRegistry, observationConvention);
+            retryTemplate, observationRegistry, observationConvention);
     }
 
     @Bean
