@@ -17,6 +17,8 @@ import cc.wdev.platform.commons.ai.factory.vectorstore.ElasticsearchVectorStoreF
 import cc.wdev.platform.commons.ai.factory.vectorstore.MariaDBVectorStoreFactory;
 import cc.wdev.platform.commons.ai.factory.vectorstore.PgVectorStoreFactory;
 import cc.wdev.platform.commons.ai.factory.vectorstore.VectorStoreFactory;
+import cc.wdev.platform.commons.ai.question.WebQuestionService;
+import cc.wdev.platform.commons.ai.question.WebQuestionServiceImpl;
 import cc.wdev.platform.commons.ai.tools.AiTool;
 import cc.wdev.platform.commons.ai.tools.CommonTools;
 import cc.wdev.platform.commons.ai.ui.UiComponentDefinition;
@@ -28,6 +30,11 @@ import cc.wdev.platform.commons.autoconfigure.ai.properties.AiProperties;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiVectorStoreElasticsearchProperties;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiVectorStoreMariaDBProperties;
 import cc.wdev.platform.commons.autoconfigure.ai.properties.AiVectorStorePgVectorProperties;
+import cc.wdev.platform.commons.core.cache.service.CacheService;
+import cc.wdev.platform.commons.core.cache.utils.RedissonUtils;
+import cc.wdev.platform.commons.message.sse.DefaultSseManager;
+import cc.wdev.platform.commons.message.sse.SseManager;
+import cc.wdev.platform.commons.message.sse.SseTopicService;
 import cc.wdev.platform.commons.utils.CollectionUtils;
 import cc.wdev.platform.commons.utils.ObjectUtils;
 import cc.wdev.platform.commons.utils.StringUtils;
@@ -338,6 +345,36 @@ public class AiAutoConfiguration {
         UiComponentManager.setRegistry(registry);
 
         return registry;
+    }
+
+    // ------------------------------------------------------------------------------
+    // AOT
+    // ------------------------------------------------------------------------------
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SseManager sseManager() {
+        return new DefaultSseManager();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SseTopicService sseTopicService(ObjectProvider<RedissonUtils> redissonUtilsProvider, SseManager sseManager) {
+        return new SseTopicService(redissonUtilsProvider.getIfAvailable(), sseManager);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public WebQuestionService aiQuestionManager(
+        ObjectProvider<CacheService> cacheServices,
+        ObjectProvider<AiProperties> aiPropertiesProvider,
+        SseManager sseManager, SseTopicService sseTopicService) {
+        long timeoutMinutes = 10L;
+        AiProperties aiProperties = aiPropertiesProvider.getIfAvailable();
+        if (aiProperties != null && aiProperties.getQuestionTimeoutMinutes() > 0) {
+            timeoutMinutes = aiProperties.getQuestionTimeoutMinutes();
+        }
+        return new WebQuestionServiceImpl(cacheServices.getIfAvailable(), sseManager, sseTopicService, timeoutMinutes);
     }
 
     // ------------------------------------------------------------------------------

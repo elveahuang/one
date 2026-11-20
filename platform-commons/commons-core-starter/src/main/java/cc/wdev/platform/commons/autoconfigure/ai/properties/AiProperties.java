@@ -55,4 +55,10 @@ public class AiProperties {
      */
     private List<String> memberAllowedModels = new ArrayList<>();
 
+    /**
+     * 会话挂起提问（AskUserQuestion）等待用户作答的超时分钟数。
+     * 多题评测（如通用能力自测）学员逐题作答耗时较长，默认 10 分钟。
+     */
+    private long questionTimeoutMinutes = 10L;
+
 }
