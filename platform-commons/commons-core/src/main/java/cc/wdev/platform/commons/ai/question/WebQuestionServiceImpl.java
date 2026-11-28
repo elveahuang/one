@@ -15,6 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Lists;
 import org.springaicommunity.agent.tools.AskUserQuestionTool;
+import org.springframework.ai.session.EventType;
+import org.springframework.ai.session.SessionEvent;
+import org.springframework.ai.session.SessionService;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.codec.ServerSentEvent;
 
 import java.time.Duration;
@@ -35,11 +39,22 @@ public class WebQuestionServiceImpl implements WebQuestionService {
 
     private static final String PENDING_QUESTION_KEY_PREFIX = "ai:question:pending:";
 
+    /**
+     * 会话事件类型：题目卡（payload 携带 json-render 块与学员作答，一条记录即可完整回放）
+     */
+    private static final EventType QUESTION_EVENT_TYPE = EventType.of("QUESTION");
+
     private final CacheService cacheService;
 
     private final SseManager sseManager;
 
     private final SseTopicService sseTopicService;
+
+    /**
+     * Spring AI 会话服务，底层由 CustomSessionRepository 落库 sys_ai_session_event；
+     * 用于把问答卡片写入会话日志，保证刷新/回放时不丢
+     */
+    private final ObjectProvider<SessionService> sessionServiceProvider;
 
     /**
      * 等待用户作答的超时分钟数（多题评测逐题作答耗时较长，经 AiProperties 可配置）
@@ -79,17 +94,20 @@ public class WebQuestionServiceImpl implements WebQuestionService {
             log.warn("handleQuestions rejected: a pending question already exists for conversationId={}", conversationId);
             return Collections.emptyMap();
         }
+        String jsonRenderBlock = buildJsonRenderBlock(conversationId, userId, questions);
         AiQuestionVo questionVo = toVo(conversationId, userId, questions);
         cacheService.set(cacheKey, questionVo, Duration.ofMinutes(timeoutMinutes));
 
         try {
-            String jsonRenderBlock = buildJsonRenderBlock(conversationId, userId, questions);
             String ssePayload = AiUtils.getJsonRenderContent(jsonRenderBlock);
             log.info("Pushing json-render question card to client stream: conversationId={}", conversationId);
             sseTopicService.emit(conversationId, "text", ssePayload);
 
             // 等待用户通过任意节点提交答案
-            return future.get(timeoutMinutes, TimeUnit.MINUTES);
+            Map<String, String> answers = future.get(timeoutMinutes, TimeUnit.MINUTES);
+            // 作答后一次性落库：题目与作答写进同一条 QUESTION 事件
+            this.appendQuestionEvent(conversationId, userId, jsonRenderBlock, answers);
+            return answers;
         } catch (TimeoutException e) {
             log.warn("Timeout waiting for user answer: conversationId={}", conversationId);
             return Collections.emptyMap();
@@ -216,38 +234,56 @@ public class WebQuestionServiceImpl implements WebQuestionService {
         if (CollectionUtils.isEmpty(questions)) {
             return "{}";
         }
-        Map<String, Object> root = new LinkedHashMap<>();
-        root.put("type", "Question");
+        QuestionRenderPayload payload = QuestionRenderPayload.builder()
+            .props(QuestionRenderPayload.Props.builder()
+                .conversationId(StringUtils.isNotEmpty(conversationId) ? conversationId : null)
+                .userId(userId != null && userId > 0 ? String.valueOf(userId) : null)
+                .questionData(questions)
+                .build())
+            .build();
+        return GsonUtils.toJson(payload);
+    }
 
-        Map<String, Object> props = new LinkedHashMap<>();
-        if (StringUtils.isNotEmpty(conversationId)) {
-            props.put("conversationId", conversationId);
+    /**
+     * 追加题目事件：render + answers 构成一条完整的 json-render 记录，
+     * 前端只需渲染这一条即可同时展示题目与学员作答（非 SSE 信封）
+     */
+    private void appendQuestionEvent(String conversationId, Long userId, String jsonRenderBlock, Map<String, String> answers) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("render", jsonRenderBlock);
+        if (CollectionUtils.isNotEmpty(answers)) {
+            payload.put("answers", answers);
         }
         if (userId != null && userId > 0) {
-            props.put("userId", String.valueOf(userId));
+            payload.put("userId", String.valueOf(userId));
         }
+        this.appendSessionEvent(conversationId, QUESTION_EVENT_TYPE, payload);
+    }
 
-        List<Map<String, Object>> questionDataList = new ArrayList<>();
-        for (AskUserQuestionTool.Question q : questions) {
-            Map<String, Object> qMap = new LinkedHashMap<>();
-            qMap.put("question", q.question());
-            qMap.put("header", StringUtils.isNotEmpty(q.header()) ? q.header() : "问题澄清");
-            List<Map<String, String>> qOptions = Lists.newArrayList();
-            if (CollectionUtils.isNotEmpty(q.options())) {
-                for (AskUserQuestionTool.Question.Option opt : q.options()) {
-                    Map<String, String> optionMap = new LinkedHashMap<>();
-                    optionMap.put("label", opt.label());
-                    optionMap.put("description", opt.description() != null ? opt.description() : "");
-                    qOptions.add(optionMap);
-                }
+    /**
+     * 通过 SessionService 追加事件，实际由 CustomSessionRepository 落库 sys_ai_session_event。
+     * 会话由聊天链路的 memory advisor 创建；工具线程中会话不存在时跳过，避免反向创建会话。
+     */
+    private void appendSessionEvent(String conversationId, EventType type, Map<String, Object> payload) {
+        SessionService sessionService = this.sessionServiceProvider != null
+            ? this.sessionServiceProvider.getIfAvailable() : null;
+        if (sessionService == null) {
+            return;
+        }
+        try {
+            if (sessionService.findById(conversationId) == null) {
+                log.debug("Skip {} event: session {} not found", type, conversationId);
+                return;
             }
-            qMap.put("options", qOptions);
-            qMap.put("multiSelect", Boolean.TRUE.equals(q.multiSelect()));
-            questionDataList.add(qMap);
+            sessionService.appendEvent(SessionEvent.builder()
+                .sessionId(conversationId)
+                .type(type)
+                .payload(payload)
+                .build());
+            log.debug("Append {} event success: conversationId={}", type, conversationId);
+        } catch (Exception e) {
+            // 事件仅用于历史回放，失败不能影响提问/作答主流程
+            log.warn("Append {} event failed: conversationId={}", type, conversationId, e);
         }
-
-        props.put("QuestionData", questionDataList);
-        root.put("props", props);
-        return GsonUtils.toJson(root);
     }
 }

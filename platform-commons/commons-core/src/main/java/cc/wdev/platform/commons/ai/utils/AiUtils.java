@@ -126,6 +126,8 @@ public abstract class AiUtils {
                 request.setToolNames(tools);
             } else if ("agent".equalsIgnoreCase(actionType) && StringUtils.isEmpty(request.getAgentCode())) {
                 request.setAgentCode(actionCode);
+            } else if ("skill".equalsIgnoreCase(actionType)) {
+                request.getParams().put("preferredSkill", actionCode.trim());
             }
         }
     }
@@ -155,8 +157,18 @@ public abstract class AiUtils {
             a.params(params);
             a.param(CHAT_CONTEXT_SESSION_METADATA, params);
         }).system(s -> {
-            if (StringUtils.isNotEmpty(request.getSystemPrompt())) {
-                s.text(request.getSystemPrompt());
+            String baseSystemPrompt = StringUtils.nvl(request.getSystemPrompt());
+            Object preferredSkillObj = params.get("preferredSkill");
+            String preferredSkill = preferredSkillObj != null ? String.valueOf(preferredSkillObj).trim() : "";
+            if (StringUtils.isNotEmpty(preferredSkill)) {
+                String skillHint = END_LINE + "【本轮快捷入口路由提示】用户通过快捷能力入口发起请求（code=" + preferredSkill
+                    + "）。若该 code 对应已有 Skill 名称，请优先通过 SkillsTool 加载该 Skill 执行；"
+                    + "若该 code 属于场景编码，请加载 general-competency-assessment Skill 并调用 getCompetencyAssessmentByCode(scenarioCode=\""
+                    + preferredSkill + "\")。";
+                baseSystemPrompt = baseSystemPrompt + skillHint;
+            }
+            if (StringUtils.isNotEmpty(baseSystemPrompt)) {
+                s.text(baseSystemPrompt);
             }
             s.metadata(params);
         }).user(u -> {

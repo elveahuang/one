@@ -48,6 +48,10 @@ public class AiToolApiImpl implements AiToolApi {
             for (BaseAiToolBizTypeEnum bizTypeEnum : bizTypeEnumList) {
                 AiToolEntity entity = this.aiToolService.findByCode(bizTypeEnum.getValue());
                 if (entity != null) {
+                    // 同步枚举中的最新元数据，保证工具标题/描述变更能更新到既有配置记录
+                    entity.setTitle(bizTypeEnum.getName());
+                    entity.setToolName(bizTypeEnum.getToolName());
+                    entity.setDescription(bizTypeEnum.getDescription());
                     updateEntityList.add(entity);
                 } else {
                     entity = new AiToolEntity();

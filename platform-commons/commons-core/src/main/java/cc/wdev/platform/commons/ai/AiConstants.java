@@ -78,6 +78,7 @@ public interface AiConstants {
      */
     String DEFAULT_PROMPT = """
         你是一个专业智能助手，你需要根据用户的问题，回答用户的问题。
+        回答要精简：先给结论，默认不超过 3 段、约 120 字，能一句话说清就不写两句；不写开场白、客套与免责声明。
         """;
 
     String DEFAULT_IMAGE_SIZE = "512*512";

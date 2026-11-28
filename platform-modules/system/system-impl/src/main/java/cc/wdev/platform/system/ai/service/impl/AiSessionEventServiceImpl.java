@@ -57,7 +57,9 @@ public class AiSessionEventServiceImpl
         }
         return this.lambdaQueryWrapper()
             .eq(AiSessionEventEntity::getSessionId, sessionId)
-            .ne(AiSessionEventEntity::getEventType, "GREETING")
+            // 仅供界面回放的自定义事件不能进入模型日志：EventFilter.lastN 不限类型，
+            // 无 message 的事件会占窗口且 getMessage() 会抛异常
+            .notIn(AiSessionEventEntity::getEventType, List.of("GREETING", "QUESTION"))
             .eq(AiSessionEventEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
             .orderByAsc(AiSessionEventEntity::getId)
             .list();
@@ -135,7 +137,9 @@ public class AiSessionEventServiceImpl
         }
         IPage<AiSessionEventEntity> page = lambdaQueryWrapper()
             .eq(AiSessionEventEntity::getSessionId, request.getSessionId())
-            .in(AiSessionEventEntity::getEventType, List.of(EventType.MESSAGE.name(), "GREETING"))
+            // QUESTION/ANSWER 为界面问答卡片事件，messageContent 为空，需与 GREETING 一并放行
+            .in(AiSessionEventEntity::getEventType,
+                List.of(EventType.MESSAGE.name(), "GREETING", "QUESTION", "ANSWER"))
             .eq(AiSessionEventEntity::getActive, ActiveTypeEnum.ENABLED.getValue())
             .orderByDesc(List.of(AiSessionEventEntity::getCreatedAt, AiSessionEventEntity::getId))
             .page(getMyBatisPlusPage(request));
